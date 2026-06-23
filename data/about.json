@@ -1,0 +1,48 @@
+{
+    "hero_title": "More than gear.",
+    "hero_highlight": "Built to move with you.",
+    "hero_subtitle": "Kizora makes premium backpacks, water bottles and flasks — engineered for everyday life, priced for everyone, and built to go the distance.",
+    "story_title": "How Kizora began",
+    "story": [
+        {
+            "text": "Kizora started with a frustration we all know: carry gear that either looks great but falls apart, or lasts forever but looks dull — and always costs too much."
+        },
+        {
+            "text": "So we set out to build the opposite. Backpacks, bottles and flasks that are tough, comfortable and genuinely good-looking, at a price that makes sense for students, professionals and families."
+        },
+        {
+            "text": "Every product is obsessively tested — zippers, straps, seams and insulation — so your gear keeps up with school runs, commutes, gym sessions and weekend adventures."
+        }
+    ],
+    "est": "Est. 2026",
+    "craft_title": "Engineered to last",
+    "craft_body": "We don't cut corners where it counts. Kizora bags use water-resistant fabrics, reinforced stitching and heavy-duty zippers. Our bottles and flasks are made from food-grade stainless steel with double-wall vacuum insulation.",
+    "mission": "To make durable, well-designed everyday carry accessible to everyone — without the premium price tag.",
+    "vision": "To become Bangladesh's most trusted lifestyle gear brand — known for quality, value and service people rely on.",
+    "offerings": [
+        {
+            "title": "Backpacks",
+            "desc": "Everyday packs built for comfort and capacity"
+        },
+        {
+            "title": "Laptop Backpacks",
+            "desc": "Padded sleeves and USB ports for work & study"
+        },
+        {
+            "title": "School & Trolley Bags",
+            "desc": "Lightweight, sturdy bags kids love"
+        },
+        {
+            "title": "Water Bottles",
+            "desc": "Leak-proof bottles for gym, office and travel"
+        },
+        {
+            "title": "Thermos & Flasks",
+            "desc": "Double-wall insulation, hot or cold for hours"
+        },
+        {
+            "title": "Accessories",
+            "desc": "Pouches, straps and add-ons to complete your carry"
+        }
+    ]
+}

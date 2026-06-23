@@ -1,0 +1,548 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+@source '../**/*.vue';
+
+@theme {
+    --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Sora', ui-sans-serif, system-ui, sans-serif;
+    --font-body: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+
+    /* ── Kizora brand system (logo-derived) ──
+       Primary = ink (the black wordmark). Accent = #ED1C24 (the red dot),
+       used sparingly (<10%) on CTAs, sale badges & active states.
+       Single medium radius across the whole UI. */
+    --radius: 0.75rem;
+
+    --color-ink: #17181B;
+    --color-ink-700: #000000;
+
+    /* `primary` token name kept = ink, so existing text-primary/bg-primary become neutral chrome */
+    --color-primary: #17181B;
+    --color-primary-dark: #000000;
+    --color-primary-light: #F4F4F5;
+
+    /* Red accent + steps + tints */
+    --color-accent: #ED1C24;
+    --color-accent-600: #D1141B;
+    --color-accent-700: #B00C13;
+    --color-accent-50: #FEECEC;
+    --color-accent-100: #FBD5D6;
+
+    /* Surfaces & text */
+    --color-bg: #FAFAFA;
+    --color-surface: #FFFFFF;
+    --color-border: #E7E7EA;
+    --color-lavender-bg: #F6F6F7;
+    --color-cream: #FAFAFA;
+    --color-beige: #FFFFFF;
+    --color-charcoal: #17181B;
+    --color-muted: #6B6B73;
+    --color-success: #16A34A;
+    --color-warning: #D97706;
+    --color-error: #DC2626;
+
+    /* Neutral gray ramp (token names preserved; were the violet ramp) */
+    --color-purple-50: #F7F7F8;
+    --color-purple-100: #ECECEE;
+    --color-purple-200: #DEDEE1;
+    --color-purple-300: #C5C5CA;
+    --color-purple-400: #9B9BA3;
+    --color-purple-500: #6B6B73;
+    --color-purple-600: #3C3D42;
+    --color-purple-700: #2A2B2F;
+    --color-purple-800: #1F2024;
+    --color-purple-900: #17181B;
+}
+
+@layer base {
+    html {
+        scroll-behavior: smooth;
+        overflow-x: clip; /* prevent horizontal scroll without breaking sticky positioning */
+    }
+
+    body {
+        font-family: var(--font-body);
+        background-color: #FFFFFF;
+        color: var(--color-charcoal);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        overflow-x: clip;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        font-family: var(--font-display);
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    /* Tailwind v4 dropped the default pointer cursor on buttons — restore it
+       for every interactive element so all clickable objects feel clickable. */
+    button,
+    [role="button"],
+    [type="button"],
+    [type="submit"],
+    [type="reset"],
+    summary,
+    label[for],
+    select {
+        cursor: pointer;
+    }
+
+    button:disabled,
+    [role="button"][aria-disabled="true"],
+    [type="button"]:disabled,
+    [type="submit"]:disabled,
+    select:disabled,
+    .cursor-not-allowed {
+        cursor: not-allowed;
+    }
+}
+
+@layer utilities {
+    /* Global site container — matches Navbar & Footer width exactly */
+    .site-container {
+        @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+    }
+
+    /* Page background — white base + soft archive colour blobs for the gradient. */
+    .app-gradient { background-color: #ffffff; }
+
+    /* Soft animated colour blobs (exact archive values). Fixed behind content. */
+    .kz-blob {
+        position: fixed;
+        border-radius: 9999px;
+        filter: blur(70px);
+        opacity: 0.55;
+        z-index: 0;
+        pointer-events: none;
+        animation: kz-float 14s ease-in-out infinite;
+    }
+    .kz-blob-1 { width: 420px; height: 420px; background: #a78bfa; top: -120px; left: -100px; }
+    .kz-blob-2 { width: 380px; height: 380px; background: #f9a8d4; bottom: -120px; right: -80px; animation-delay: -4s; }
+    .kz-blob-3 { width: 300px; height: 300px; background: #fda4af; top: 40%; right: 12%; animation-delay: -8s; opacity: 0.4; }
+
+    @keyframes kz-float {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        50%      { transform: translate(30px, -30px) scale(1.08); }
+    }
+    @media (prefers-reduced-motion: reduce) { .kz-blob { animation: none; } }
+}
+
+@layer components {
+    /* Shared admin table checkbox (bulk selection). */
+    .kz-check {
+        @apply w-4 h-4 rounded border-purple-200 cursor-pointer;
+        accent-color: var(--color-ink);
+    }
+
+    /* Legacy aliases — the canonical control is Components/ui/Button.vue.
+       Kept so existing .btn-primary/.btn-secondary markup stays styled. */
+    .btn-primary {
+        @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200;
+        background: var(--color-ink);
+    }
+    .btn-primary:hover { background: #2A2C31; transform: translateY(-1px); box-shadow: 0 8px 20px -8px rgba(0,0,0,0.45); }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(23,24,27,0.25); }
+
+    .btn-secondary {
+        @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-200;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        color: var(--color-ink);
+    }
+    .btn-secondary:hover { background: #F4F4F5; border-color: #D5D5D9; transform: translateY(-1px); }
+    .btn-secondary:active { transform: scale(0.98); }
+    .btn-secondary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(23,24,27,0.18); }
+
+    /* Accent CTA — red, used sparingly for sale/high-emphasis actions */
+    .btn-accent {
+        @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200;
+        background: var(--color-accent);
+    }
+    .btn-accent:hover { background: var(--color-accent-600); transform: translateY(-1px); box-shadow: 0 8px 20px -8px rgba(237,28,36,0.5); }
+    .btn-accent:active { transform: scale(0.98); }
+    .btn-accent:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(237,28,36,0.3); }
+
+    .card {
+        @apply bg-white rounded-2xl overflow-hidden transition-all duration-300;
+        box-shadow: 0 1px 2px rgba(23,24,27,0.04), 0 8px 24px -16px rgba(23,24,27,0.12);
+        border: 1px solid var(--color-border);
+    }
+    @media (hover: hover) {
+        .card:hover {
+            box-shadow: 0 2px 4px rgba(23,24,27,0.05), 0 18px 40px -20px rgba(23,24,27,0.22);
+            transform: translateY(-2px);
+        }
+    }
+
+    .section-title {
+        font-family: var(--font-display);
+        @apply text-3xl sm:text-4xl font-bold text-charcoal;
+    }
+
+    /* Legacy gradient names now resolve to solid ink (kept so existing markup works) */
+    .gradient-purple,
+    .gradient-kizora {
+        background: var(--color-ink);
+    }
+    /* Accent fill helper */
+    .gradient-accent {
+        background: var(--color-accent);
+    }
+
+    .gradient-soft {
+        background: linear-gradient(135deg, #FAFAFA 0%, #F1F1F2 100%);
+    }
+
+    .glass {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+
+    .input-field {
+        @apply w-full px-4 py-3 rounded-xl border transition-all duration-200 text-charcoal;
+        border-color: var(--color-border);
+        background: var(--color-surface);
+    }
+    .input-field:focus {
+        outline: none;
+        border-color: #9B9BA3;
+        box-shadow: 0 0 0 3px rgba(23, 24, 27, 0.08);
+    }
+
+    /* Dropdowns: hide the native arrow, draw a clean chevron with proper
+       breathing room. Applies to every .input-field <select> (forms + filters). */
+    select.input-field {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='20'%20height='20'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%236B7280'%20stroke-width='2.2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='m6%209%206%206%206-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.85rem center;
+        background-size: 1.05rem 1.05rem;
+        padding-right: 2.6rem;
+    }
+    select.input-field:hover { border-color: #C9C9CF; }
+    /* Tidy the options list where the browser allows it. */
+    select.input-field option { color: var(--color-charcoal); padding: 0.5rem; }
+
+    .badge {
+        @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold;
+    }
+    .badge-purple {
+        background: #F1F1F2;
+        color: #3C3D42;
+    }
+    .badge-accent {
+        background: var(--color-accent-50);
+        color: var(--color-accent-700);
+    }
+    .badge-success {
+        background: #D1FAE5;
+        color: #065F46;
+    }
+    .badge-warning {
+        background: #FEF3C7;
+        color: #92400E;
+    }
+    .badge-error {
+        background: #FEE2E2;
+        color: #991B1B;
+    }
+    /* Order status extras */
+    .badge-blue {
+        background: #DBEAFE;
+        color: #1E40AF;
+    }
+    .badge-teal {
+        background: #CCFBF1;
+        color: #0F766E;
+    }
+    .badge-gray {
+        background: #F3F4F6;
+        color: #4B5563;
+    }
+    .badge-orange {
+        background: #FFEDD5;
+        color: #9A3412;
+    }
+}
+
+@layer utilities {
+    /* Legacy gradient text → solid ink. Use .text-accent for the red pop word. */
+    .text-gradient {
+        color: var(--color-ink);
+    }
+
+    .animate-float {
+        animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-12px); }
+    }
+
+    /* Soft animated colour blobs for airy hero / section backdrops (ported from archive) */
+    .blob {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(70px);
+        opacity: 0.5;
+        z-index: 0;
+        pointer-events: none;
+        animation: blob-float 14s ease-in-out infinite;
+    }
+    .blob-violet  { background: #E7E7EA; }
+    .blob-magenta { background: #EDEDF0; }
+    .blob-red     { background: #FBD5D6; }
+
+    @keyframes blob-float {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        50%      { transform: translate(30px, -30px) scale(1.08); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .blob, .animate-float { animation: none !important; }
+    }
+
+    .animate-fade-in {
+        animation: fadeIn 0.6s ease-out forwards;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .fill-warning { fill: var(--color-warning); }
+
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    /* Slim, branded scrollbar — used for scrollable panels (e.g. shop filter) */
+    .scrollbar-slim {
+        scrollbar-width: thin;
+        scrollbar-color: #D5D5D9 transparent;
+    }
+    .scrollbar-slim::-webkit-scrollbar {
+        width: 7px;
+        height: 7px;
+    }
+    .scrollbar-slim::-webkit-scrollbar-track {
+        background: transparent;
+        margin: 4px 0;
+    }
+    .scrollbar-slim::-webkit-scrollbar-thumb {
+        background: #D5D5D9;
+        border-radius: 9999px;
+    }
+    .scrollbar-slim::-webkit-scrollbar-thumb:hover {
+        background: #B0B0B8;
+    }
+}
+
+/* ── Toast notifications ────────────────────────────────────────────────── */
+
+/* Container — bottom-right. Do NOT override flex-direction; the library
+   uses column-reverse for bottom positions so toasts stack upward correctly. */
+.Vue-Toastification__container.bottom-right {
+  bottom: 1.5rem !important;
+  right: 1.25rem !important;
+  top: auto !important;
+  left: auto !important;
+  width: auto !important;
+  max-width: 360px !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  gap: 8px !important;
+}
+
+/*
+ * Base toast — white card style matching site's .card component.
+ * Type is indicated by a 4px inset left accent (via box-shadow trick)
+ * so it looks clean on the white background without needing a bg override.
+ */
+.Vue-Toastification__toast {
+  display: flex !important;
+  align-items: center !important;
+  border-radius: 14px !important;
+  padding: 13px 15px !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  line-height: 1.45 !important;
+  color: #17181B !important;          /* site charcoal */
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.07) !important;
+  overflow: hidden !important;
+  min-width: 260px !important;
+  max-width: 340px !important;
+  /* Default (info/purple) inset left accent + elevation shadow */
+  box-shadow:
+    inset 4px 0 0 #17181B,
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    0 8px 24px rgba(0, 0, 0, 0.11) !important;
+  cursor: default !important;
+}
+
+/* Toast body text */
+.Vue-Toastification__toast-body {
+  padding: 0 !important;
+  margin: 0 !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  color: inherit !important;
+  line-height: inherit !important;
+  flex: 1 !important;
+  word-break: break-word !important;
+}
+
+/* Icon — sized, colored per type, right margin */
+.Vue-Toastification__icon {
+  flex-shrink: 0 !important;
+  margin-right: 10px !important;
+  margin-left: 0 !important;
+  width: 20px !important;
+  height: 20px !important;
+  color: #17181B !important;         /* default purple */
+  opacity: 1 !important;
+}
+
+/* Thin progress bar at bottom, colored per type */
+.Vue-Toastification__progress-bar {
+  height: 3px !important;
+  background: rgba(23, 24, 27, 0.25) !important;
+  border-radius: 0 0 14px 14px !important;
+  bottom: 0 !important;
+}
+
+/* Close button */
+.Vue-Toastification__close-button {
+  color: rgba(31, 27, 36, 0.35) !important;
+  font-size: 1.1rem !important;
+  align-self: flex-start !important;
+}
+.Vue-Toastification__close-button:hover {
+  color: rgba(31, 27, 36, 0.75) !important;
+}
+
+/* ── Success ── */
+.Vue-Toastification__toast--success {
+  box-shadow:
+    inset 4px 0 0 #2E9D63,
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    0 8px 24px rgba(46, 157, 99, 0.10) !important;
+}
+.Vue-Toastification__toast--success .Vue-Toastification__icon {
+  color: #2E9D63 !important;
+}
+.Vue-Toastification__toast--success .Vue-Toastification__progress-bar {
+  background: rgba(46, 157, 99, 0.30) !important;
+}
+
+/* ── Error ── */
+.Vue-Toastification__toast--error {
+  box-shadow:
+    inset 4px 0 0 #D64545,
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    0 8px 24px rgba(214, 69, 69, 0.10) !important;
+}
+.Vue-Toastification__toast--error .Vue-Toastification__icon {
+  color: #D64545 !important;
+}
+.Vue-Toastification__toast--error .Vue-Toastification__progress-bar {
+  background: rgba(214, 69, 69, 0.30) !important;
+}
+
+/* ── Warning ── */
+.Vue-Toastification__toast--warning {
+  box-shadow:
+    inset 4px 0 0 #F2A93B,
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    0 8px 24px rgba(242, 169, 59, 0.10) !important;
+}
+.Vue-Toastification__toast--warning .Vue-Toastification__icon {
+  color: #F2A93B !important;
+}
+.Vue-Toastification__toast--warning .Vue-Toastification__progress-bar {
+  background: rgba(242, 169, 59, 0.30) !important;
+}
+
+/* ── Mobile: full-width, above the bottom navigation bar ── */
+@media (max-width: 767px) {
+  .Vue-Toastification__container.bottom-right {
+    bottom: 5.5rem !important;   /* clears the 72px mobile bottom nav */
+    left: 0.75rem !important;
+    right: 0.75rem !important;
+    width: auto !important;
+    max-width: unset !important;
+  }
+  .Vue-Toastification__toast {
+    min-width: unset !important;
+    max-width: unset !important;
+    width: 100% !important;
+    border-radius: 12px !important;
+    padding: 12px 14px !important;
+  }
+}
+
+/* ── Toast enter/leave animation ── */
+/*
+ * Slides up + fades in on enter (works for both bottom-right desktop
+ * and full-width mobile). Fades + shrinks out on leave.
+ */
+.lavender-toast-enter-active {
+  animation: lavender-toast-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.lavender-toast-leave-active {
+  animation: lavender-toast-out 0.2s ease-in both;
+}
+.lavender-toast-move {
+  transition: transform 0.25s ease;
+}
+
+@keyframes lavender-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes lavender-toast-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+}
+
+/* Swiper custom styles */
+.swiper-pagination-bullet-active {
+    background: #17181B !important;
+}
+.swiper-button-next,
+.swiper-button-prev {
+    color: #17181B !important;
+}

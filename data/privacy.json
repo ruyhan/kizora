@@ -1,0 +1,22 @@
+{
+    "title": "Privacy Policy",
+    "last_updated": "June 2026",
+    "sections": [
+        {
+            "heading": "1. Information We Collect",
+            "body": "When you use the Kizora website, we collect information including your name, email address, phone number, and delivery address when you place an order or create an account."
+        },
+        {
+            "heading": "2. How We Use Your Information",
+            "body": "We use your information to process orders, provide customer support, send order updates, and improve our services. We do not sell your personal information to third parties."
+        },
+        {
+            "heading": "3. Data Security",
+            "body": "We implement appropriate security measures to protect your personal information. All sensitive data is encrypted and stored securely."
+        },
+        {
+            "heading": "4. Contact Us",
+            "body": "If you have any questions about our Privacy Policy, please contact us at hello@kizora.com.bd."
+        }
+    ]
+}

@@ -1,0 +1,74 @@
+{
+    "hero": [
+        {
+            "eyebrow": "New in · 2026",
+            "title": "Carry your world",
+            "subtitle": "Premium backpacks, bottles & flasks built to move with you.",
+            "cta_label": "Shop new arrivals",
+            "cta_link": "/shop?sort=latest",
+            "tone": "ink",
+            "image": "http://127.0.0.1:8000/storage/media/eMJDpFqr8DHE2ewKTBtx71db0NMjVltgFkyPEjK7.webp",
+            "overlay_type": "gradient",
+            "overlay_color2": "rgba(255, 77, 77, 0)",
+            "overlay_opacity": "100",
+            "overlay_color": "#000000",
+            "overlay_angle": "90",
+            "overlay_stop1": "25",
+            "overlay_stop2": "75"
+        },
+        {
+            "eyebrow": "Work & study",
+            "title": "Laptop backpacks that keep up",
+            "subtitle": "Padded sleeves, USB ports, water-resistant builds.",
+            "cta_label": "Shop laptop backpacks",
+            "cta_link": "/shop?category=laptop-backpacks",
+            "tone": "slate",
+            "image": "http://127.0.0.1:8000/storage/media/cMMktMkNAi2q30Xfnqgcrhv5mj1GVmPgFOpdIJcG.webp",
+            "overlay_color": "#13004d",
+            "overlay_color2": "rgba(23, 24, 27, 0)",
+            "overlay_opacity": "100",
+            "overlay_angle": "90",
+            "overlay_stop1": "25",
+            "overlay_stop2": "75",
+            "overlay_type": "gradient"
+        },
+        {
+            "eyebrow": "Limited time",
+            "title": "Up to 30% off drinkware",
+            "subtitle": "Insulated bottles & flasks — hot or cold for hours.",
+            "cta_label": "Shop the sale",
+            "cta_link": "/shop?sale=1",
+            "tone": "accent"
+        }
+    ],
+    "trust": [
+        {
+            "title": "Free delivery",
+            "desc": "On orders over ৳3,000",
+            "icon": "truck"
+        },
+        {
+            "title": "1-year warranty",
+            "desc": "On every product",
+            "icon": "shield"
+        },
+        {
+            "title": "7-day returns",
+            "desc": "Easy & hassle-free",
+            "icon": "returns"
+        },
+        {
+            "title": "Cash on delivery",
+            "desc": "Pay when it arrives",
+            "icon": "card"
+        }
+    ],
+    "new_title": "New arrivals",
+    "new_subtitle": "Fresh drops across bags & drinkware.",
+    "best_title": "Bestsellers",
+    "best_subtitle": "The carry our customers reach for again and again.",
+    "sale_title": "On sale",
+    "sale_subtitle": "Limited-time prices on customer favourites.",
+    "more_title": "More to explore",
+    "more_subtitle": "Fresh picks across the collection."
+}

@@ -1,0 +1,15 @@
+{
+    "enabled": true,
+    "provider": "groq",
+    "groq_api_key": "",
+    "openrouter_api_key": "",
+    "model": "llama-3.3-70b-versatile",
+    "name": "Zora",
+    "welcome_message": "Hi!, I am Zora 👋 I can help you find the product, answer questions, and even place your order. What are you looking for?",
+    "avatar": "http://127.0.0.1:8000/storage/media/Gx5Fj2OsJLgXQVEePZo0SuI0q98DILJeTUNNM3w9.png",
+    "widget_icon": "http://127.0.0.1:8000/storage/media/Gx5Fj2OsJLgXQVEePZo0SuI0q98DILJeTUNNM3w9.png",
+    "primary_color": "#000000",
+    "position": "bottom-right",
+    "theme": "light",
+    "rounded": true
+}

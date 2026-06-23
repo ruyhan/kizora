@@ -1,0 +1,15 @@
+{
+    "company_logo": "http://127.0.0.1:8000/storage/media/t1InNj7gU9rMCVnP80u2xytgZ8RDH2RW6eaS7rhq.png",
+    "company_name": "Kizora",
+    "company_address": "House 7, Road 12, Banani, Dhaka 1213, Bangladesh",
+    "company_phone": "+880 1730-728954",
+    "company_email": "hello@kizora.com.bd",
+    "company_website": "www.kizoralifestyle.com",
+    "invoice_title": "INVOICE",
+    "header_text": null,
+    "footer_message": "Thank you for shopping with us!",
+    "notes": null,
+    "terms": null,
+    "primary_color": "#17181B",
+    "secondary_color": "#000000"
+}

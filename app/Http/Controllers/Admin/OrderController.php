@@ -1,0 +1,334 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
+use App\Models\Invoice;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Product;
+use App\Support\DeliverySettings;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class OrderController extends Controller
+{
+    public function __construct(private readonly DeliverySettings $delivery) {}
+
+    /** Contact name prefers the order's own snapshot (editable) over the linked account. */
+    private function contactName(Order $o): string
+    {
+        return $o->guest_name ?: ($o->user?->name ?? 'Guest');
+    }
+
+    public function index(Request $request): Response
+    {
+        // Website orders only — POS & Chatbot orders live in their own sections.
+        $query = Order::web()->with('user')->latest();
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('search')) {
+            $query->where('order_number', 'like', "%{$request->search}%");
+        }
+
+        $orders = $query->paginate(20)->through(fn ($o) => [
+            'id' => $o->id,
+            'order_number' => $o->order_number,
+            'source' => $o->source,
+            'customer' => $this->contactName($o),
+            'status' => $o->status,
+            'status_label' => $o->status_label,
+            'status_color' => $o->status_color,
+            'total' => $o->total,
+            'payment_method' => $o->payment_method,
+            'payment_status' => $o->payment_status,
+            'created_at' => $o->created_at->format('d M Y'),
+        ]);
+
+        $raw = Order::web()->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
+        $counts = ['all' => (int) $raw->sum()];
+        foreach (['pending', 'confirmed', 'processing', 'out_for_delivery', 'completed', 'cancelled'] as $s) {
+            $counts[$s] = (int) ($raw[$s] ?? 0);
+        }
+
+        return Inertia::render('Admin/Orders/Index', [
+            'orders' => $orders,
+            'filters' => $request->only(['status', 'search']),
+            'counts' => $counts,
+        ]);
+    }
+
+    private function payload(Order $order): array
+    {
+        $order->loadMissing(['items', 'user', 'invoice']);
+
+        return [
+            'id' => $order->id,
+            'order_number' => $order->order_number,
+            'invoice_number' => $order->order_number, // invoice number == order number
+            'source' => $order->source,
+            'status' => $order->status,
+            'status_label' => $order->status_label,
+            'customer' => [
+                'name'  => $this->contactName($order),
+                'email' => $order->guest_email ?: $order->user?->email,
+                'phone' => $order->guest_phone ?: $order->user?->phone,
+            ],
+            'delivery_address' => $order->delivery_address,
+            'delivery_city' => $order->delivery_city,
+            'delivery_area' => $order->delivery_area,
+            'inside_dhaka' => strcasecmp((string) $order->delivery_city, 'Dhaka') === 0,
+            'subtotal' => $order->subtotal,
+            'delivery_charge' => $order->delivery_charge,
+            'discount' => $order->discount,
+            'total' => $order->total,
+            'payment_method' => $order->payment_method,
+            'payment_status' => $order->payment_status,
+            'notes' => $order->notes,
+            'created_at' => $order->created_at->format('d M Y, h:i A'),
+            'items' => $order->items->map(fn ($i) => [
+                'id' => $i->id,
+                'product_id' => $i->product_id,
+                'product_name' => $i->product_name,
+                'product_image' => $i->product_image,
+                'price' => $i->price,
+                'quantity' => $i->quantity,
+                'total' => $i->total,
+                'variations' => $i->variations ?? [],
+            ]),
+        ];
+    }
+
+    public function show(Order $order): Response
+    {
+        return Inertia::render('Admin/Orders/Show', ['order' => $this->payload($order)]);
+    }
+
+    public function data(Order $order): \Illuminate\Http\JsonResponse
+    {
+        return response()->json($this->payload($order));
+    }
+
+    public function updateStatus(Request $request, Order $order)
+    {
+        $request->validate(['status' => 'required|in:pending,confirmed,processing,out_for_delivery,completed,cancelled']);
+
+        $from = $order->status;
+        $updates = ['status' => $request->status];
+        if ($order->payment_method === 'cod') {
+            if ($request->status === 'completed') {
+                $updates['payment_status'] = 'paid';
+            } elseif ($request->status === 'cancelled' && $order->payment_status === 'pending') {
+                $updates['payment_status'] = 'cancelled';
+            }
+        }
+        $order->update($updates);
+        AuditLog::record('status', 'Orders', "{$order->order_number}: status {$from} → {$request->status}");
+
+        return back()->with('success', 'Order status updated!');
+    }
+
+    /**
+     * Unified order edit — works identically for website, POS and chatbot orders.
+     * Handles customer/delivery/payment + items with automatic stock sync,
+     * delivery recalculation and before/after audit logging.
+     */
+    public function update(Request $request, Order $order)
+    {
+        $user = $request->user();
+        $data = $request->validate([
+            'name' => 'nullable|string|max:255',
+            'phone' => 'nullable|string|max:30',
+            'email' => 'nullable|email|max:255',
+            'address' => 'nullable|string|max:500',
+            'inside_dhaka' => 'nullable|boolean',
+            'notes' => 'nullable|string|max:1000',
+            'payment_method' => 'nullable|string|max:30',
+            'payment_status' => 'nullable|in:pending,paid,failed,refunded,cancelled',
+            'items' => 'nullable|array|min:1',
+            'items.*.id' => 'nullable|integer',
+            'items.*.product_id' => 'required_with:items|exists:products,id',
+            'items.*.quantity' => 'required_with:items|integer|min:1|max:1000',
+        ]);
+
+        $before = $this->snapshot($order);
+
+        DB::transaction(function () use ($order, $data, $user) {
+            $order->load('items');
+
+            // ── Items + stock sync (orders.edit_items) ──
+            if (isset($data['items']) && $user->hasPermission('orders.edit_items')) {
+                $existing = $order->items->keyBy('id');
+
+                // Restore stock from every current line, then validate + re-deduct the new set.
+                foreach ($order->items as $it) {
+                    if ($it->product_id) {
+                        Product::where('id', $it->product_id)->increment('stock', $it->quantity);
+                    }
+                }
+                $products = Product::whereIn('id', collect($data['items'])->pluck('product_id'))->get()->keyBy('id');
+
+                foreach ($data['items'] as $ni) {
+                    $p = $products[$ni['product_id']];
+                    if ($ni['quantity'] > $p->stock) {
+                        throw ValidationException::withMessages(['items' => "Insufficient stock for {$p->name} (only {$p->stock} available)."]);
+                    }
+                }
+
+                $order->items()->delete();
+                foreach ($data['items'] as $ni) {
+                    $p = $products[$ni['product_id']];
+                    $prev = ! empty($ni['id']) ? $existing->get($ni['id']) : null;
+                    $price = $prev ? (float) $prev->price : (float) $p->final_price; // preserve historical price
+                    OrderItem::create([
+                        'order_id' => $order->id, 'product_id' => $p->id, 'product_name' => $p->name,
+                        'product_image' => $p->featured_image_url, 'price' => $price,
+                        'quantity' => $ni['quantity'], 'total' => $price * $ni['quantity'],
+                        'variations' => $prev?->variations,
+                    ]);
+                    $p->decrement('stock', $ni['quantity']);
+                }
+                $order->load('items');
+            }
+
+            $subtotal = (float) $order->items->sum('total');
+            $update = [];
+
+            // ── Customer / delivery (orders.edit_customer) ──
+            if ($user->hasPermission('orders.edit_customer')) {
+                foreach (['name' => 'guest_name', 'phone' => 'guest_phone', 'email' => 'guest_email', 'address' => 'delivery_address', 'notes' => 'notes'] as $in => $col) {
+                    if (array_key_exists($in, $data)) {
+                        $update[$col] = $data[$in];
+                    }
+                }
+                if (array_key_exists('inside_dhaka', $data) && $data['inside_dhaka'] !== null) {
+                    $update['delivery_city'] = $data['inside_dhaka'] ? 'Dhaka' : 'Outside Dhaka';
+                    $update['delivery_area'] = null;
+                }
+            }
+
+            // ── Payment (orders.edit) ──
+            if ($user->hasPermission('orders.edit')) {
+                if (! empty($data['payment_method'])) {
+                    $update['payment_method'] = $data['payment_method'];
+                }
+                if (! empty($data['payment_status'])) {
+                    $update['payment_status'] = $data['payment_status'];
+                }
+            }
+
+            // ── Recalculate delivery + totals (respects free-delivery rules dynamically) ──
+            $insideDhaka = strcasecmp((string) ($update['delivery_city'] ?? $order->delivery_city), 'Dhaka') === 0;
+            $deliveryCharge = $this->delivery->chargeForInside($insideDhaka, $subtotal);
+            $discount = min((float) $order->discount, $subtotal);
+
+            $update += [
+                'subtotal' => $subtotal,
+                'delivery_charge' => $deliveryCharge,
+                'discount' => $discount,
+                'total' => $subtotal + $deliveryCharge - $discount,
+            ];
+
+            $order->update($update);
+            Invoice::forOrder($order); // invoice number stays == order number
+        });
+
+        $order->refresh()->load('items');
+        AuditLog::record('updated', 'Orders', $order->order_number . ' edited — ' . $this->diff($before, $this->snapshot($order)));
+
+        return back()->with('success', 'Order updated.');
+    }
+
+    /**
+     * Permanently delete an order (website, POS or chatbot). Restores stock for
+     * orders that were not yet fulfilled, removes the invoice, and audit-logs it.
+     */
+    public function destroy(Order $order)
+    {
+        $number = $order->order_number;
+        DB::transaction(fn () => $this->removeOrder($order));
+        AuditLog::record('deleted', 'Orders', "{$number} deleted");
+
+        return back()->with('success', "Order {$number} deleted.");
+    }
+
+    /** Bulk delete orders (works across website, POS and chatbot lists). */
+    public function bulkDestroy(Request $request)
+    {
+        $data = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:orders,id',
+        ]);
+
+        $count = 0;
+        DB::transaction(function () use ($data, &$count) {
+            foreach (Order::with('items')->whereIn('id', $data['ids'])->get() as $order) {
+                $this->removeOrder($order);
+                $count++;
+            }
+        });
+        AuditLog::record('deleted', 'Orders', "{$count} orders bulk-deleted");
+
+        return back()->with('success', "{$count} order(s) deleted.");
+    }
+
+    /** Delete one order, restoring stock for orders that weren't yet fulfilled. */
+    private function removeOrder(Order $order): void
+    {
+        $order->loadMissing('items');
+        if ($order->status !== 'completed') { // completed = goods already sold
+            foreach ($order->items as $it) {
+                if ($it->product_id) {
+                    Product::where('id', $it->product_id)->increment('stock', $it->quantity);
+                }
+            }
+        }
+        $order->invoice?->delete();
+        $order->items()->delete();
+        $order->delete();
+    }
+
+    public function productsSearch(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $q = trim((string) $request->get('q', ''));
+        $products = Product::where('is_active', true)
+            ->when($q !== '', fn ($b) => $b->where(fn ($x) => $x->where('name', 'like', "%{$q}%")->orWhere('sku', 'like', "%{$q}%")))
+            ->orderBy('name')->limit(15)->get()
+            ->map(fn (Product $p) => [
+                'id' => $p->id, 'name' => $p->name, 'sku' => $p->sku,
+                'price' => (float) $p->final_price, 'stock' => (int) $p->stock, 'image' => $p->featured_image_url,
+            ]);
+
+        return response()->json($products);
+    }
+
+    private function snapshot(Order $order): array
+    {
+        return [
+            'name' => $this->contactName($order),
+            'phone' => $order->guest_phone ?: $order->user?->phone,
+            'payment_method' => $order->payment_method,
+            'payment_status' => $order->payment_status,
+            'items' => $order->items()->count(),
+            'total' => (float) $order->total,
+        ];
+    }
+
+    /** Concise before→after summary for the audit log. */
+    private function diff(array $before, array $after): string
+    {
+        $parts = [];
+        foreach ($after as $k => $v) {
+            if (($before[$k] ?? null) != $v) {
+                $parts[] = "{$k}: " . ($before[$k] ?? '—') . " → {$v}";
+            }
+        }
+        return $parts ? implode(', ', $parts) : 'no field changes';
+    }
+}

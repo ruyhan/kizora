@@ -1,0 +1,40 @@
+{
+    "nav": [
+        {
+            "label": "Home",
+            "url": "/",
+            "mega": false
+        },
+        {
+            "label": "Shop",
+            "url": "/shop",
+            "mega": true
+        },
+        {
+            "label": "About",
+            "url": "/about",
+            "mega": false
+        },
+        {
+            "label": "Contact",
+            "url": "/contact",
+            "mega": false
+        }
+    ],
+    "utility": [
+        {
+            "label": "Track order",
+            "url": "/track-order",
+            "icon": "truck"
+        },
+        {
+            "label": "Help",
+            "url": "/faq",
+            "icon": "help"
+        }
+    ],
+    "promo_eyebrow": "New in",
+    "promo_title": "The 2026 carry collection",
+    "promo_cta": "Shop new arrivals",
+    "promo_link": "/shop?sort=latest"
+}

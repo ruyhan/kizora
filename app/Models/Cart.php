@@ -1,0 +1,27 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Cart extends Model
+{
+    protected $fillable = ['user_id', 'session_id', 'product_id', 'quantity', 'variations'];
+
+    protected $casts = ['variations' => 'array'];
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function getSubtotalAttribute(): float
+    {
+        return $this->product->final_price * $this->quantity;
+    }
+}

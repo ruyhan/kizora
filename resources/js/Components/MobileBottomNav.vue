@@ -13,8 +13,8 @@
       </button>
 
       <!-- Cart (center, elevated) -->
-      <button @click="openCart" class="relative flex flex-col items-center gap-1 -mt-5 min-w-14">
-        <span class="w-14 h-14 rounded-2xl bg-ink flex items-center justify-center shadow-lg relative">
+      <button @click="openCart" class="relative flex flex-1 basis-0 flex-col items-center gap-1 -mt-5">
+        <span data-cart-fab class="w-14 h-14 rounded-2xl bg-ink flex items-center justify-center shadow-lg relative">
           <ShoppingBagIcon class="w-6 h-6 text-white" />
           <span v-if="cart_count > 0" class="absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 rounded-full bg-accent text-white text-[10px] flex items-center justify-center font-bold shadow">
             {{ cart_count }}
@@ -64,6 +64,6 @@ const openSearch = () => window.dispatchEvent(new Event('open-search'))
 
 <style scoped>
 @reference "../../css/app.css";
-.bottom-nav-item { @apply flex flex-col items-center gap-1 pb-2 text-[11px] font-medium transition-colors hover:text-ink min-w-12; }
+.bottom-nav-item { @apply flex flex-1 basis-0 flex-col items-center gap-1 pb-2 text-[11px] font-medium transition-colors hover:text-ink; }
 .safe-area-inset { padding-bottom: env(safe-area-inset-bottom, 0); }
 </style>

@@ -2,8 +2,8 @@
   <div v-if="cfg.enabled" :class="dark ? 'kz-chat-dark' : ''">
     <!-- Floating button -->
     <button v-show="!open" @click="toggle" :style="{ background: cfg.primary_color }"
-      :class="[pos, rounded ? 'rounded-full' : 'rounded-xl']"
-      class="fixed z-[80] w-14 h-14 shadow-xl flex items-center justify-center text-white hover:scale-105 active:scale-95 transition-transform">
+      :class="[pos, rounded ? 'rounded-full' : 'rounded-xl', hideOnMobile ? 'hidden md:flex' : 'flex']"
+      class="fixed z-[80] w-14 h-14 shadow-xl items-center justify-center text-white hover:scale-105 active:scale-95 transition-transform">
       <img v-if="cfg.widget_icon" :src="cfg.widget_icon" class="w-7 h-7 object-contain" alt="chat">
       <ChatBubbleOvalLeftEllipsisIcon v-else class="w-7 h-7" />
     </button>
@@ -121,6 +121,8 @@ const dark = computed(() => cfg.value.theme === 'dark')
 const rounded = computed(() => cfg.value.rounded !== false)
 // On mobile the launcher must clear the 64px bottom nav (md:hidden); on desktop it drops back to bottom-5.
 const pos = computed(() => (cfg.value.position === 'bottom-left' ? 'bottom-20 left-5 md:bottom-5' : 'bottom-20 right-5 md:bottom-5'))
+// The product page has its own mobile sticky buy bar — hide the launcher there on mobile to avoid overlap.
+const hideOnMobile = computed(() => usePage().component === 'ProductDetail')
 
 const toast = useToast()
 const cart = useCartStore()

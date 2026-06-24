@@ -19,26 +19,9 @@
     <!-- Highlight cards (key benefits, right under the summary) -->
     <ProductHighlights v-if="product.usps?.length && showHighlights" :usps="product.usps" class="mb-5" />
 
-    <!-- Variations — every group assigned to this product, with its own label -->
-    <div v-for="(g, gi) in variationGroups" :key="gi" class="mb-5">
-      <p class="text-sm font-semibold text-charcoal mb-2">
-        {{ g.name }}<span v-if="selected[gi]" class="text-muted font-normal">: {{ selected[gi].label || selected[gi].value }}</span>
-      </p>
-      <div class="flex items-center gap-2.5 flex-wrap">
-        <!-- Colour swatches -->
-        <template v-if="g.type === 'color'">
-          <button v-for="(o, oi) in g.options" :key="oi" type="button" @click="selectOption(gi, o)"
-            :style="{ backgroundColor: o.value }"
-            :class="selected[gi] === o ? 'ring-2 ring-ink ring-offset-2' : 'ring-1 ring-border hover:ring-purple-300'"
-            class="w-8 h-8 rounded-full transition-all" :aria-label="o.label || o.value" :title="o.label || o.value"></button>
-        </template>
-        <!-- Button options (size, material, …) -->
-        <template v-else>
-          <button v-for="(o, oi) in g.options" :key="oi" type="button" @click="selectOption(gi, o)"
-            :class="selected[gi] === o ? 'border-ink bg-ink text-white' : 'border-border text-charcoal hover:border-ink'"
-            class="min-w-11 h-10 px-3.5 rounded-xl border-2 text-sm font-semibold transition-all">{{ o.value }}</button>
-        </template>
-      </div>
+    <!-- Variations (desktop; on mobile the sticky bar's options sheet handles these) -->
+    <div v-if="hasVariations" class="hidden md:block mb-5">
+      <ProductVariations :product="product" :model-value="selected" @update:model-value="$emit('update:selected', $event)" />
     </div>
 
     <!-- Delivery availability -->
@@ -70,8 +53,8 @@
       <span v-if="product.sku" class="text-muted">SKU: {{ product.sku }}</span>
     </div>
 
-    <!-- Quantity + Add to cart -->
-    <div class="flex items-center gap-2.5 sm:gap-3 mb-4">
+    <!-- Quantity + Add to cart (desktop; mobile uses the sticky buy bar) -->
+    <div class="hidden md:flex items-center gap-2.5 sm:gap-3 mb-4">
       <div class="flex items-center border-2 border-purple-200 rounded-full overflow-hidden shrink-0">
         <button @click="setQty(qty - 1)" :disabled="qty <= 1" aria-label="Decrease quantity"
           class="px-3.5 py-3 text-ink hover:bg-purple-50 active:bg-purple-100 transition-colors font-bold text-lg leading-none disabled:opacity-30">−</button>
@@ -119,6 +102,7 @@ import Rating from '@/Components/ui/Rating.vue'
 import Price from '@/Components/ui/Price.vue'
 import Button from '@/Components/ui/Button.vue'
 import ProductHighlights from '@/Components/product/detail/ProductHighlights.vue'
+import ProductVariations from '@/Components/product/detail/ProductVariations.vue'
 import { variationGroups as variationGroupsOf } from '@/utils/variations'
 import {
   CheckCircleIcon, ExclamationTriangleIcon, MapPinIcon, HeartIcon, ShareIcon,
@@ -134,27 +118,16 @@ const props = defineProps({
   adding:      { type: Boolean, default: false },
   added:       { type: Boolean, default: false },
   inWishlist:  { type: Boolean, default: false },
+  selected:    { type: Object, default: () => ({}) }, // { groupIndex: option } — owned by the page
 })
-const emit = defineEmits(['add', 'toggle-wishlist', 'update:qty', 'go-reviews', 'select-variation', 'variation-change'])
+defineEmits(['add', 'toggle-wishlist', 'update:qty', 'go-reviews', 'update:selected'])
 
 const auth  = usePage().props.auth
 const toast = useToast()
 const ps = computed(() => usePage().props.productSettings || {})
 const showHighlights = computed(() => ps.value.show_highlights !== false)
 
-// ── Variations (product-specific groups) ──
-const variationGroups = computed(() => variationGroupsOf(props.product))
-const selected = ref({}) // { groupIndex: option }
-const buildSelected = () => variationGroups.value
-  .map((g, gi) => (selected.value[gi]
-    ? { name: g.name, type: g.type, value: selected.value[gi].value, label: selected.value[gi].label || selected.value[gi].value, image: selected.value[gi].image || null }
-    : null))
-  .filter(Boolean)
-const selectOption = (gi, o) => {
-  selected.value = { ...selected.value, [gi]: o }
-  if (o.image) emit('select-variation', o.image)
-  emit('variation-change', buildSelected())
-}
+const hasVariations = computed(() => variationGroupsOf(props.product).length > 0)
 
 const reviewCount = computed(() => props.product.review_count ?? props.product.reviews?.length ?? 0)
 const total = computed(() => (props.product.final_price * props.qty).toLocaleString())

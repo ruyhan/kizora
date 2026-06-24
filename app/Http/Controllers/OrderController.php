@@ -72,19 +72,36 @@ class OrderController extends Controller
     {
         $order = null;
         if ($request->filled('order_number')) {
-            $order = Order::with('items')
-                ->where('order_number', $request->order_number)
+            $found = Order::with(['items', 'invoice'])
+                ->where('order_number', trim($request->order_number))
                 ->first();
 
-            if ($order) {
+            if ($found) {
+                // Public lookup by (guessable) order number — expose order contents + status only,
+                // never PII like phone/email/street address.
                 $order = [
-                    'order_number' => $order->order_number,
-                    'status' => $order->status,
-                    'status_label' => $order->status_label,
-                    'status_color' => $order->status_color,
-                    'created_at' => $order->created_at->format('d M Y'),
-                    'items_count' => $order->items->count(),
-                    'total' => $order->total,
+                    'order_number' => $found->order_number,
+                    'invoice_number' => $found->invoice?->invoice_number ?? $found->order_number,
+                    'status' => $found->status,
+                    'status_label' => $found->status_label,
+                    'created_at' => $found->created_at->format('d M Y'),
+                    'payment_method' => $found->payment_method,
+                    'payment_status' => $found->payment_status,
+                    'delivery_city' => $found->delivery_city,
+                    'delivery_area' => $found->delivery_area,
+                    'subtotal' => (float) $found->subtotal,
+                    'delivery_charge' => (float) $found->delivery_charge,
+                    'discount' => (float) $found->discount,
+                    'total' => (float) $found->total,
+                    'items_count' => $found->items->sum('quantity'),
+                    'items' => $found->items->map(fn ($i) => [
+                        'name' => $i->product_name,
+                        'image' => $i->product_image,
+                        'quantity' => $i->quantity,
+                        'price' => (float) $i->price,
+                        'total' => (float) $i->total,
+                        'variations' => $i->variations ?? [],
+                    ])->values(),
                 ];
             }
         }

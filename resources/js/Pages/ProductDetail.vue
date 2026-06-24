@@ -24,8 +24,8 @@
           <ProductBuyBox
             :product="product" :availability="availability"
             v-model:qty="qty" :adding="adding" :added="added" :in-wishlist="inWishlist"
-            @add="addToCart" @toggle-wishlist="toggleWishlist" @go-reviews="scrollTo('reviews')"
-            @select-variation="variationImage = $event" @variation-change="selectedVariations = $event" />
+            :selected="selectedMap" @update:selected="selectedMap = $event"
+            @add="addToCart" @toggle-wishlist="toggleWishlist" @go-reviews="scrollTo('reviews')" />
         </div>
       </div>
 
@@ -51,27 +51,14 @@
         </div>
       </div>
 
-      <!-- clearance for mobile sticky bar + bottom nav -->
-      <div class="h-24 md:hidden"></div>
+      <!-- clearance for mobile sticky bar + bottom nav (+ iOS safe-area) -->
+      <div class="md:hidden" style="height: calc(8rem + env(safe-area-inset-bottom, 0px))"></div>
     </div>
 
-    <!-- Mobile sticky add-to-cart -->
-    <div class="md:hidden fixed inset-x-0 bottom-16 z-40 bg-surface/95 backdrop-blur border-t border-border px-4 py-3">
-      <div class="flex items-center gap-2.5">
-        <div class="shrink-0">
-          <p class="text-[10px] text-muted leading-none uppercase tracking-wide">Total</p>
-          <p class="text-lg font-bold text-ink leading-tight">৳{{ (product.final_price * qty).toLocaleString() }}</p>
-        </div>
-        <div class="flex items-center border border-border rounded-xl overflow-hidden shrink-0">
-          <button @click="qty > 1 ? qty-- : null" aria-label="Decrease" class="px-3 py-2 text-ink active:bg-[#F1F1F2] disabled:opacity-30" :disabled="qty <= 1">−</button>
-          <span class="px-1.5 text-sm font-semibold tabular-nums min-w-6 text-center">{{ qty }}</span>
-          <button @click="qty < product.stock ? qty++ : null" aria-label="Increase" class="px-3 py-2 text-ink active:bg-[#F1F1F2] disabled:opacity-30" :disabled="qty >= product.stock">+</button>
-        </div>
-        <Button size="md" :loading="adding" :disabled="product.stock === 0" @click="addToCart" class="flex-1">
-          {{ product.stock === 0 ? 'Out of stock' : (added ? 'Added!' : 'Add to cart') }}
-        </Button>
-      </div>
-    </div>
+    <!-- Mobile sticky add-to-cart (flexible: expands into an options sheet for variations) -->
+    <MobileBuyBar
+      :product="product" v-model:qty="qty" :selected-map="selectedMap" @update:selected-map="selectedMap = $event"
+      :adding="adding" :added="added" @add="addToCart" />
   </AppLayout>
 </template>
 
@@ -82,11 +69,11 @@ import { useToast } from 'vue-toastification'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import ProductCard from '@/Components/ProductCard.vue'
 import SectionHeading from '@/Components/ui/SectionHeading.vue'
-import Button from '@/Components/ui/Button.vue'
 import ProductGallery from '@/Components/product/detail/ProductGallery.vue'
 import ProductBuyBox from '@/Components/product/detail/ProductBuyBox.vue'
 import ProductReviews from '@/Components/product/detail/ProductReviews.vue'
-import { variationGroups } from '@/utils/variations'
+import MobileBuyBar from '@/Components/product/detail/MobileBuyBar.vue'
+import { variationGroups, buildSelectedVariations } from '@/utils/variations'
 import { useRecentlyViewed } from '@/composables/useRecentlyViewed'
 import { useAnalytics } from '@/composables/useAnalytics'
 import { useCartStore } from '@/stores/cart'
@@ -100,10 +87,11 @@ const props = defineProps({
 const toast     = useToast()
 const cartStore = useCartStore()
 
-// ── Variation selection ──
-const variationImage = ref(null)              // selected colour image (gallery swap)
-const selectedVariations = ref([])            // [{ name, type, value, label, image }]
+// ── Variation selection (owned here, shared by the buy box + mobile bar) ──
+const selectedMap = ref({})                   // { groupIndex: option }
 const requiredGroups = computed(() => variationGroups(props.product))
+const selectedVariations = computed(() => buildSelectedVariations(props.product, selectedMap.value))
+const variationImage = computed(() => Object.values(selectedMap.value).find((o) => o?.image)?.image || null)
 
 // ── Cart / quantity state ──
 const qty    = ref(1)

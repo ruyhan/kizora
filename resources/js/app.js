@@ -59,9 +59,13 @@ createInertiaApp({
     },
 });
 
-// ── PWA service worker (root scope) ──
+// ── Remove any stale service worker + caches (none is shipped; a leftover one would
+//    keep serving old assets, so updates never appear). ──
 if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
-    });
+    navigator.serviceWorker.getRegistrations?.()
+        .then((regs) => regs.forEach((r) => r.unregister()))
+        .catch(() => {});
+    if (window.caches?.keys) {
+        caches.keys().then((keys) => keys.forEach((k) => caches.delete(k))).catch(() => {});
+    }
 }

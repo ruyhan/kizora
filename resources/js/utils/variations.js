@@ -30,3 +30,13 @@ export function variationGroups(product) {
 export function colorGroup(product) {
   return variationGroups(product).find((g) => g.type === 'color') || null
 }
+
+// Build the flat selection payload (for the cart) from a { groupIndex: option } map.
+export function buildSelectedVariations(product, selectedMap = {}) {
+  return variationGroups(product)
+    .map((g, gi) => {
+      const o = selectedMap[gi]
+      return o ? { name: g.name, type: g.type, value: o.value, label: o.label || o.value, image: o.image || null } : null
+    })
+    .filter(Boolean)
+}

@@ -57,6 +57,15 @@
           class="w-5 h-5 rounded-full shrink-0 transition-all" :aria-label="`Colour ${v.value}`" :title="v.value"></button>
       </div>
 
+      <!-- Size / other option preview chips -->
+      <div v-if="sizeOptions.length" class="flex items-center gap-1 mb-2 flex-wrap">
+        <span v-for="(s, i) in sizeOptions.slice(0, 5)" :key="i"
+          class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-md border border-border text-[10px] font-semibold text-charcoal leading-none">
+          {{ s }}
+        </span>
+        <span v-if="sizeOptions.length > 5" class="text-[10px] text-muted font-medium">+{{ sizeOptions.length - 5 }}</span>
+      </div>
+
       <!-- Price + Cart Action — single row (price left, button right) -->
       <div class="mt-auto pt-2 sm:pt-3 border-t border-purple-50 flex items-center justify-between gap-2">
 
@@ -109,7 +118,7 @@ import { useToast } from 'vue-toastification'
 import { useCartStore } from '@/stores/cart'
 import Price from '@/Components/ui/Price.vue'
 import Rating from '@/Components/ui/Rating.vue'
-import { colorGroup } from '@/utils/variations'
+import { colorGroup, variationGroups } from '@/utils/variations'
 import {
   HeartIcon, ShoppingBagIcon, MinusIcon, PlusIcon, CheckCircleIcon, EyeIcon,
 } from '@heroicons/vue/24/outline'
@@ -131,6 +140,12 @@ const increasing = ref(false)
 
 // ── Variations (colour) — instant client-side image swap ──
 const colorOptions = computed(() => colorGroup(props.product)?.options || [])
+// Non-colour groups (size, material, …) — shown as small preview chips.
+const sizeOptions = computed(() =>
+  variationGroups(props.product)
+    .filter((g) => g.type !== 'color')
+    .flatMap((g) => g.options.map((o) => o.value))
+)
 const activeVariation = ref(null)
 const displayImage = computed(() => activeVariation.value?.image || props.product.featured_image_url)
 

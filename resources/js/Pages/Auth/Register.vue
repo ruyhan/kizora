@@ -2,7 +2,9 @@
   <AppLayout>
     <Head title="Create Account" />
 
-    <section class="flex-1 flex">
+    <section class="flex-1 flex items-center py-8 lg:py-12">
+      <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex rounded-3xl overflow-hidden border border-border shadow-sm bg-white lg:min-h-[600px]">
 
       <!-- ── Left brand panel (lg+) ── -->
       <div class="hidden lg:flex w-5/12 xl:w-[45%] relative overflow-hidden bg-linear-to-br from-purple-900 via-purple-800 to-purple-600 flex-col items-center justify-center p-14 text-center select-none">
@@ -21,10 +23,10 @@
             class="h-12 w-auto object-contain mx-auto mb-8"
             :style="darkInvert ? 'filter: brightness(0) invert(1);' : ''">
 
-          <h2 class="font-display text-4xl font-bold text-white mb-4 leading-snug">
-            Join<br>Kizora
+          <h2 class="font-display text-3xl xl:text-4xl font-bold text-white mb-4 leading-snug whitespace-nowrap">
+            Join Kizora
           </h2>
-          <p class="text-white/60 text-sm leading-relaxed max-w-xs mx-auto mb-10">
+          <p class="text-white/60 text-sm leading-relaxed max-w-sm mx-auto mb-10 text-balance">
             Create your account to unlock exclusive deals, faster checkout, order tracking and a personalised experience.
           </p>
 
@@ -76,8 +78,7 @@
 
             <div>
               <label class="text-sm font-medium text-charcoal mb-1.5 block">Phone Number</label>
-              <input v-model="form.phone" type="tel" class="input-field" :class="{'border-error': errors.phone}"
-                placeholder="+8801XXXXXXXXX">
+              <PhoneInput v-model="form.phone" :input-class="errors.phone ? 'input-field border-error' : 'input-field'" placeholder="Phone number" />
               <p v-if="errors.phone" class="text-error text-xs mt-1">{{ errors.phone }}</p>
             </div>
 
@@ -112,6 +113,8 @@
         </div>
       </div>
 
+        </div>
+      </div>
     </section>
   </AppLayout>
 </template>
@@ -121,6 +124,7 @@ import { ref } from 'vue'
 import { Head, Link, router } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import RecaptchaCheckbox from '@/Components/RecaptchaCheckbox.vue'
+import PhoneInput from '@/Components/ui/PhoneInput.vue'
 import { useRecaptcha } from '@/composables/useRecaptcha'
 import { ClipboardDocumentCheckIcon, TagIcon, HeartIcon } from '@heroicons/vue/24/outline'
 import { useBrandLogo } from '@/composables/useBrandLogo'

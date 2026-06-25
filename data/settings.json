@@ -13,7 +13,7 @@
     "facebook": "https://facebook.com/kizora",
     "instagram": "https://instagram.com/kizora",
     "currency_symbol": "৳",
-    "maintenance_mode": true,
+    "maintenance_mode": false,
     "maintenance_title": "We’ll be right back",
     "maintenance_message": "We’re making things better. Our store is briefly down for scheduled maintenance and will be back online shortly. Thanks for your patience."
 }

@@ -2,7 +2,9 @@
   <AppLayout>
     <Head title="Sign In" />
 
-    <section class="flex-1 flex">
+    <section class="flex-1 flex items-center py-8 lg:py-12">
+      <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex rounded-3xl overflow-hidden border border-border shadow-sm bg-white lg:min-h-[600px]">
 
       <!-- ── Left brand panel (lg+) ── -->
       <div class="hidden lg:flex w-5/12 xl:w-[45%] relative overflow-hidden bg-linear-to-br from-purple-900 via-purple-800 to-purple-600 flex-col items-center justify-center p-14 text-center select-none">
@@ -22,34 +24,12 @@
             class="h-12 w-auto object-contain mx-auto mb-8"
             :style="darkInvert ? 'filter: brightness(0) invert(1);' : ''">
 
-          <h2 class="font-display text-4xl font-bold text-white mb-4 leading-snug">
-            Carry your<br>world
+          <h2 class="font-display text-3xl xl:text-4xl font-bold text-white mb-4 leading-snug whitespace-nowrap">
+            Carry your world
           </h2>
-          <p class="text-white/60 text-sm leading-relaxed max-w-xs mx-auto mb-10">
+          <p class="text-white/60 text-sm leading-relaxed max-w-sm mx-auto text-balance">
             Premium backpacks, bottles &amp; flasks designed to move with you — built to last, priced for everyone.
           </p>
-
-          <!-- Trust badges -->
-          <div class="flex flex-col gap-3 text-left max-w-xs mx-auto">
-            <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-xl bg-white/12 flex items-center justify-center shrink-0">
-                <ShieldCheckIcon class="w-4.5 h-4.5 text-white" />
-              </div>
-              <span class="text-white/75 text-sm">1-year warranty on every product</span>
-            </div>
-            <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-xl bg-white/12 flex items-center justify-center shrink-0">
-                <TruckIcon class="w-4.5 h-4.5 text-white" />
-              </div>
-              <span class="text-white/75 text-sm">{{ del.message || 'Nationwide delivery across Bangladesh' }}</span>
-            </div>
-            <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-xl bg-white/12 flex items-center justify-center shrink-0">
-                <SparklesIcon class="w-4.5 h-4.5 text-white" />
-              </div>
-              <span class="text-white/75 text-sm">Premium materials &amp; build</span>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -116,6 +96,8 @@
         </div>
       </div>
 
+        </div>
+      </div>
     </section>
   </AppLayout>
 </template>
@@ -124,16 +106,14 @@
 import { ref } from 'vue'
 import { Head, Link, router } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
-import { useDelivery } from '@/composables/useDelivery'
 import { useBrandLogo } from '@/composables/useBrandLogo'
 
 const { dark: darkLogo, darkInvert } = useBrandLogo()
 import RecaptchaCheckbox from '@/Components/RecaptchaCheckbox.vue'
 import { useRecaptcha } from '@/composables/useRecaptcha'
-import { ShieldCheckIcon, TruckIcon, SparklesIcon, EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
+import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
 
 const { getToken } = useRecaptcha()
-const del = useDelivery()
 const form = ref({ email: '', password: '', remember: false })
 const errors = ref({})
 const processing = ref(false)

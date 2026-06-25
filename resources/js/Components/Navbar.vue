@@ -91,8 +91,8 @@
               </div>
             </Transition>
           </div>
-          <Link v-else :href="route('login')" class="hidden md:inline-flex btn-primary h-10 px-5 text-sm ml-1">
-            <UserIcon class="w-4 h-4" /> Login
+          <Link v-else :href="route('login')" class="hidden md:inline-flex items-center justify-center btn-primary h-10 w-10 ml-1" aria-label="Login" title="Login">
+            <UserIcon class="w-5 h-5" />
           </Link>
 
           <!-- mobile hamburger -->

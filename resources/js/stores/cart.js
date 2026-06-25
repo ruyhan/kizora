@@ -75,6 +75,7 @@ export const useCartStore = defineStore('cart', () => {
     return new Promise((resolve, reject) => {
       router.post(route('cart.add'), { product_id: productId, quantity, variations }, {
         preserveScroll: true,
+        preserveState: true,
         onSuccess: async () => {
           try {
             await fetch()

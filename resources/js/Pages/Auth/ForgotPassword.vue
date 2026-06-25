@@ -2,7 +2,9 @@
   <AppLayout>
     <Head title="Forgot Password" />
 
-    <section class="flex-1 flex">
+    <section class="flex-1 flex items-center py-8 lg:py-12">
+      <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex rounded-3xl overflow-hidden border border-border shadow-sm bg-white lg:min-h-[600px]">
 
       <!-- ── Left brand panel (lg+) ── -->
       <div class="hidden lg:flex w-5/12 xl:w-[45%] relative overflow-hidden bg-linear-to-br from-purple-900 via-purple-800 to-purple-600 flex-col items-center justify-center p-14 text-center select-none">
@@ -63,6 +65,8 @@
         </div>
       </div>
 
+        </div>
+      </div>
     </section>
   </AppLayout>
 </template>

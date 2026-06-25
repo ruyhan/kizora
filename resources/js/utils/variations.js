@@ -31,6 +31,15 @@ export function colorGroup(product) {
   return variationGroups(product).find((g) => g.type === 'color') || null
 }
 
+// Stable signature for a variation selection — mirrors the server's collapsing
+// rule (sort by name, compare name+value) so the UI can tell whether a specific
+// selection is already a line in the cart.
+export function variationSignature(variations) {
+  const v = Array.isArray(variations) ? [...variations] : []
+  v.sort((a, b) => String(a?.name || '').localeCompare(String(b?.name || '')))
+  return JSON.stringify(v.map((x) => [x?.name || '', x?.value || '']))
+}
+
 // Build the flat selection payload (for the cart) from a { groupIndex: option } map.
 export function buildSelectedVariations(product, selectedMap = {}) {
   return variationGroups(product)

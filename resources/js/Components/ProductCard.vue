@@ -49,21 +49,25 @@
         {{ product.name }}
       </Link>
 
-      <!-- Colour variations — click swaps the image instantly -->
-      <div v-if="colorOptions.length" class="flex items-center gap-1.5 mb-2 flex-wrap">
-        <button v-for="(v, i) in colorOptions" :key="i" type="button" @click.prevent.stop="activeVariation = v"
-          :style="{ backgroundColor: v.value }"
-          :class="activeVariation === v ? 'ring-2 ring-ink ring-offset-1' : 'ring-1 ring-border hover:ring-purple-300'"
-          class="w-5 h-5 rounded-full shrink-0 transition-all" :aria-label="`Colour ${v.value}`" :title="v.value"></button>
+      <!-- Colour variations — click selects & swaps the image instantly -->
+      <div v-if="colorGroupData" class="flex items-center gap-1.5 mb-2 flex-wrap">
+        <button v-for="(o, oi) in colorGroupData.options" :key="oi" type="button"
+          @click.prevent.stop="selectOption(colorGi, o)"
+          :style="{ backgroundColor: o.value }"
+          :class="selectedMap[colorGi] === o ? 'ring-2 ring-ink ring-offset-1' : 'ring-1 ring-border hover:ring-purple-300'"
+          class="w-5 h-5 rounded-full shrink-0 transition-all cursor-pointer"
+          :aria-label="`Colour ${o.label || o.value}`" :title="o.label || o.value"></button>
       </div>
 
-      <!-- Size / other option preview chips -->
-      <div v-if="sizeOptions.length" class="flex items-center gap-1 mb-2 flex-wrap">
-        <span v-for="(s, i) in sizeOptions.slice(0, 5)" :key="i"
-          class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-md border border-border text-[10px] font-semibold text-charcoal leading-none">
-          {{ s }}
-        </span>
-        <span v-if="sizeOptions.length > 5" class="text-[10px] text-muted font-medium">+{{ sizeOptions.length - 5 }}</span>
+      <!-- Other option groups (size, material, …) — selectable chips, like the colours -->
+      <div v-for="g in optionGroups" :key="g._gi" class="flex items-center gap-1 mb-2 flex-wrap">
+        <button v-for="(o, oi) in g.options.slice(0, 6)" :key="oi" type="button"
+          @click.prevent.stop="selectOption(g._gi, o)"
+          :class="selectedMap[g._gi] === o ? 'bg-ink text-white border-ink' : 'border-border text-charcoal hover:border-ink/40'"
+          class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-md border text-[10px] font-semibold leading-none transition-colors cursor-pointer">
+          {{ o.value }}
+        </button>
+        <span v-if="g.options.length > 6" class="text-[10px] text-muted font-medium">+{{ g.options.length - 6 }}</span>
       </div>
 
       <!-- Price + Cart Action — single row (price left, button right) -->
@@ -118,7 +122,7 @@ import { useToast } from 'vue-toastification'
 import { useCartStore } from '@/stores/cart'
 import Price from '@/Components/ui/Price.vue'
 import Rating from '@/Components/ui/Rating.vue'
-import { colorGroup, variationGroups } from '@/utils/variations'
+import { variationGroups, buildSelectedVariations, variationSignature } from '@/utils/variations'
 import {
   HeartIcon, ShoppingBagIcon, MinusIcon, PlusIcon, CheckCircleIcon, EyeIcon,
 } from '@heroicons/vue/24/outline'
@@ -138,18 +142,33 @@ const adding     = ref(false)
 const decreasing = ref(false)
 const increasing = ref(false)
 
-// ── Variations (colour) — instant client-side image swap ──
-const colorOptions = computed(() => colorGroup(props.product)?.options || [])
-// Non-colour groups (size, material, …) — shown as small preview chips.
-const sizeOptions = computed(() =>
-  variationGroups(props.product)
-    .filter((g) => g.type !== 'color')
-    .flatMap((g) => g.options.map((o) => o.value))
+// ── Variations — selectable on the card; the selection is carried into the cart ──
+const groups = computed(() => variationGroups(props.product))
+const colorGi = computed(() => groups.value.findIndex((g) => g.type === 'color'))
+const colorGroupData = computed(() => (colorGi.value >= 0 ? groups.value[colorGi.value] : null))
+// Non-colour groups (size, material, …) keep their original group index as `_gi`.
+const optionGroups = computed(() =>
+  groups.value.map((g, gi) => ({ ...g, _gi: gi })).filter((g) => g.type !== 'color')
 )
-const activeVariation = ref(null)
-const displayImage = computed(() => activeVariation.value?.image || props.product.featured_image_url)
 
-const cartItem = computed(() => cartStore.getItemByProductId(props.product.id))
+const selectedMap = ref({})                       // { groupIndex: option }
+const selectOption = (gi, o) => { selectedMap.value = { ...selectedMap.value, [gi]: o } }
+const selectedVariations = computed(() => buildSelectedVariations(props.product, selectedMap.value))
+
+// Selecting a colour (or any option carrying an image) swaps the card image.
+const displayImage = computed(() =>
+  Object.values(selectedMap.value).find((o) => o?.image)?.image || props.product.featured_image_url
+)
+
+// "Added" state is per-variation: a line matches only when the product AND the
+// currently-selected variation combination are the same — so each distinct
+// selection can be added separately and shows its own Added state.
+const selectedSignature = computed(() => variationSignature(selectedVariations.value))
+const cartItem = computed(() =>
+  cartStore.items.find(
+    (i) => i.product_id === props.product.id && variationSignature(i.variations) === selectedSignature.value,
+  ) ?? null,
+)
 const inCart   = computed(() => !!cartItem.value)
 const cartQty  = computed(() => cartItem.value?.quantity ?? 0)
 const inWishlist = computed(() => props.wishlistedIds.includes(props.product.id))
@@ -160,9 +179,16 @@ onMounted(() => cartStore.ensureLoaded())
 
 const addToCart = async () => {
   if (adding.value || props.product.stock === 0) return
+  // Require a choice for every variation group (mirrors the product page).
+  if (groups.value.length && selectedVariations.value.length < groups.value.length) {
+    const chosen = selectedVariations.value.map((v) => v.name)
+    const missing = groups.value.map((g) => g.name).filter((n) => !chosen.includes(n))
+    toast.error(`Please select ${missing.join(' & ')}.`)
+    return
+  }
   adding.value = true
   try {
-    await cartStore.add(props.product.id, 1)
+    await cartStore.add(props.product.id, 1, selectedVariations.value)
     toast.success(`${props.product.name} added to cart`)
   } catch {
     toast.error('Could not add to cart. Please try again.')

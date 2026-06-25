@@ -163,14 +163,23 @@
       <Link v-for="(link, i) in navItems.filter(l => !l.mega)" :key="i" :href="link.url" @click="mobileMenuOpen = false"
         class="panel-link" :class="isActive(link.url) ? 'panel-link-active' : ''">{{ link.label }}</Link>
 
-      <p class="text-[11px] font-bold uppercase tracking-widest text-muted px-4 mt-5 mb-1">Shop by category</p>
-      <div v-for="group in categoryGroups" :key="group.id" class="mb-1">
-        <Link :href="route('shop.index', { category: group.slug })" @click="mobileMenuOpen = false"
-          class="px-4 pt-2 pb-1 flex items-center gap-2 text-xs font-semibold text-charcoal hover:text-ink transition-colors">
-          <CategoryIcon :slug="group.slug" :icon="group.icon" class="w-4 h-4 text-ink/70" />{{ group.name }}
-        </Link>
-        <Link v-for="item in group.children" :key="item.slug" :href="route('shop.index', { category: item.slug })" @click="mobileMenuOpen = false"
-          class="panel-link pl-8 text-sm">{{ item.name }}</Link>
+      <p class="text-[11px] font-bold uppercase tracking-widest text-muted px-4 mt-5 mb-2">Shop by category</p>
+      <div class="space-y-1">
+        <div v-for="group in categoryGroups" :key="group.id">
+          <!-- Parent -->
+          <Link :href="route('shop.index', { category: group.slug })" @click="mobileMenuOpen = false"
+            class="flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-semibold text-charcoal hover:bg-purple-50 transition-colors">
+            <span class="w-7 h-7 rounded-lg bg-purple-50 flex items-center justify-center shrink-0">
+              <CategoryIcon :slug="group.slug" :icon="group.icon" class="w-4 h-4 text-ink" />
+            </span>
+            {{ group.name }}
+          </Link>
+          <!-- Children -->
+          <div v-if="group.children?.length" class="ml-[1.65rem] mt-0.5 mb-1 pl-4 border-l border-border space-y-0.5">
+            <Link v-for="item in group.children" :key="item.slug" :href="route('shop.index', { category: item.slug })" @click="mobileMenuOpen = false"
+              class="block px-2.5 py-1.5 rounded-lg text-sm text-muted hover:text-ink hover:bg-purple-50 transition-colors">{{ item.name }}</Link>
+          </div>
+        </div>
       </div>
 
       <template v-if="auth?.user">
@@ -178,13 +187,19 @@
         <Link :href="route('account.dashboard')" @click="mobileMenuOpen = false" class="panel-link">My Account</Link>
         <Link :href="route('account.orders')" @click="mobileMenuOpen = false" class="panel-link">My Orders</Link>
         <Link :href="route('wishlist.index')" @click="mobileMenuOpen = false" class="panel-link">Wishlist</Link>
-        <Link :href="route('logout')" method="post" as="button" @click="mobileMenuOpen = false" class="panel-link text-accent w-full">Sign Out</Link>
       </template>
     </nav>
-    <template v-if="!auth?.user" #footer>
-      <div class="p-4 space-y-2">
-        <Link :href="route('login')" class="btn-primary w-full" @click="mobileMenuOpen = false">Sign In</Link>
-        <Link :href="route('register')" class="btn-secondary w-full" @click="mobileMenuOpen = false">Create Account</Link>
+    <template #footer>
+      <!-- Guest: Sign In / Create Account · Logged in: Sign Out — both sticky -->
+      <div v-if="!auth?.user" class="px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex gap-2.5">
+        <Link :href="route('login')" class="btn-primary flex-1 justify-center px-3 py-3 text-sm whitespace-nowrap" @click="mobileMenuOpen = false">Sign In</Link>
+        <Link :href="route('register')" class="btn-secondary flex-1 justify-center px-3 py-3 text-sm whitespace-nowrap" @click="mobileMenuOpen = false">Create Account</Link>
+      </div>
+      <div v-else class="px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <Link :href="route('logout')" method="post" as="button" @click="mobileMenuOpen = false"
+          class="w-full inline-flex items-center justify-center gap-2 px-3 py-3 text-sm font-semibold rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 active:bg-rose-100 transition-colors">
+          <ArrowRightOnRectangleIcon class="w-4 h-4" /> Sign Out
+        </Link>
       </div>
     </template>
   </Drawer>

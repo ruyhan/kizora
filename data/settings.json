@@ -7,10 +7,13 @@
     "email": "hello@kizoralifestyle.com",
     "phone_1": "+880 1730-728954",
     "phone_2": "+880 1730-728905",
-    "address": "House 7, Road 12, Banani, Dhaka 1213, Bangladesh",
-    "opening_hours": "Sat – Thu: 10:00 AM – 9:00 PM",
-    "map_url": "https://maps.google.com",
+    "address": null,
+    "opening_hours": null,
+    "map_url": null,
     "facebook": "https://facebook.com/kizora",
     "instagram": "https://instagram.com/kizora",
-    "currency_symbol": "৳"
+    "currency_symbol": "৳",
+    "maintenance_mode": true,
+    "maintenance_title": "We’ll be right back",
+    "maintenance_message": "We’re making things better. Our store is briefly down for scheduled maintenance and will be back online shortly. Thanks for your patience."
 }

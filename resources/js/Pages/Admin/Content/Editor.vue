@@ -17,6 +17,7 @@
     <form @submit.prevent="submit" class="max-w-3xl space-y-5 pb-24">
       <div v-for="field in visibleFields" :key="field.key" class="bg-white rounded-2xl border border-purple-100 p-5">
         <label class="block text-sm font-semibold text-charcoal mb-2">{{ field.label }}</label>
+        <p v-if="field.help" class="text-muted text-xs -mt-1 mb-3 leading-relaxed">{{ field.help }}</p>
 
         <!-- scalar types -->
         <input v-if="['text','url'].includes(field.type)" v-model="form.content[field.key]" type="text" class="input-field">

@@ -7,8 +7,15 @@
 
     <!-- Slim trust strip -->
     <div v-if="page.trust?.length" class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-px bg-border rounded-2xl overflow-hidden border border-border">
-        <div v-for="(t, i) in page.trust" :key="i" class="flex items-center gap-3 bg-surface px-4 py-4">
+      <div class="grid grid-cols-2 lg:grid-cols-4 rounded-2xl border border-border overflow-hidden">
+        <div v-for="(t, i) in page.trust" :key="i"
+          class="flex items-center gap-3 px-4 py-4 border-border"
+          :class="[
+            i % 2 === 1 ? 'border-l' : '',
+            i >= 2 ? 'border-t' : '',
+            'lg:border-t-0',
+            i % 4 !== 0 ? 'lg:border-l' : '',
+          ]">
           <component :is="trustIcon(t.icon)" class="w-5 h-5 text-ink shrink-0" />
           <div class="min-w-0">
             <p class="text-xs sm:text-sm font-semibold text-ink leading-tight">{{ t.title }}</p>

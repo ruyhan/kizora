@@ -33,6 +33,10 @@ return [
             ['key' => 'facebook', 'label' => 'Facebook URL', 'type' => 'url', 'default' => 'https://facebook.com/kizora'],
             ['key' => 'instagram', 'label' => 'Instagram URL', 'type' => 'url', 'default' => 'https://instagram.com/kizora'],
             ['key' => 'currency_symbol', 'label' => 'Currency symbol', 'type' => 'text', 'default' => '৳'],
+
+            ['key' => 'maintenance_mode', 'label' => 'Maintenance mode', 'type' => 'toggle', 'default' => false, 'help' => 'When ON, visitors see a maintenance page (HTTP 503). You and other admins can still sign in, use the admin panel, and browse the live site — so you can update things safely.'],
+            ['key' => 'maintenance_title', 'label' => 'Maintenance — heading', 'type' => 'text', 'default' => 'We’ll be right back', 'show_if' => ['key' => 'maintenance_mode', 'value' => true]],
+            ['key' => 'maintenance_message', 'label' => 'Maintenance — message', 'type' => 'textarea', 'default' => 'We’re making things better. Our store is briefly down for scheduled maintenance and will be back online shortly. Thanks for your patience.', 'show_if' => ['key' => 'maintenance_mode', 'value' => true]],
         ],
     ],
 
@@ -253,12 +257,20 @@ return [
 
     'contact' => [
         'label' => 'Contact page',
-        'desc'  => 'Contact page heading & intro (cards use Brand & Contact details).',
+        'desc'  => 'Heading, intro, which contact cards to show, and the embedded map. Card details come from Brand & Contact details.',
         'icon'  => 'mail',
         'fields' => [
             ['key' => 'title', 'label' => 'Heading', 'type' => 'text', 'default' => 'Get in touch'],
             ['key' => 'subtitle', 'label' => 'Subtitle', 'type' => 'textarea', 'default' => 'Questions about a product, an order, or bulk pricing? We\'d love to help.'],
-            ['key' => 'map_image', 'label' => 'Location / map image (optional)', 'type' => 'image', 'default' => ''],
+
+            ['key' => 'show_visit', 'label' => 'Show “Visit us” card', 'type' => 'toggle', 'default' => true, 'help' => 'Address comes from Brand & Contact details. Card is hidden if the address is empty.'],
+            ['key' => 'show_call',  'label' => 'Show “Call us” card',  'type' => 'toggle', 'default' => true, 'help' => 'Phone comes from Brand & Contact details. Card is hidden if the phone is empty.'],
+            ['key' => 'show_email', 'label' => 'Show “Email us” card', 'type' => 'toggle', 'default' => true, 'help' => 'Email comes from Brand & Contact details. Card is hidden if the email is empty.'],
+            ['key' => 'show_hours', 'label' => 'Show “Opening hours” card', 'type' => 'toggle', 'default' => true, 'help' => 'Opening hours come from Brand & Contact details. Card is hidden if hours are empty.'],
+
+            ['key' => 'show_map',  'label' => 'Show map', 'type' => 'toggle', 'default' => true],
+            ['key' => 'map_embed', 'label' => 'Google Maps embed link', 'type' => 'textarea', 'default' => '', 'help' => 'In Google Maps: Share → Embed a map → copy the link (or the whole <iframe> code) and paste it here. Leave empty to use the image below as a fallback.'],
+            ['key' => 'map_image', 'label' => 'Map image (fallback when no embed link)', 'type' => 'image', 'default' => ''],
         ],
     ],
 

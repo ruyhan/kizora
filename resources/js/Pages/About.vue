@@ -76,36 +76,44 @@
           <h2 class="section-title mb-4">What we make</h2>
           <p class="text-muted text-lg">Everyday-carry essentials for school, work, sport and travel.</p>
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
           <div v-for="(item, i) in page.offerings" :key="i"
-            class="p-6 rounded-2xl bg-purple-50 text-center hover:gradient-kizora hover:text-white group transition-all duration-300 hover:-translate-y-1">
-            <div class="w-14 h-14 rounded-2xl bg-white/70 group-hover:bg-white/20 flex items-center justify-center mx-auto mb-4 transition-all duration-300 group-hover:scale-110">
-              <component :is="offeringIcon(i)" class="w-7 h-7 text-primary group-hover:text-white transition-colors duration-300" />
+            class="p-6 rounded-2xl bg-white border border-purple-100 text-center group transition-all duration-300 hover:-translate-y-1 hover:border-ink/15 hover:shadow-xl hover:shadow-ink/5">
+            <div class="w-14 h-14 rounded-2xl bg-purple-50 group-hover:bg-ink flex items-center justify-center mx-auto mb-4 transition-all duration-300 group-hover:scale-110">
+              <component :is="offeringIcon(i)" class="w-7 h-7 text-ink group-hover:text-white transition-colors duration-300" />
             </div>
-            <h3 class="font-semibold text-charcoal group-hover:text-white mb-2 transition-colors text-sm">{{ item.title }}</h3>
-            <p class="text-muted text-xs group-hover:text-white/80 transition-colors leading-relaxed">{{ item.desc }}</p>
+            <h3 class="font-semibold text-charcoal mb-1.5 text-sm sm:text-base">{{ item.title }}</h3>
+            <p class="text-muted text-xs sm:text-[13px] leading-relaxed">{{ item.desc }}</p>
           </div>
         </div>
       </div>
     </section>
 
     <!-- Mission & Vision -->
-    <section class="py-20 gradient-kizora">
-      <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid md:grid-cols-2 gap-8">
-          <div class="card rounded-3xl p-8">
-            <div class="w-14 h-14 rounded-2xl bg-primary/20 flex items-center justify-center mb-5">
-              <BoltIcon class="w-7 h-7 text-primary" />
+    <section class="py-20 sm:py-24 gradient-kizora relative overflow-hidden">
+      <div class="absolute -top-24 -left-24 w-80 h-80 rounded-full bg-white/5 blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-28 -right-20 w-96 h-96 rounded-full bg-accent/15 blur-3xl pointer-events-none"></div>
+      <div class="absolute inset-0 opacity-[0.04] pointer-events-none" style="background-image: radial-gradient(circle, white 1.5px, transparent 1.5px); background-size: 28px 28px;"></div>
+
+      <div class="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+          <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-accent mb-3">Why we exist</p>
+          <h2 class="font-display text-3xl sm:text-4xl font-bold text-white">What drives us</h2>
+        </div>
+        <div class="grid md:grid-cols-2 gap-5 sm:gap-6">
+          <div class="rounded-3xl p-8 bg-white/[0.06] border border-white/10 backdrop-blur-sm transition-all duration-300 hover:bg-white/[0.1] hover:-translate-y-1">
+            <div class="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center mb-5">
+              <BoltIcon class="w-7 h-7 text-white" />
             </div>
-            <h3 class="font-display text-2xl font-bold text-charcoal mb-4">Our Mission</h3>
-            <p class="text-muted leading-relaxed">{{ page.mission }}</p>
+            <h3 class="font-display text-2xl font-bold text-white mb-3">Our Mission</h3>
+            <p class="text-white/65 leading-relaxed">{{ page.mission }}</p>
           </div>
-          <div class="card rounded-3xl p-8">
-            <div class="w-14 h-14 rounded-2xl bg-amber-100 flex items-center justify-center mb-5">
-              <EyeIcon class="w-7 h-7 text-amber-600" />
+          <div class="rounded-3xl p-8 bg-white/[0.06] border border-white/10 backdrop-blur-sm transition-all duration-300 hover:bg-white/[0.1] hover:-translate-y-1">
+            <div class="w-14 h-14 rounded-2xl bg-amber-400/15 flex items-center justify-center mb-5">
+              <EyeIcon class="w-7 h-7 text-amber-300" />
             </div>
-            <h3 class="font-display text-2xl font-bold text-charcoal mb-4">Our Vision</h3>
-            <p class="text-muted leading-relaxed">{{ page.vision }}</p>
+            <h3 class="font-display text-2xl font-bold text-white mb-3">Our Vision</h3>
+            <p class="text-white/65 leading-relaxed">{{ page.vision }}</p>
           </div>
         </div>
       </div>

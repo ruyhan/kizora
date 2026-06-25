@@ -85,26 +85,34 @@
             </div>
           </div>
 
-          <!-- Location image (from Media Library) -->
-          <a v-if="page.map_image" :href="site.map_url || 'https://maps.google.com'" target="_blank" rel="noopener"
-            class="block rounded-3xl overflow-hidden bg-purple-50 aspect-video group">
-            <img :src="page.map_image" alt="Our location" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
-          </a>
-          <!-- Map placeholder -->
-          <div v-else class="rounded-3xl overflow-hidden bg-purple-50 aspect-video flex items-center justify-center border-2 border-dashed border-purple-200">
-            <div class="text-center p-8">
-              <div class="w-16 h-16 rounded-2xl gradient-purple flex items-center justify-center mx-auto mb-4 shadow-md">
-                <MapPinIcon class="w-8 h-8 text-white" />
-              </div>
-              <p class="font-semibold text-charcoal mb-1">Find us here</p>
-              <p class="text-muted text-sm mb-3">{{ site.address }}</p>
-              <a :href="site.map_url || 'https://maps.google.com'" target="_blank"
-                class="inline-flex items-center gap-1.5 text-primary text-sm font-medium hover:underline">
-                Open Google Maps
-                <ArrowTopRightOnSquareIcon class="w-3.5 h-3.5" />
-              </a>
+          <template v-if="showMap">
+            <!-- Embedded Google Map (from admin) -->
+            <div v-if="mapSrc" class="rounded-3xl overflow-hidden bg-purple-50 aspect-video border border-purple-100 shadow-sm">
+              <iframe :src="mapSrc" title="Our location" class="w-full h-full block" style="border:0"
+                loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+                allowfullscreen></iframe>
             </div>
-          </div>
+            <!-- Location image fallback (from Media Library) -->
+            <a v-else-if="page.map_image" :href="site.map_url || 'https://maps.google.com'" target="_blank" rel="noopener"
+              class="block rounded-3xl overflow-hidden bg-purple-50 aspect-video group">
+              <img :src="page.map_image" alt="Our location" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+            </a>
+            <!-- Placeholder when nothing is configured -->
+            <div v-else class="rounded-3xl overflow-hidden bg-purple-50 aspect-video flex items-center justify-center border-2 border-dashed border-purple-200">
+              <div class="text-center p-8">
+                <div class="w-16 h-16 rounded-2xl gradient-purple flex items-center justify-center mx-auto mb-4 shadow-md">
+                  <MapPinIcon class="w-8 h-8 text-white" />
+                </div>
+                <p class="font-semibold text-charcoal mb-1">Find us here</p>
+                <p class="text-muted text-sm mb-3">{{ site.address }}</p>
+                <a :href="site.map_url || 'https://maps.google.com'" target="_blank"
+                  class="inline-flex items-center gap-1.5 text-primary text-sm font-medium hover:underline">
+                  Open Google Maps
+                  <ArrowTopRightOnSquareIcon class="w-3.5 h-3.5" />
+                </a>
+              </div>
+            </div>
+          </template>
         </div>
 
       </div>
@@ -132,10 +140,11 @@ import {
   CheckCircleIcon,
 } from '@heroicons/vue/24/outline'
 
-defineProps({ page: { type: Object, default: () => ({}) } })
+const props = defineProps({ page: { type: Object, default: () => ({}) } })
 
 const sitePage = usePage()
 const site = computed(() => sitePage.props.site || {})
+const page = computed(() => props.page || {})
 
 const form = ref({ name: '', email: '', phone: '', subject: '', message: '' })
 const errors = ref({})
@@ -175,12 +184,32 @@ const submit = async () => {
 
 const telLink = (p) => 'tel:' + String(p || '').replace(/[^+\d]/g, '')
 
+// "Call us" shows both numbers, each as its own tel: link, on separate lines.
+const phoneLines = computed(() =>
+  [site.value.phone_1, site.value.phone_2]
+    .filter(Boolean)
+    .map(p => `<a href="${telLink(p)}" class="hover:text-primary transition-colors">${p}</a>`)
+    .join('<br>')
+)
+
+// Each card is shown only when its admin toggle is on AND the underlying
+// Brand & Contact detail has a value — empty content removes the card (and icon).
 const contactInfo = computed(() => [
-  { icon: MapPinIcon,   label: 'Visit us', value: site.value.address,       href: site.value.map_url || 'https://maps.google.com', action: 'Get directions' },
-  { icon: PhoneIcon,    label: 'Call us',  value: site.value.phone_1,       href: telLink(site.value.phone_1), action: 'Call now' },
-  { icon: EnvelopeIcon, label: 'Email us', value: site.value.email,         href: site.value.email ? `mailto:${site.value.email}` : null, action: 'Send email' },
-  { icon: ClockIcon,    label: 'Opening hours', value: site.value.opening_hours, href: null, action: null },
-])
+  { icon: MapPinIcon,   label: 'Visit us', value: site.value.address,       href: site.value.map_url || 'https://maps.google.com', action: 'Get directions', on: page.value.show_visit !== false },
+  { icon: PhoneIcon,    label: 'Call us',  value: phoneLines.value,         href: telLink(site.value.phone_1 || site.value.phone_2), action: 'Call now', on: page.value.show_call !== false },
+  { icon: EnvelopeIcon, label: 'Email us', value: site.value.email,         href: site.value.email ? `mailto:${site.value.email}` : null, action: 'Send email', on: page.value.show_email !== false },
+  { icon: ClockIcon,    label: 'Opening hours', value: site.value.opening_hours, href: null, action: null, on: page.value.show_hours !== false },
+].filter(i => i.on && i.value))
+
+// Embedded map. Admin can paste either the bare embed URL or the whole
+// <iframe …> snippet from Google Maps → Share → Embed; we extract the src.
+const showMap = computed(() => page.value.show_map !== false)
+const mapSrc = computed(() => {
+  const raw = String(page.value.map_embed || '').trim()
+  if (!raw) return ''
+  const m = raw.match(/src=["']([^"']+)["']/i)
+  return m ? m[1] : raw
+})
 </script>
 
 <style scoped>

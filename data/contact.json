@@ -1,4 +1,11 @@
 {
     "title": "Get in touch",
-    "subtitle": "Questions about a product, an order, or bulk pricing? We'd love to help."
+    "subtitle": "Questions about a product, an order, or bulk pricing? We'd love to help.",
+    "show_visit": false,
+    "show_call": true,
+    "show_email": true,
+    "show_hours": false,
+    "show_map": false,
+    "map_embed": null,
+    "map_image": null
 }

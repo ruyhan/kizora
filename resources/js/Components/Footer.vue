@@ -52,18 +52,22 @@
         <div class="col-span-2 lg:col-span-1">
           <h4 class="font-display text-sm lg:text-base font-semibold text-white mb-4 tracking-wide">Contact Us</h4>
           <ul class="space-y-3">
-            <li class="flex gap-3 text-gray-400 text-sm">
+            <li v-if="site.address" class="flex gap-3 text-gray-400 text-sm">
               <MapPinIcon class="w-5 h-5 text-accent shrink-0 mt-0.5" />
               <span class="leading-relaxed">{{ site.address }}</span>
             </li>
-            <li class="flex gap-3 text-gray-400 text-sm items-start">
+            <li v-if="site.phone_1 || site.phone_2" class="flex gap-3 text-gray-400 text-sm items-start">
               <PhoneIcon class="w-5 h-5 text-accent shrink-0 mt-0.5" />
               <div>
                 <a v-if="site.phone_1" :href="telLink(site.phone_1)" class="block hover:text-white transition-colors">{{ site.phone_1 }}</a>
-                <a v-if="site.email" :href="`mailto:${site.email}`" class="block hover:text-white transition-colors mt-1">{{ site.email }}</a>
+                <a v-if="site.phone_2" :href="telLink(site.phone_2)" class="block hover:text-white transition-colors mt-1">{{ site.phone_2 }}</a>
               </div>
             </li>
-            <li class="flex gap-3 text-gray-400 text-sm items-center">
+            <li v-if="site.email" class="flex gap-3 text-gray-400 text-sm items-start">
+              <EnvelopeIcon class="w-5 h-5 text-accent shrink-0 mt-0.5" />
+              <a :href="`mailto:${site.email}`" class="hover:text-white transition-colors break-all">{{ site.email }}</a>
+            </li>
+            <li v-if="site.opening_hours" class="flex gap-3 text-gray-400 text-sm items-center">
               <ClockIcon class="w-5 h-5 text-accent shrink-0" />
               <span>{{ site.opening_hours }}</span>
             </li>
@@ -115,7 +119,7 @@
 <script setup>
 import { computed } from 'vue'
 import { Link, usePage } from '@inertiajs/vue3'
-import { MapPinIcon, PhoneIcon, ClockIcon } from '@heroicons/vue/24/outline'
+import { MapPinIcon, PhoneIcon, EnvelopeIcon, ClockIcon } from '@heroicons/vue/24/outline'
 import { useBrandLogo } from '@/composables/useBrandLogo'
 
 const { dark: darkLogo, darkInvert } = useBrandLogo()

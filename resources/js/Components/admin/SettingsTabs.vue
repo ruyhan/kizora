@@ -25,6 +25,7 @@ const tabs = computed(() => [
   { label: 'General',           href: route('admin.content.edit', { group: 'settings' }), active: route().current('admin.content.edit', { group: 'settings' }) },
   { label: 'Delivery Settings', href: route('admin.content.edit', { group: 'delivery' }), active: route().current('admin.content.edit', { group: 'delivery' }) },
   { label: 'Product Page',      href: route('admin.content.edit', { group: 'product' }),  active: route().current('admin.content.edit', { group: 'product' }) },
+  { label: 'Email Configuration', href: route('admin.email.smtp'),            active: route().current('admin.email.*') },
   { label: 'Invoice Settings',  href: route('admin.invoice-settings.index'), active: route().current('admin.invoice-settings*') },
   { label: 'Chatbot Settings',  href: route('admin.chatbot-settings.index'), active: route().current('admin.chatbot-settings*') },
   { label: 'Payment Gateways',  href: route('admin.payments.index'),         active: route().current('admin.payments*') },

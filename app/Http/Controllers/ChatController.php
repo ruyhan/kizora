@@ -150,6 +150,18 @@ class ChatController extends Controller
             return $order;
         });
 
+        // Transactional emails (customer confirmation if an email is known + admin alert).
+        try {
+            $emails   = app(\App\Services\Email\EmailService::class);
+            $settings = app(\App\Services\Email\EmailSettingService::class);
+            $emails->send('order_placed_customer', $order->customer_email, $emails->orderVars($order), $order->id);
+            foreach ($settings->adminRecipients() as $adminEmail) {
+                $emails->send('order_received_admin', $adminEmail, $emails->adminVars($order), $order->id);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Chatbot order email failed: ' . $e->getMessage());
+        }
+
         return response()->json([
             'ok' => true,
             'order_number' => $order->order_number,

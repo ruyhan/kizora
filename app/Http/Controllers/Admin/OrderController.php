@@ -117,19 +117,50 @@ class OrderController extends Controller
 
     public function updateStatus(Request $request, Order $order)
     {
-        $request->validate(['status' => 'required|in:pending,confirmed,processing,out_for_delivery,completed,cancelled']);
+        $data = $request->validate([
+            'status'                  => 'required|in:pending,confirmed,processing,out_for_delivery,completed,cancelled',
+            'courier_name'            => 'nullable|string|max:120',
+            'tracking_number'         => 'nullable|string|max:120',
+            'tracking_url'            => 'nullable|url|max:500',
+            'estimated_delivery_date' => 'nullable|date',
+            'cancel_reason'           => 'nullable|string|max:500',
+        ]);
 
         $from = $order->status;
-        $updates = ['status' => $request->status];
+        $updates = ['status' => $data['status']];
+
+        // Persist fulfilment / cancellation details when provided (used by emails).
+        foreach (['courier_name', 'tracking_number', 'tracking_url', 'estimated_delivery_date', 'cancel_reason'] as $f) {
+            if ($request->filled($f)) {
+                $updates[$f] = $data[$f];
+            }
+        }
+
         if ($order->payment_method === 'cod') {
-            if ($request->status === 'completed') {
+            if ($data['status'] === 'completed') {
                 $updates['payment_status'] = 'paid';
-            } elseif ($request->status === 'cancelled' && $order->payment_status === 'pending') {
+            } elseif ($data['status'] === 'cancelled' && $order->payment_status === 'pending') {
                 $updates['payment_status'] = 'cancelled';
             }
         }
         $order->update($updates);
-        AuditLog::record('status', 'Orders', "{$order->order_number}: status {$from} → {$request->status}");
+        AuditLog::record('status', 'Orders', "{$order->order_number}: status {$from} → {$data['status']}");
+
+        // Notify the customer when the status changes to a stage with a template.
+        if ($from !== $data['status']
+            && isset(\App\Services\Email\EmailService::STATUS_TEMPLATES[$data['status']])) {
+            try {
+                $emails = app(\App\Services\Email\EmailService::class);
+                $emails->send(
+                    \App\Services\Email\EmailService::STATUS_TEMPLATES[$data['status']],
+                    $order->customer_email,
+                    $emails->orderVars($order),
+                    $order->id,
+                );
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Status email failed: ' . $e->getMessage());
+            }
+        }
 
         return back()->with('success', 'Order status updated!');
     }

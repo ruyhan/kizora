@@ -16,6 +16,7 @@ class Order extends Model
         'status', 'subtotal', 'delivery_charge',
         'discount', 'total', 'coupon_code', 'payment_method', 'payment_status',
         'notes', 'estimated_delivery',
+        'courier_name', 'tracking_number', 'tracking_url', 'estimated_delivery_date', 'cancel_reason',
     ];
 
     protected $casts = [
@@ -24,7 +25,24 @@ class Order extends Model
         'discount' => 'decimal:2',
         'total' => 'decimal:2',
         'estimated_delivery' => 'datetime',
+        'estimated_delivery_date' => 'date',
     ];
+
+    /** Customer contact — registered user takes precedence over guest snapshot. */
+    public function getCustomerNameAttribute(): string
+    {
+        return $this->user?->name ?: ($this->guest_name ?: 'Customer');
+    }
+
+    public function getCustomerEmailAttribute(): ?string
+    {
+        return $this->user?->email ?: $this->guest_email;
+    }
+
+    public function getCustomerPhoneAttribute(): ?string
+    {
+        return $this->user?->phone ?: $this->guest_phone;
+    }
 
     protected static function boot()
     {

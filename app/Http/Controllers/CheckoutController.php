@@ -207,6 +207,21 @@ class CheckoutController extends Controller
 
         $order = Order::where('order_number', session('last_order_number'))->first();
 
+        // Transactional emails — customer confirmation + admin notification.
+        // Queued + logged; never block or break checkout if mail fails.
+        if ($order) {
+            try {
+                $emails   = app(\App\Services\Email\EmailService::class);
+                $settings = app(\App\Services\Email\EmailSettingService::class);
+                $emails->send('order_placed_customer', $order->customer_email, $emails->orderVars($order), $order->id);
+                foreach ($settings->adminRecipients() as $adminEmail) {
+                    $emails->send('order_received_admin', $adminEmail, $emails->adminVars($order), $order->id);
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Order email dispatch failed: ' . $e->getMessage());
+            }
+        }
+
         // COD: go straight to success
         if ($request->payment_method === 'cod') {
             return redirect()->route('order.success')->with('success', 'Order placed successfully!');

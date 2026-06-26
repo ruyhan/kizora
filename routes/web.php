@@ -253,6 +253,31 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/recaptcha',  [AdminRecaptchaController::class, 'index'])->middleware('permission:settings.view')->name('recaptcha.index');
     Route::post('/recaptcha', [AdminRecaptchaController::class, 'update'])->middleware('permission:settings.edit')->name('recaptcha.update');
 
+    // Email Configuration (Settings → SMTP · Branding · Templates · Logs)
+    Route::prefix('email')->name('email.')->group(function () {
+        Route::get('smtp',         [\App\Http\Controllers\Admin\EmailSettingsController::class, 'smtp'])->middleware('permission:settings.view')->name('smtp');
+        Route::post('smtp',        [\App\Http\Controllers\Admin\EmailSettingsController::class, 'updateSmtp'])->middleware('permission:settings.edit')->name('smtp.update');
+        Route::post('smtp/verify', [\App\Http\Controllers\Admin\EmailSettingsController::class, 'verifySmtp'])->middleware('permission:settings.edit')->name('smtp.verify');
+        Route::post('smtp/test',   [\App\Http\Controllers\Admin\EmailSettingsController::class, 'testEmail'])->middleware('permission:settings.edit')->name('smtp.test');
+
+        Route::get('brand',          [\App\Http\Controllers\Admin\EmailSettingsController::class, 'brand'])->middleware('permission:settings.view')->name('brand');
+        Route::post('brand',         [\App\Http\Controllers\Admin\EmailSettingsController::class, 'updateBrand'])->middleware('permission:settings.edit')->name('brand.update');
+        Route::post('brand/preview', [\App\Http\Controllers\Admin\EmailSettingsController::class, 'brandPreview'])->middleware('permission:settings.view')->name('brand.preview');
+
+        Route::get('templates',                       [\App\Http\Controllers\Admin\EmailTemplateController::class, 'index'])->middleware('permission:settings.view')->name('templates');
+        Route::get('templates/{template}',            [\App\Http\Controllers\Admin\EmailTemplateController::class, 'edit'])->middleware('permission:settings.view')->name('templates.edit');
+        Route::post('templates/{template}',           [\App\Http\Controllers\Admin\EmailTemplateController::class, 'update'])->middleware('permission:settings.edit')->name('templates.update');
+        Route::post('templates/{template}/preview',   [\App\Http\Controllers\Admin\EmailTemplateController::class, 'preview'])->middleware('permission:settings.view')->name('templates.preview');
+        Route::post('templates/{template}/test',      [\App\Http\Controllers\Admin\EmailTemplateController::class, 'test'])->middleware('permission:settings.edit')->name('templates.test');
+        Route::post('templates/{template}/reset',     [\App\Http\Controllers\Admin\EmailTemplateController::class, 'reset'])->middleware('permission:settings.edit')->name('templates.reset');
+        Route::post('templates/{template}/duplicate', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'duplicate'])->middleware('permission:settings.edit')->name('templates.duplicate');
+        Route::patch('templates/{template}/toggle',   [\App\Http\Controllers\Admin\EmailTemplateController::class, 'toggle'])->middleware('permission:settings.edit')->name('templates.toggle');
+        Route::delete('templates/{template}',         [\App\Http\Controllers\Admin\EmailTemplateController::class, 'destroy'])->middleware('permission:settings.edit')->name('templates.destroy');
+
+        Route::get('logs',               [\App\Http\Controllers\Admin\EmailLogController::class, 'index'])->middleware('permission:settings.view')->name('logs');
+        Route::post('logs/{log}/resend', [\App\Http\Controllers\Admin\EmailLogController::class, 'resend'])->middleware('permission:settings.edit')->name('logs.resend');
+    });
+
     // Media Library
     Route::get('/media',                 [AdminMediaController::class, 'index'])->middleware('permission:media.view')->name('media.index');
     Route::get('/media/list',            [AdminMediaController::class, 'list'])->middleware('permission:media.view')->name('media.list');

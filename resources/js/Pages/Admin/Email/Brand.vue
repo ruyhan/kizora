@@ -21,8 +21,8 @@
               <div>
                 <label class="text-sm font-medium text-charcoal mb-1.5 block">Company logo</label>
                 <div class="flex items-center gap-3">
-                  <div class="w-20 h-14 rounded-xl border border-purple-100 bg-ink/90 flex items-center justify-center overflow-hidden shrink-0 p-2">
-                    <img v-if="form.logo" :src="form.logo" class="max-w-full max-h-full object-contain" style="filter:brightness(0) invert(1)" alt="">
+                  <div class="w-20 h-14 rounded-xl border border-purple-100 bg-ink flex items-center justify-center overflow-hidden shrink-0 p-2">
+                    <img v-if="form.logo" :src="form.logo" class="max-w-full max-h-full object-contain" alt="">
                     <PhotoIcon v-else class="w-6 h-6 text-white/40" />
                   </div>
                   <div class="flex items-center gap-2">
@@ -30,7 +30,7 @@
                     <button v-if="form.logo" type="button" @click="form.logo = ''" class="text-error text-sm hover:underline">Remove</button>
                   </div>
                 </div>
-                <p class="text-xs text-muted mt-1.5">Shown on a dark header (auto-inverted to white).</p>
+                <p class="text-xs text-muted mt-1.5">Shown as-is on the dark email header — upload a light/white version of your logo. No colour filter is applied.</p>
               </div>
               <div>
                 <label class="text-sm font-medium text-charcoal mb-1.5 block">Header banner (optional)</label>

@@ -40,7 +40,9 @@ return [
 
         'public' => [
             'driver' => 'local',
-            'root' => storage_path('app/public'),
+            // Uploads are stored in a REAL public/storage folder (no symlink) so
+            // the project zips/transfers cleanly and never needs `storage:link`.
+            'root' => public_path('storage'),
             'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
             'visibility' => 'public',
             'throw' => false,
@@ -74,7 +76,7 @@ return [
     */
 
     'links' => [
-        public_path('storage') => storage_path('app/public'),
+        // No symlink needed — the `public` disk writes directly into public/storage.
     ],
 
 ];

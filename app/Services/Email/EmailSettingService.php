@@ -15,6 +15,9 @@ class EmailSettingService
 {
     public const MASK = '••••••••';
 
+    /** Per-request cache of url → data-URI conversions. */
+    private array $uriCache = [];
+
     /** @return array<string,mixed> */
     public function smtp(bool $maskSecret = true): array
     {
@@ -22,6 +25,7 @@ class EmailSettingService
 
         return [
             'enabled'          => WebsiteSetting::get('mail_enabled', '0') === '1',
+            'queue'            => WebsiteSetting::get('mail_queue', '0') === '1',
             'driver'           => WebsiteSetting::get('mail_driver', 'smtp'),
             'host'             => (string) WebsiteSetting::get('mail_host', ''),
             'port'             => (string) WebsiteSetting::get('mail_port', '587'),
@@ -39,6 +43,7 @@ class EmailSettingService
     {
         $map = [
             'mail_enabled'          => ! empty($data['enabled']) ? '1' : '0',
+            'mail_queue'            => ! empty($data['queue']) ? '1' : '0',
             'mail_driver'           => $data['driver'] ?? 'smtp',
             'mail_host'             => $data['host'] ?? '',
             'mail_port'             => (string) ($data['port'] ?? '587'),
@@ -62,6 +67,12 @@ class EmailSettingService
     public function enabled(): bool
     {
         return WebsiteSetting::get('mail_enabled', '0') === '1';
+    }
+
+    /** Background sending (requires a running queue worker). Off = send instantly. */
+    public function queueEnabled(): bool
+    {
+        return WebsiteSetting::get('mail_queue', '0') === '1';
     }
 
     /** Override the runtime mail config from saved settings. Called on boot. */
@@ -151,7 +162,7 @@ class EmailSettingService
         $socials = json_decode((string) WebsiteSetting::get('email_socials', ''), true) ?: [];
 
         return [
-            'logo'              => WebsiteSetting::get('email_logo', '') ?: ($content['logo'] ?? ''),
+            'logo'              => $this->embedAsDataUri(WebsiteSetting::get('email_logo', '') ?: ($content['logo_light'] ?? '') ?: ($content['logo'] ?? '')),
             'banner'            => (string) WebsiteSetting::get('email_banner', ''),
             'company_name'      => WebsiteSetting::get('email_company_name', '') ?: ($content['site_name'] ?? 'Kizora'),
             'address'           => WebsiteSetting::get('email_company_address', '') ?: ($content['address'] ?? ''),
@@ -186,5 +197,68 @@ class EmailSettingService
         foreach ($map as $k => $v) {
             WebsiteSetting::set($k, $v);
         }
+    }
+
+    /**
+     * Convert a locally-stored image URL/path into a base64 data URI so the logo
+     * is embedded in the email and always renders, even when the source URL
+     * (e.g. a local/dev domain) isn't reachable by the recipient. Remote URLs,
+     * missing files, or oversized images (>256 KB) are returned unchanged.
+     */
+    public function embedAsDataUri(?string $url): ?string
+    {
+        if (! $url || str_starts_with($url, 'data:')) {
+            return $url;
+        }
+        if (array_key_exists($url, $this->uriCache)) {
+            return $this->uriCache[$url];
+        }
+
+        $file = $this->resolveLocalFile($url);
+        if (! $file) {
+            return $this->uriCache[$url] = $url; // remote or not found → keep the URL
+        }
+
+        $data = @file_get_contents($file);
+        if ($data === false || strlen($data) > 256 * 1024) {
+            return $this->uriCache[$url] = $url;
+        }
+
+        $mime = function_exists('mime_content_type') ? (mime_content_type($file) ?: 'image/png') : 'image/png';
+
+        return $this->uriCache[$url] = 'data:' . $mime . ';base64,' . base64_encode($data);
+    }
+
+    /** Resolved brand-logo URL (email logo → light logo → main logo). */
+    public function logoUrl(): string
+    {
+        $content = app(PageContent::class)->get('settings');
+
+        return WebsiteSetting::get('email_logo', '') ?: ($content['logo_light'] ?? '') ?: ($content['logo'] ?? '');
+    }
+
+    /** Local filesystem path of the brand logo, for CID inline embedding (null if remote/missing). */
+    public function logoFile(): ?string
+    {
+        return $this->resolveLocalFile($this->logoUrl());
+    }
+
+    /** Map a /storage or public URL to its file on disk (null if remote/missing). */
+    private function resolveLocalFile(?string $url): ?string
+    {
+        if (! $url || str_starts_with($url, 'data:')) {
+            return null;
+        }
+        $path = parse_url($url, PHP_URL_PATH) ?: $url;
+
+        if (($pos = strpos($path, '/storage/')) !== false) {
+            $candidate = storage_path('app/public/' . substr($path, $pos + strlen('/storage/')));
+            if (is_file($candidate)) {
+                return $candidate;
+            }
+        }
+        $candidate = public_path(ltrim($path, '/'));
+
+        return is_file($candidate) ? $candidate : null;
     }
 }

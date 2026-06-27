@@ -7,6 +7,7 @@
         <h1 class="font-display text-2xl font-bold text-charcoal">Customers</h1>
         <p class="text-muted text-sm">{{ totals.count }} consumers · {{ totals.active }} active</p>
       </div>
+      <DateRangeFilter route-name="admin.customers.index" :filters="filters" :params="f" />
     </div>
 
     <!-- Filters -->
@@ -203,6 +204,7 @@ import { useToast } from 'vue-toastification'
 import axios from 'axios'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import SelectMenu from '@/Components/ui/SelectMenu.vue'
+import DateRangeFilter from '@/Components/admin/DateRangeFilter.vue'
 import Avatar from '@/Components/ui/Avatar.vue'
 import Pagination from '@/Components/ui/Pagination.vue'
 import OrderModal from '@/Components/admin/OrderModal.vue'
@@ -234,7 +236,7 @@ const toast = useToast()
 const statusClass = (s) => ({ active: 'badge-success', inactive: 'badge-gray', suspended: 'badge-error' }[s] || 'badge-gray')
 const statusLabel = (s) => ({ active: 'Active', inactive: 'Inactive', suspended: 'Blocked' }[s] || s)
 
-const f = ref({ search: props.filters?.search || '', status: props.filters?.status || '', sort: props.filters?.sort || 'latest' })
+const f = ref({ search: props.filters?.search || '', status: props.filters?.status || '', sort: props.filters?.sort || 'latest', range: props.filters?.range, from: props.filters?.from, to: props.filters?.to })
 let t = null
 const apply = () => router.get(route('admin.customers.index'), f.value, { preserveState: true, preserveScroll: true, replace: true })
 const applyDebounced = () => { clearTimeout(t); t = setTimeout(apply, 350) }

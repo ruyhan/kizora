@@ -131,7 +131,8 @@ class PosController extends Controller
 
     public function orders(Request $request): Response
     {
-        $query = Order::pos()->with(['user:id,name', 'invoice'])->latest();
+        $dr = \App\Support\DateRange::fromRequest($request, 'all');
+        $query = $dr->applyTo(Order::pos()->with(['user:id,name', 'invoice']))->latest();
 
         if ($request->filled('search')) {
             $s = $request->search;
@@ -157,7 +158,7 @@ class PosController extends Controller
 
         return Inertia::render('Admin/Pos/Orders', [
             'orders' => $orders,
-            'filters' => $request->only(['search', 'payment_method']),
+            'filters' => array_merge($request->only(['search', 'payment_method']), $dr->filters()),
             'paymentMethods' => self::PAYMENT_METHODS,
         ]);
     }

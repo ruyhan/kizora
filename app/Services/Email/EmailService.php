@@ -26,6 +26,9 @@ class EmailService
         'cancelled'        => 'order_cancelled',
     ];
 
+    /** Placeholder in the rendered HTML that is swapped for the CID (or base64) logo at send time. */
+    private const LOGO_TOKEN = '__KZ_LOGO_SRC__';
+
     /** @return array<string,array> registry of default templates. */
     public function registry(): array
     {
@@ -225,20 +228,38 @@ HTML,
 
     // ── Rendering ────────────────────────────────────────────────────────────
 
-    /** @return array{subject:string,html:string,text:string} */
-    public function render(string $key, array $vars): array
+    /**
+     * @return array{subject:string,html:string,text:string,logoPath:?string,logoFallback:?string}
+     * When $forSend is true the logo src becomes a token that TemplatedMail swaps
+     * for an inline CID (Gmail-friendly), falling back to base64/url.
+     */
+    public function render(string $key, array $vars, bool $forSend = false): array
     {
         $tpl = $this->template($key);
         $subject = $this->interpolate($tpl?->subject ?? '', $vars);
         $bodyHtml = $this->interpolate($tpl?->body_html ?? '', $vars);
 
+        $brand = $this->settings->brand();
+        $logoFallback = $brand['logo'];   // base64 data URI (or url) — used if CID can't be embedded
+        $logoPath = null;
+        if ($forSend && $logoFallback) {
+            $logoPath = $this->settings->logoFile();   // local file → CID embed
+            $brand['logo'] = self::LOGO_TOKEN;
+        }
+
         $html = view('emails.layout', [
             'content' => $bodyHtml,
-            'brand'   => $this->settings->brand(),
+            'brand'   => $brand,
             'subject' => $subject,
         ])->render();
 
-        return ['subject' => $subject, 'html' => $html, 'text' => $this->toPlainText($bodyHtml)];
+        return [
+            'subject'      => $subject,
+            'html'         => $html,
+            'text'         => $this->toPlainText($bodyHtml),
+            'logoPath'     => $logoPath,
+            'logoFallback' => $logoFallback,
+        ];
     }
 
     private function interpolate(string $template, array $vars): string
@@ -286,7 +307,7 @@ HTML,
             . '<th style="padding:8px;border-bottom:2px solid #17181B;font-size:12px;text-transform:uppercase;color:#52525b;">Qty</th>'
             . '<th align="right" style="padding:8px;border-bottom:2px solid #17181B;font-size:12px;text-transform:uppercase;color:#52525b;">Unit price</th>'
             . '<th align="right" style="padding:8px;border-bottom:2px solid #17181B;font-size:12px;text-transform:uppercase;color:#52525b;">Total</th></tr>'
-            . $row('Kizora Slim Travel Sling', 'Size: M', 1, '990.00', '990.00')
+            . $row('Kizora Slim Travel Sling', 'Color: <span style="display:inline-block;width:11px;height:11px;border-radius:3px;border:1px solid #d4d4d8;background:#ED1C24;vertical-align:middle;margin:0 2px;"></span> Red, Size: M', 1, '990.00', '990.00')
             . $row('Kizora Bottle Carry Sleeve', '', 1, '900.00', '900.00')
             . '</table>';
 
@@ -323,7 +344,7 @@ HTML,
     /** Synchronous test send of a template (immediate success/failure for the admin). */
     public function sendTest(string $key, string $to): array
     {
-        $r = $this->render($key, $this->sampleVars());
+        $r = $this->render($key, $this->sampleVars(), true);
         $log = EmailLog::create([
             'template_key' => $key,
             'mailable'     => TemplatedMail::class,
@@ -332,8 +353,8 @@ HTML,
             'status'       => 'queued',
         ]);
         try {
-            Mail::html($r['html'], fn ($m) => $m->to($to)->subject('[TEST] ' . $r['subject']));
-            $log->update(['status' => 'sent', 'sent_at' => now()]);
+            $replyTo = $this->settings->smtp(false)['reply_to'] ?: null;
+            Mail::to($to)->sendNow(new TemplatedMail('[TEST] ' . $r['subject'], $r['html'], $r['text'], $log->id, $replyTo, $r['logoPath'], $r['logoFallback']));
             return ['ok' => true, 'message' => 'Test email sent to ' . $to];
         } catch (\Throwable $e) {
             $log->update(['status' => 'failed', 'error' => $e->getMessage()]);
@@ -353,7 +374,7 @@ HTML,
             return null;
         }
 
-        $r = $this->render($key, $vars);
+        $r = $this->render($key, $vars, true);
 
         $log = EmailLog::create([
             'template_key' => $key,
@@ -365,14 +386,29 @@ HTML,
             'variables'    => array_filter($vars, 'is_scalar'),
         ]);
 
+        $replyTo = $this->settings->smtp(false)['reply_to'] ?: null;
+        $this->deliver($to, new TemplatedMail($r['subject'], $r['html'], $r['text'], $log->id, $replyTo, $r['logoPath'], $r['logoFallback']), $log);
+
+        return $log;
+    }
+
+    /**
+     * Deliver a mailable. Sends immediately (sendNow) by default so the email
+     * goes out within the request and the log flips to "sent" via the
+     * MessageSent listener. Only queues when background sending is explicitly
+     * enabled (which requires a running queue worker).
+     */
+    private function deliver(string $to, TemplatedMail $mailable, EmailLog $log): void
+    {
         try {
-            $replyTo = $this->settings->smtp(false)['reply_to'] ?: null;
-            Mail::to($to)->queue(new TemplatedMail($r['subject'], $r['html'], $r['text'], $log->id, $replyTo));
+            if ($this->settings->queueEnabled()) {
+                Mail::to($to)->queue($mailable);
+            } else {
+                Mail::to($to)->sendNow($mailable);
+            }
         } catch (\Throwable $e) {
             $log->update(['status' => 'failed', 'error' => $e->getMessage()]);
         }
-
-        return $log;
     }
 
     /** Re-send a previous log entry. */
@@ -381,7 +417,9 @@ HTML,
         $key = $log->template_key;
         $vars = $log->variables ?? [];
         // Re-render fresh so edited templates take effect.
-        $r = $key ? $this->render($key, $vars) : ['subject' => $log->subject, 'html' => '', 'text' => ''];
+        $r = $key
+            ? $this->render($key, $vars, true)
+            : ['subject' => $log->subject, 'html' => '', 'text' => '', 'logoPath' => null, 'logoFallback' => null];
 
         $new = EmailLog::create([
             'template_key' => $key,
@@ -393,12 +431,8 @@ HTML,
             'variables'    => $vars,
         ]);
 
-        try {
-            $replyTo = $this->settings->smtp(false)['reply_to'] ?: null;
-            Mail::to($log->recipient)->queue(new TemplatedMail($new->subject, $r['html'], $r['text'], $new->id, $replyTo));
-        } catch (\Throwable $e) {
-            $new->update(['status' => 'failed', 'error' => $e->getMessage()]);
-        }
+        $replyTo = $this->settings->smtp(false)['reply_to'] ?: null;
+        $this->deliver($log->recipient, new TemplatedMail($new->subject, $r['html'], $r['text'], $new->id, $replyTo, $r['logoPath'], $r['logoFallback']), $new);
 
         return $new;
     }
@@ -426,14 +460,65 @@ HTML,
         };
     }
 
+    /**
+     * Human-readable variation label. For colours we show a colour swatch plus a
+     * friendly colour name (the saved label, or the nearest common colour to the
+     * hex) instead of the raw hex code.
+     */
+    private function variationLabel(array $v): string
+    {
+        $name  = e($v['name'] ?? '');
+        $value = (string) ($v['value'] ?? '');
+        $label = (string) ($v['label'] ?? '');
+
+        if (($v['type'] ?? '') === 'color' && preg_match('/^#?[0-9a-fA-F]{6}$/', trim($value))) {
+            $swatch = '<span style="display:inline-block;width:11px;height:11px;border-radius:3px;border:1px solid #d4d4d8;background:' . e($value) . ';vertical-align:middle;margin:0 2px;"></span>';
+            $human  = ($label && strcasecmp($label, $value) !== 0) ? $label : ($this->colorName($value) ?? '');
+
+            return $name . ': ' . $swatch . ($human ? ' ' . e($human) : '');
+        }
+
+        return $name . ': ' . e($label ?: $value);
+    }
+
+    /** Nearest common colour name for a hex value (e.g. #ED1C24 → Red). */
+    private function colorName(string $hex): ?string
+    {
+        $hex = ltrim(trim($hex), '#');
+        if (! preg_match('/^[0-9a-fA-F]{6}$/', $hex)) {
+            return null;
+        }
+        [$r, $g, $b] = [hexdec(substr($hex, 0, 2)), hexdec(substr($hex, 2, 2)), hexdec(substr($hex, 4, 2))];
+
+        $palette = [
+            'Black' => [0, 0, 0], 'White' => [255, 255, 255], 'Gray' => [128, 128, 128], 'Silver' => [192, 192, 192],
+            'Red' => [220, 20, 30], 'Maroon' => [128, 0, 0], 'Orange' => [255, 140, 0], 'Gold' => [212, 175, 55],
+            'Yellow' => [240, 220, 20], 'Olive' => [128, 128, 0], 'Green' => [34, 139, 34], 'Teal' => [0, 128, 128],
+            'Blue' => [30, 80, 200], 'Navy' => [20, 30, 90], 'Purple' => [128, 0, 128], 'Pink' => [255, 105, 180],
+            'Brown' => [120, 72, 40], 'Beige' => [222, 200, 160],
+        ];
+
+        $best = null;
+        $bestD = PHP_INT_MAX;
+        foreach ($palette as $nm => [$pr, $pg, $pb]) {
+            $d = ($r - $pr) ** 2 + ($g - $pg) ** 2 + ($b - $pb) ** 2;
+            if ($d < $bestD) {
+                $bestD = $d;
+                $best = $nm;
+            }
+        }
+
+        return $best;
+    }
+
     public function productTable(Order $order): string
     {
         $rows = '';
         foreach ($order->items as $i) {
             $variations = '';
             if (! empty($i->variations) && is_array($i->variations)) {
-                $parts = array_map(fn ($v) => ($v['name'] ?? '') . ': ' . ($v['value'] ?? ''), $i->variations);
-                $variations = '<br><span style="color:#9b9ba3;font-size:12px;">' . e(implode(', ', $parts)) . '</span>';
+                $parts = array_map(fn ($v) => $this->variationLabel($v), $i->variations);
+                $variations = '<br><span style="color:#9b9ba3;font-size:12px;">' . implode(', ', $parts) . '</span>';
             }
             $rows .= '<tr>'
                 . '<td style="padding:12px 8px;border-bottom:1px solid #e7e7ea;font-size:14px;color:#17181B;">' . e($i->product_name) . $variations . '</td>'

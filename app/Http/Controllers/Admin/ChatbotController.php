@@ -14,7 +14,8 @@ class ChatbotController extends Controller
 {
     public function orders(Request $request): Response
     {
-        $query = Order::chatbot()->with(['user:id,name', 'invoice'])->latest();
+        $dr = \App\Support\DateRange::fromRequest($request, 'all');
+        $query = $dr->applyTo(Order::chatbot()->with(['user:id,name', 'invoice']))->latest();
 
         if ($request->filled('search')) {
             $s = $request->search;
@@ -40,24 +41,31 @@ class ChatbotController extends Controller
 
         return Inertia::render('Admin/Chatbot/Orders', [
             'orders' => $orders,
-            'filters' => $request->only(['search', 'status']),
+            'filters' => array_merge($request->only(['search', 'status']), $dr->filters()),
         ]);
     }
 
-    public function analytics(): Response
+    public function analytics(Request $request): Response
     {
-        $totalConversations = ChatbotConversation::count();
-        $converted = ChatbotConversation::whereNotNull('order_id')->count();
-        $ordersCount = Order::chatbot()->count();
-        $revenue = (float) Order::chatbot()->where('status', '!=', 'cancelled')->sum('total');
+        $dr = \App\Support\DateRange::fromRequest($request, '30');
+        $ev = fn ($q) => $q->when($dr->start, fn ($x) => $x->where('chatbot_events.created_at', '>=', $dr->start))
+            ->when($dr->end, fn ($x) => $x->where('chatbot_events.created_at', '<=', $dr->end));
+        $ord = fn ($q) => $q->when($dr->start, fn ($x) => $x->where('orders.created_at', '>=', $dr->start))
+            ->when($dr->end, fn ($x) => $x->where('orders.created_at', '<=', $dr->end));
 
-        $eventAgg = fn (string $type) => DB::table('chatbot_events')
+        $totalConversations = $dr->applyTo(ChatbotConversation::query())->count();
+        $converted = $dr->applyTo(ChatbotConversation::whereNotNull('order_id'))->count();
+        $ordersCount = $dr->applyTo(Order::chatbot())->count();
+        $revenue = (float) $dr->applyTo(Order::chatbot()->where('status', '!=', 'cancelled'))->sum('total');
+
+        $eventAgg = fn (string $type) => $ev(DB::table('chatbot_events')
             ->join('products', 'products.id', '=', 'chatbot_events.product_id')
-            ->where('chatbot_events.type', $type)
+            ->where('chatbot_events.type', $type))
             ->select('products.name', DB::raw('COUNT(*) as count'))
             ->groupBy('products.name')->orderByDesc('count')->limit(8)->get();
 
         return Inertia::render('Admin/Chatbot/Analytics', [
+            'filters' => $dr->filters(),
             'kpis' => [
                 'conversations' => $totalConversations,
                 'orders' => $ordersCount,
@@ -66,18 +74,18 @@ class ChatbotController extends Controller
             ],
             'mostAsked' => $eventAgg('product_shown'),
             'mostClicked' => $eventAgg('product_click'),
-            'leadingToOrders' => DB::table('order_items')
+            'leadingToOrders' => $ord(DB::table('order_items')
                 ->join('orders', 'orders.id', '=', 'order_items.order_id')
-                ->where('orders.source', 'chatbot')->where('orders.status', '!=', 'cancelled')
+                ->where('orders.source', 'chatbot')->where('orders.status', '!=', 'cancelled'))
                 ->select('order_items.product_name as name', DB::raw('SUM(order_items.quantity) as count'))
                 ->groupBy('order_items.product_name')->orderByDesc('count')->limit(8)->get(),
-            'topQuestions' => DB::table('chatbot_events')->where('type', 'query')->whereNotNull('query')
+            'topQuestions' => $ev(DB::table('chatbot_events')->where('type', 'query')->whereNotNull('query'))
                 ->select('query', DB::raw('COUNT(*) as count'))
                 ->groupBy('query')->orderByDesc('count')->limit(10)->get(),
-            'topCategories' => DB::table('chatbot_events')
+            'topCategories' => $ev(DB::table('chatbot_events')
                 ->join('products', 'products.id', '=', 'chatbot_events.product_id')
                 ->join('categories', 'categories.id', '=', 'products.category_id')
-                ->where('chatbot_events.type', 'product_shown')
+                ->where('chatbot_events.type', 'product_shown'))
                 ->select('categories.name', DB::raw('COUNT(*) as count'))
                 ->groupBy('categories.name')->orderByDesc('count')->limit(8)->get(),
         ]);
@@ -85,8 +93,17 @@ class ChatbotController extends Controller
 
     public function conversations(Request $request): Response
     {
-        $conversations = ChatbotConversation::withCount('messages')->with('user:id,name', 'order:id,order_number')
-            ->latest()->paginate(20)->through(fn (ChatbotConversation $c) => [
+        $dr = \App\Support\DateRange::fromRequest($request, 'all');
+        $query = $dr->applyTo(ChatbotConversation::withCount('messages')->with('user:id,name', 'order:id,order_number'));
+
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(fn ($q) => $q->whereHas('user', fn ($u) => $u->where('name', 'like', "%{$s}%"))
+                ->orWhereHas('order', fn ($o) => $o->where('order_number', 'like', "%{$s}%"))
+                ->orWhereHas('messages', fn ($m) => $m->where('content', 'like', "%{$s}%")));
+        }
+
+        $conversations = $query->latest()->paginate(20)->withQueryString()->through(fn (ChatbotConversation $c) => [
                 'id' => $c->id,
                 'user' => $c->user?->name ?? 'Guest',
                 'messages_count' => $c->messages_count,
@@ -96,6 +113,9 @@ class ChatbotController extends Controller
                     ->map(fn ($m) => ['role' => $m->role, 'content' => $m->content]),
             ]);
 
-        return Inertia::render('Admin/Chatbot/Conversations', ['conversations' => $conversations]);
+        return Inertia::render('Admin/Chatbot/Conversations', [
+            'conversations' => $conversations,
+            'filters' => array_merge($request->only(['search']), $dr->filters()),
+        ]);
     }
 }

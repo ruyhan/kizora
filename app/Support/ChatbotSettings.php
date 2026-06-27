@@ -25,7 +25,13 @@ class ChatbotSettings
     /** Decrypted API key for the active provider (empty string if unset/invalid). */
     public function apiKey(): string
     {
-        $key = $this->provider() === 'openrouter'
+        return $this->apiKeyFor($this->provider());
+    }
+
+    /** Decrypted API key for a specific provider. */
+    public function apiKeyFor(string $provider): string
+    {
+        $key = $provider === 'openrouter'
             ? ($this->data()['openrouter_api_key'] ?? '')
             : ($this->data()['groq_api_key'] ?? '');
         return $this->decrypt($key);

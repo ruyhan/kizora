@@ -100,6 +100,7 @@ Route::post('/contact', [ContactController::class, 'sendMessage'])->name('contac
 Route::post('/chat/message', [ChatController::class, 'message'])->middleware('throttle:30,1')->name('chat.message');
 Route::post('/chat/event',   [ChatController::class, 'event'])->middleware('throttle:60,1')->name('chat.event');
 Route::post('/chat/order',   [ChatController::class, 'placeOrder'])->middleware('throttle:10,1')->name('chat.order');
+Route::get('/chat/delivery-options', [ChatController::class, 'deliveryOptions'])->middleware('throttle:60,1')->name('chat.delivery-options');
 
 // Auth routes (guests only)
 Route::middleware('guest')->group(function () {
@@ -226,6 +227,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Chatbot Settings (Settings tab)
     Route::get('/chatbot-settings', [AdminChatbotSettingsController::class, 'index'])->middleware('permission:chatbot.settings.view')->name('chatbot-settings.index');
     Route::post('/chatbot-settings', [AdminChatbotSettingsController::class, 'update'])->middleware('permission:chatbot.settings.edit')->name('chatbot-settings.update');
+    Route::post('/chatbot-settings/test', [AdminChatbotSettingsController::class, 'test'])->middleware('permission:chatbot.settings.view')->name('chatbot-settings.test');
 
     // AI Chatbot orders + analytics
     Route::get('/chatbot/orders', [AdminChatbotController::class, 'orders'])->middleware('permission:chatbot.orders.view')->name('chatbot.orders');
@@ -248,6 +250,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::patch('/messages/contacts/{message}/status', [AdminMessageController::class, 'updateStatus'])->middleware('permission:customers.view')->name('messages.contacts.status');
     Route::delete('/messages/contacts/{message}', [AdminMessageController::class, 'destroy'])->middleware('permission:customers.delete')->name('messages.contacts.destroy');
     Route::post('/messages/contacts/bulk-delete', [AdminMessageController::class, 'bulkDestroy'])->middleware('permission:customers.delete')->name('messages.contacts.bulk-destroy');
+
+    // Product Reviews (manage / moderate)
+    Route::get('reviews',                  [\App\Http\Controllers\Admin\ReviewController::class, 'index'])->middleware('permission:products.view')->name('reviews.index');
+    Route::put('reviews/{review}',         [\App\Http\Controllers\Admin\ReviewController::class, 'update'])->middleware('permission:products.edit')->name('reviews.update');
+    Route::patch('reviews/{review}/toggle', [\App\Http\Controllers\Admin\ReviewController::class, 'toggle'])->middleware('permission:products.edit')->name('reviews.toggle');
+    Route::post('reviews/bulk-delete',     [\App\Http\Controllers\Admin\ReviewController::class, 'bulkDestroy'])->middleware('permission:products.edit')->name('reviews.bulk-destroy');
+    Route::delete('reviews/{review}',      [\App\Http\Controllers\Admin\ReviewController::class, 'destroy'])->middleware('permission:products.edit')->name('reviews.destroy');
 
     // Security / reCAPTCHA (Settings)
     Route::get('/recaptcha',  [AdminRecaptchaController::class, 'index'])->middleware('permission:settings.view')->name('recaptcha.index');
@@ -276,6 +285,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
         Route::get('logs',               [\App\Http\Controllers\Admin\EmailLogController::class, 'index'])->middleware('permission:settings.view')->name('logs');
         Route::post('logs/{log}/resend', [\App\Http\Controllers\Admin\EmailLogController::class, 'resend'])->middleware('permission:settings.edit')->name('logs.resend');
+        Route::delete('logs/clear',      [\App\Http\Controllers\Admin\EmailLogController::class, 'clear'])->middleware('permission:settings.edit')->name('logs.clear');
     });
 
     // Media Library

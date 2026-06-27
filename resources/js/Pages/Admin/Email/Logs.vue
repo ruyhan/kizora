@@ -6,9 +6,15 @@
       <SettingsTabs />
       <EmailTabs />
 
-      <div>
-        <h1 class="text-2xl font-bold font-display text-charcoal">Email Logs</h1>
-        <p class="text-muted text-sm mt-1">Every email the store has queued, sent or failed to send.</p>
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h1 class="text-2xl font-bold font-display text-charcoal">Email Logs</h1>
+          <p class="text-muted text-sm mt-1">Every email the store has queued, sent or failed to send.</p>
+        </div>
+        <button v-if="logs.total" type="button" @click="clearLogs"
+          class="btn-secondary text-sm px-4 shrink-0 inline-flex items-center gap-1.5 text-error border-error/30 hover:bg-error/5">
+          <TrashIcon class="w-4 h-4" /> Clear all logs
+        </button>
       </div>
 
       <!-- Filters -->
@@ -80,7 +86,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue'
 import SettingsTabs from '@/Components/admin/SettingsTabs.vue'
 import EmailTabs from '@/Components/admin/EmailTabs.vue'
 import SelectMenu from '@/Components/ui/SelectMenu.vue'
-import { ArrowPathIcon } from '@heroicons/vue/24/outline'
+import { ArrowPathIcon, TrashIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({ logs: Object, filters: Object, types: Array })
 
@@ -111,4 +117,9 @@ const clear = () => { Object.keys(f).forEach(k => f[k] = ''); apply() }
 const cleaned = () => Object.fromEntries(Object.entries(f).filter(([, v]) => v))
 const go = (url) => router.get(url, {}, { preserveState: true, preserveScroll: true })
 const resend = (l) => router.post(route('admin.email.logs.resend', l.id), {}, { preserveScroll: true })
+const clearLogs = () => {
+  if (confirm('Delete ALL email logs? This cannot be undone.')) {
+    router.delete(route('admin.email.logs.clear'), { preserveScroll: true })
+  }
+}
 </script>

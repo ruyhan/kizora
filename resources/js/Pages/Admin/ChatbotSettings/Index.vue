@@ -37,6 +37,29 @@
           <input v-if="modelChoice === '__custom__'" v-model="form.model" class="input-field mt-2" placeholder="Enter model id (e.g. openai/gpt-4o)">
           <p class="text-xs text-muted mt-1">Models shown are for the selected provider. Choose “Custom…” to enter any supported model id.</p>
         </div>
+
+        <!-- Test connection -->
+        <div class="pt-3 border-t border-purple-50">
+          <div class="flex items-center gap-3 flex-wrap">
+            <button type="button" @click="testConnection" :disabled="test.loading"
+              class="btn-secondary text-sm px-4 flex items-center gap-2 disabled:opacity-60">
+              <span v-if="test.loading" class="w-4 h-4 border-2 border-ink/40 border-t-ink rounded-full animate-spin"></span>
+              <BoltIcon v-else class="w-4 h-4" />
+              {{ test.loading ? 'Testing…' : 'Test connection' }}
+            </button>
+            <span v-if="test.result" class="inline-flex items-center gap-1.5 text-sm font-semibold"
+              :class="test.result.ok ? 'text-success' : 'text-error'">
+              <CheckCircleIcon v-if="test.result.ok" class="w-4 h-4" />
+              <ExclamationTriangleIcon v-else class="w-4 h-4" />
+              {{ test.result.ok ? 'Connected' : 'Not connected' }}
+            </span>
+          </div>
+          <p v-if="test.result" class="text-xs mt-2 leading-relaxed" :class="test.result.ok ? 'text-muted' : 'text-error/90'">
+            {{ test.result.message }}
+            <span v-if="test.result.ok && test.result.reply"> · model replied: “{{ test.result.reply }}”</span>
+          </p>
+          <p class="text-[11px] text-muted mt-1">Tests the selected provider using the key above, or the saved key if left blank.</p>
+        </div>
       </section>
 
       <!-- Identity -->
@@ -106,6 +129,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+import axios from 'axios'
 import { Head, useForm } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import SelectMenu from '@/Components/ui/SelectMenu.vue'
@@ -113,7 +137,7 @@ import SettingsTabs from '@/Components/admin/SettingsTabs.vue'
 import Button from '@/Components/ui/Button.vue'
 import ColorField from '@/Components/ui/ColorField.vue'
 import MediaPicker from '@/Components/MediaPicker.vue'
-import { PhotoIcon } from '@heroicons/vue/24/outline'
+import { PhotoIcon, BoltIcon, CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({ settings: Object, hasGroqKey: Boolean, hasOpenrouterKey: Boolean })
 
@@ -143,6 +167,23 @@ const pick = (field) => { picker.value = { open: true, field } }
 const onPick = (media) => { if (media?.file_url && picker.value.field) form[picker.value.field] = media.file_url; picker.value.open = false }
 
 const save = () => form.post(route('admin.chatbot-settings.update'), { preserveScroll: true })
+
+// Test connection — pings the provider with the typed (or saved) key.
+const test = ref({ loading: false, result: null })
+const testConnection = async () => {
+  test.value = { loading: true, result: null }
+  try {
+    const { data } = await axios.post(route('admin.chatbot-settings.test'), {
+      provider: form.provider,
+      model: form.model,
+      groq_api_key: form.groq_api_key,
+      openrouter_api_key: form.openrouter_api_key,
+    })
+    test.value = { loading: false, result: data }
+  } catch (e) {
+    test.value = { loading: false, result: { ok: false, message: e?.response?.data?.message || 'Request failed.' } }
+  }
+}
 </script>
 
 <style scoped>

@@ -7,55 +7,49 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use App\Models\ContactMessage;
+use App\Support\DateRange;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        // ── Period-over-period windows (last 30 days vs the prior 30) ──
-        $now       = now();
-        $curStart  = $now->copy()->subDays(30);
-        $prevStart = $now->copy()->subDays(60);
+        $dr = DateRange::fromRequest($request, '30');
+        $hasPrev = (bool) $dr->prevStart;
 
         // % change; null when there's no prior baseline (avoids misleading +100%)
         $pct = function (float $current, float $previous): ?int {
             if ($previous <= 0) return null;
             return (int) round((($current - $previous) / $previous) * 100);
         };
-
-        $ordersCur  = Order::whereBetween('created_at', [$curStart, $now])->count();
-        $ordersPrev = Order::whereBetween('created_at', [$prevStart, $curStart])->count();
-
-        // Revenue = all non-cancelled orders (consistent with Reports & Sales Analysis).
-        $revCur  = (float) Order::where('status', '!=', 'cancelled')->whereBetween('created_at', [$curStart, $now])->sum('total');
-        $revPrev = (float) Order::where('status', '!=', 'cancelled')->whereBetween('created_at', [$prevStart, $curStart])->sum('total');
-
-        $pendCur  = Order::where('status', 'pending')->whereBetween('created_at', [$curStart, $now])->count();
-        $pendPrev = Order::where('status', 'pending')->whereBetween('created_at', [$prevStart, $curStart])->count();
+        $prevCount = fn ($q) => $hasPrev ? $q->whereBetween('created_at', [$dr->prevStart, $dr->prevEnd])->count() : 0;
+        $prevSum = fn ($q) => $hasPrev ? (float) $q->whereBetween('created_at', [$dr->prevStart, $dr->prevEnd])->sum('total') : 0;
 
         $consumers = fn () => User::whereHas('role', fn ($q) => $q->where('slug', 'consumer'));
-        $custCur  = $consumers()->whereBetween('created_at', [$curStart, $now])->count();
-        $custPrev = $consumers()->whereBetween('created_at', [$prevStart, $curStart])->count();
+
+        $ordersCur = $dr->applyTo(Order::query())->count();
+        $revCur    = (float) $dr->applyTo(Order::where('status', '!=', 'cancelled'))->sum('total');
+        $pendCur   = $dr->applyTo(Order::where('status', 'pending'))->count();
+        $custCur   = $dr->applyTo($consumers())->count();
 
         $stats = [
-            'total_orders' => Order::count(),
-            'pending_orders' => Order::where('status', 'pending')->count(),
-            'completed_orders' => Order::where('status', 'completed')->count(),
-            'total_revenue' => Order::where('status', '!=', 'cancelled')->sum('total'),
-            'total_products' => Product::count(),
-            'total_customers' => User::whereHas('role', fn ($q) => $q->where('slug', 'consumer'))->count(),
-            'unread_messages' => ContactMessage::where('is_read', false)->count(),
-            // real deltas
-            'orders_change'    => $pct($ordersCur, $ordersPrev),
-            'revenue_change'   => $pct($revCur, $revPrev),
-            'pending_change'   => $pct($pendCur, $pendPrev),
-            'customers_change' => $pct($custCur, $custPrev),
+            'total_orders'     => $ordersCur,
+            'pending_orders'   => $pendCur,
+            'completed_orders' => $dr->applyTo(Order::where('status', 'completed'))->count(),
+            'total_revenue'    => round($revCur, 2),
+            'total_products'   => Product::count(),                 // catalog size (all-time)
+            'total_customers'  => $custCur,
+            'unread_messages'  => ContactMessage::where('is_read', false)->count(),
+            'orders_change'    => $hasPrev ? $pct($ordersCur, $prevCount(Order::query())) : null,
+            'revenue_change'   => $hasPrev ? $pct($revCur, $prevSum(Order::where('status', '!=', 'cancelled'))) : null,
+            'pending_change'   => $hasPrev ? $pct($pendCur, $prevCount(Order::where('status', 'pending'))) : null,
+            'customers_change' => $hasPrev ? $pct($custCur, $prevCount($consumers())) : null,
         ];
 
-        $recentOrders = Order::with('user')
+        $recentOrders = $dr->applyTo(Order::with('user'))
             ->latest()
             ->take(10)
             ->get()
@@ -71,24 +65,27 @@ class DashboardController extends Controller
                 'created_at' => $o->created_at->format('d M Y'),
             ]);
 
-        $salesData = Order::select(
+        $salesData = $dr->applyTo(Order::select(
                 DB::raw('DATE(created_at) as date'),
                 DB::raw('SUM(total) as revenue'),
                 DB::raw('COUNT(*) as orders')
-            )
-            ->where('created_at', '>=', now()->subDays(30))
+            ))
             ->groupBy('date')
             ->orderBy('date')
             ->get();
 
         $topProducts = DB::table('order_items')
-            ->select('product_name', DB::raw('SUM(quantity) as sold'), DB::raw('SUM(total) as revenue'))
-            ->groupBy('product_name')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->when($dr->start, fn ($q) => $q->where('orders.created_at', '>=', $dr->start))
+            ->when($dr->end, fn ($q) => $q->where('orders.created_at', '<=', $dr->end))
+            ->select('order_items.product_name', DB::raw('SUM(order_items.quantity) as sold'), DB::raw('SUM(order_items.total) as revenue'))
+            ->groupBy('order_items.product_name')
             ->orderByDesc('sold')
             ->take(5)
             ->get();
 
         return Inertia::render('Admin/Dashboard', [
+            'filters' => $dr->filters(),
             'stats' => $stats,
             'recentOrders' => $recentOrders,
             'salesData' => $salesData,

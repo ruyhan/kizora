@@ -37,6 +37,13 @@
               <p class="text-muted text-xs mt-0.5">
                 ৳{{ Number(item.price).toFixed(0) }} × {{ item.quantity }}
               </p>
+              <button v-if="canReviewItem(item)" type="button" @click="openReview(item.id)"
+                class="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-amber-600 hover:text-amber-700">
+                <StarIcon class="w-3.5 h-3.5" /> Leave a review
+              </button>
+              <span v-if="!canReviewItem(item) && item.reviewed" class="mt-1.5 inline-flex items-center gap-1 text-xs text-success font-medium">
+                <CheckCircleIcon class="w-3.5 h-3.5" /> Reviewed
+              </span>
             </div>
             <p class="font-bold text-charcoal text-sm shrink-0">৳{{ Number(item.total).toFixed(0) }}</p>
           </div>
@@ -103,13 +110,18 @@
 
       </div>
     </div>
+
+    <ReviewModal :open="review.open" :order="order" :preselect-id="review.itemId"
+      @close="review.open = false" @submitted="review.open = false" />
   </AccountLayout>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { Head, Link } from '@inertiajs/vue3'
 import AccountLayout from '@/Layouts/AccountLayout.vue'
 import VariationTags from '@/Components/ui/VariationTags.vue'
+import ReviewModal from '@/Components/ReviewModal.vue'
 import { statusBadge } from '@/composables/useOrderStatus'
 import {
   ArrowLeftIcon,
@@ -118,7 +130,13 @@ import {
   TruckIcon,
   MapPinIcon,
   CreditCardIcon,
+  StarIcon,
+  CheckCircleIcon,
 } from '@heroicons/vue/24/outline'
 
-defineProps({ order: Object })
+const props = defineProps({ order: Object })
+
+const review = ref({ open: false, itemId: null })
+const canReviewItem = (item) => props.order.can_review && item.slug && !item.reviewed
+const openReview = (itemId) => { review.value = { open: true, itemId } }
 </script>

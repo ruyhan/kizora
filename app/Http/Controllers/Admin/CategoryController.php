@@ -15,23 +15,37 @@ class CategoryController extends Controller
 
     public function index(Request $request)
     {
-        $all = Category::withCount('products')->orderBy('sort_order')->orderBy('name')->get();
+        $dr = \App\Support\DateRange::fromRequest($request, 'all');
+        $filtering = $request->filled('search') || $dr->range !== 'all';
 
-        // Order as parents → their children, for an indented list.
-        $ordered = collect();
-        foreach ($all->whereNull('parent_id') as $parent) {
-            $ordered->push($this->row($parent));
-            foreach ($all->where('parent_id', $parent->id) as $child) {
-                $ordered->push($this->row($child));
+        $base = $dr->applyTo(Category::withCount('products'));
+        if ($request->filled('search')) {
+            $base->where('name', 'like', "%{$request->search}%");
+        }
+        $all = $base->orderBy('sort_order')->orderBy('name')->get();
+
+        if ($filtering) {
+            // Flat list of matches (the parent→child tree layout doesn't apply while filtering).
+            $ordered = $all->map(fn ($c) => $this->row($c))->values();
+        } else {
+            $ordered = collect();
+            foreach ($all->whereNull('parent_id') as $parent) {
+                $ordered->push($this->row($parent));
+                foreach ($all->where('parent_id', $parent->id) as $child) {
+                    $ordered->push($this->row($child));
+                }
             }
+            $ordered = $ordered->values();
         }
 
         return Inertia::render('Admin/Categories/Index', [
-            'categories'         => $ordered->values(),
-            'parents'            => $all->whereNull('parent_id')->map(fn ($c) => ['id' => $c->id, 'name' => $c->name])->values(),
-            'featuredCount'      => $all->where('is_featured', true)->count(),
+            'categories'         => $ordered,
+            // Parent options + featured counts come from the full set, independent of filters.
+            'parents'            => Category::whereNull('parent_id')->orderBy('name')->get(['id', 'name'])->map(fn ($c) => ['id' => $c->id, 'name' => $c->name])->values(),
+            'featuredCount'      => Category::where('is_featured', true)->count(),
             'featuredLimit'      => self::HOME_FEATURED_LIMIT,
             'canManageFeatured'  => (bool) $request->user()?->hasPermission('categories.manage_featured'),
+            'filters'            => array_merge($request->only(['search']), $dr->filters()),
         ]);
     }
 

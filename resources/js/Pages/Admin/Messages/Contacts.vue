@@ -7,6 +7,7 @@
         <h1 class="font-display text-2xl font-bold text-charcoal">Leads &amp; Messages</h1>
         <p class="text-muted text-sm">Manage customer inquiries from the contact form through your lead pipeline.</p>
       </div>
+      <DateRangeFilter route-name="admin.messages.contacts" :filters="filters" :params="{ status: statusFilter, search: search }" />
     </div>
 
     <!-- Stat cards -->
@@ -165,6 +166,7 @@ import { Head, Link, router } from '@inertiajs/vue3'
 import { useToast } from 'vue-toastification'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import BulkDeleteBar from '@/Components/admin/BulkDeleteBar.vue'
+import DateRangeFilter from '@/Components/admin/DateRangeFilter.vue'
 import { usePermissions } from '@/composables/usePermissions'
 import { MagnifyingGlassIcon, TrashIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 
@@ -222,9 +224,12 @@ const tabs = [
   ...props.statuses.map((s) => ({ value: s, label: statusMeta[s]?.label || s, count: props.counts[s] ?? 0, color: statusMeta[s]?.color })),
 ]
 
+const dateParams = () => props.filters?.range === 'custom'
+  ? { from: props.filters.from, to: props.filters.to }
+  : { range: props.filters?.range }
 const reload = () => {
   router.get(route('admin.messages.contacts'),
-    { status: statusFilter.value || undefined, search: search.value || undefined },
+    { status: statusFilter.value || undefined, search: search.value || undefined, ...dateParams() },
     { preserveState: true, preserveScroll: true, replace: true })
 }
 const selectStatus = (v) => { statusFilter.value = v; reload() }

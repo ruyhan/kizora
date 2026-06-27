@@ -3,9 +3,12 @@
     <Head title="POS Orders" />
     <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
       <h1 class="font-display text-2xl font-bold text-charcoal">POS Orders</h1>
-      <Link v-if="can('pos.create')" :href="route('admin.pos.create')" class="btn-primary text-sm px-4 py-2 inline-flex items-center gap-1.5">
-        <PlusIcon class="w-4 h-4" /> New POS order
-      </Link>
+      <div class="flex items-center gap-2">
+        <DateRangeFilter route-name="admin.pos.orders" :filters="filters" :params="f" />
+        <Link v-if="can('pos.create')" :href="route('admin.pos.create')" class="btn-primary text-sm px-4 py-2 inline-flex items-center gap-1.5">
+          <PlusIcon class="w-4 h-4" /> New POS order
+        </Link>
+      </div>
     </div>
 
     <div class="flex flex-wrap items-center gap-2 mb-4">
@@ -67,6 +70,7 @@ import Pagination from '@/Components/ui/Pagination.vue'
 import OrderModal from '@/Components/admin/OrderModal.vue'
 import BulkDeleteBar from '@/Components/admin/BulkDeleteBar.vue'
 import SelectMenu from '@/Components/ui/SelectMenu.vue'
+import DateRangeFilter from '@/Components/admin/DateRangeFilter.vue'
 import { usePermissions } from '@/composables/usePermissions'
 import { statusBadge } from '@/composables/useOrderStatus'
 import { MagnifyingGlassIcon, PlusIcon } from '@heroicons/vue/24/outline'
@@ -98,7 +102,7 @@ const bulkDelete = () => {
   })
 }
 
-const f = ref({ search: props.filters?.search || '', payment_method: props.filters?.payment_method || '' })
+const f = ref({ search: props.filters?.search || '', payment_method: props.filters?.payment_method || '', range: props.filters?.range, from: props.filters?.from, to: props.filters?.to })
 let t = null
 const apply = () => router.get(route('admin.pos.orders'), f.value, { preserveState: true, preserveScroll: true, replace: true })
 const applyDebounced = () => { clearTimeout(t); t = setTimeout(apply, 350) }

@@ -24,7 +24,8 @@ class UserController extends Controller
 
     public function index(Request $request): Response
     {
-        $query = $this->staffQuery()->with('role');
+        $dr = \App\Support\DateRange::fromRequest($request, 'all');
+        $query = $dr->applyTo($this->staffQuery()->with('role'));
 
         if ($request->filled('search')) {
             $s = $request->search;
@@ -53,7 +54,7 @@ class UserController extends Controller
         return Inertia::render('Admin/Users/Index', [
             'users' => $users,
             'roles' => Role::where('is_staff', true)->get(['id', 'name', 'slug']),
-            'filters' => $request->only(['search', 'role', 'status']),
+            'filters' => array_merge($request->only(['search', 'role', 'status']), $dr->filters()),
             'invitations' => UserInvitation::with('role:id,name')->whereNull('accepted_at')->latest()->get()
                 ->map(fn ($i) => [
                     'id' => $i->id,

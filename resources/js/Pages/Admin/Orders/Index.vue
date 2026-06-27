@@ -2,7 +2,10 @@
   <AdminLayout>
     <Head title="Orders" />
 
-    <h1 class="font-display text-2xl font-bold text-charcoal mb-5">Orders</h1>
+    <div class="flex items-center justify-between gap-3 mb-5">
+      <h1 class="font-display text-2xl font-bold text-charcoal">Orders</h1>
+      <DateRangeFilter route-name="admin.orders.index" :filters="filters" :params="{ status: statusFilter, search: searchTerm }" />
+    </div>
 
     <!-- Status filter tabs (colourful, with live counts) -->
     <div class="flex gap-2 overflow-x-auto scrollbar-hide pb-1 mb-6">
@@ -16,6 +19,12 @@
         <span :class="statusFilter === t.value ? 'bg-white/25 text-white' : 'bg-purple-50 text-muted'"
           class="text-xs font-bold px-1.5 min-w-[20px] h-5 rounded-full inline-flex items-center justify-center">{{ t.count }}</span>
       </button>
+    </div>
+
+    <!-- Search -->
+    <div class="relative max-w-sm mb-4">
+      <MagnifyingGlassIcon class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+      <input v-model="searchTerm" @input="onSearch" type="text" placeholder="Search order # or customer…" class="input-field text-sm pl-9 py-2 w-full">
     </div>
 
     <div class="bg-white rounded-2xl shadow-sm border border-purple-50 overflow-hidden">
@@ -79,6 +88,8 @@ import { useToast } from 'vue-toastification'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import OrderModal from '@/Components/admin/OrderModal.vue'
 import BulkDeleteBar from '@/Components/admin/BulkDeleteBar.vue'
+import DateRangeFilter from '@/Components/admin/DateRangeFilter.vue'
+import { MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
 import { statusBadge, paymentBadge } from '@/composables/useOrderStatus'
 import { usePermissions } from '@/composables/usePermissions'
 
@@ -129,10 +140,19 @@ const tabs = computed(() => [
   { value: 'cancelled',        key: 'cancelled',        label: 'Cancelled',        count: props.counts.cancelled ?? 0 },
 ])
 
-const selectTab = (value) => {
-  statusFilter.value = value
-  router.get(route('admin.orders.index'), { status: value }, { preserveState: true, preserveScroll: true })
-}
+const dateParams = computed(() => props.filters?.range === 'custom'
+  ? { from: props.filters.from, to: props.filters.to }
+  : { range: props.filters?.range })
+
+const reload = (overrides = {}) => router.get(route('admin.orders.index'),
+  { status: statusFilter.value || undefined, search: searchTerm.value || undefined, ...dateParams.value, ...overrides },
+  { preserveState: true, preserveScroll: true, replace: true })
+
+const selectTab = (value) => { statusFilter.value = value; reload({ status: value || undefined }) }
+
+const searchTerm = ref(props.filters?.search || '')
+let _st
+const onSearch = () => { clearTimeout(_st); _st = setTimeout(reload, 350) }
 </script>
 
 <style scoped>

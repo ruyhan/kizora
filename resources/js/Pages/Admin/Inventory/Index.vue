@@ -22,6 +22,7 @@
       </div>
       <SelectMenu :model-value="f.status" @update:model-value="v => { f.status = v; apply() }" :options="statusOptions" trigger-class="text-sm py-2" class="w-40" />
       <SelectMenu :model-value="f.sort" @update:model-value="v => { f.sort = v; apply() }" :options="sortOptions" trigger-class="text-sm py-2" class="w-40" />
+      <DateRangeFilter route-name="admin.inventory.index" :filters="filters" :params="f" />
       <a v-if="can('inventory.export')" :href="route('admin.inventory.export')" class="btn-secondary text-sm px-4 py-2 inline-flex items-center gap-1.5">
         <ArrowDownTrayIcon class="w-4 h-4" /> Export
       </a>
@@ -107,6 +108,7 @@ import InventoryTabs from '@/Components/admin/InventoryTabs.vue'
 import Modal from '@/Components/ui/Modal.vue'
 import Pagination from '@/Components/ui/Pagination.vue'
 import SelectMenu from '@/Components/ui/SelectMenu.vue'
+import DateRangeFilter from '@/Components/admin/DateRangeFilter.vue'
 import { usePermissions } from '@/composables/usePermissions'
 
 const statusOptions = [
@@ -139,7 +141,7 @@ const cards = computed(() => [
 const statusClass = (s) => ({ in: 'badge-success', low: 'badge-warning', out: 'badge-error' }[s])
 const statusLabel = (s) => ({ in: 'In Stock', low: 'Low Stock', out: 'Out of Stock' }[s])
 
-const f = ref({ search: props.filters?.search || '', status: props.filters?.status || '', sort: props.filters?.sort || 'stock_asc' })
+const f = ref({ search: props.filters?.search || '', status: props.filters?.status || '', sort: props.filters?.sort || 'stock_asc', range: props.filters?.range, from: props.filters?.from, to: props.filters?.to })
 let t = null
 const apply = () => router.get(route('admin.inventory.index'), f.value, { preserveState: true, preserveScroll: true, replace: true })
 const applyDebounced = () => { clearTimeout(t); t = setTimeout(apply, 350) }

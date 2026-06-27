@@ -7,9 +7,12 @@
         <h1 class="font-display text-2xl font-bold text-charcoal">Audit Logs</h1>
         <p class="text-muted text-sm">Every important action, who did it and when.</p>
       </div>
-      <button v-if="total > 0" @click="clearLogs" class="btn-secondary text-error text-sm px-4 py-2 inline-flex items-center gap-1.5">
-        <TrashIcon class="w-4 h-4" /> Clear logs
-      </button>
+      <div class="flex items-center gap-2">
+        <DateRangeFilter route-name="admin.audit-logs.index" :filters="filters" :params="f" />
+        <button v-if="total > 0" @click="clearLogs" class="btn-secondary text-error text-sm px-4 py-2 inline-flex items-center gap-1.5">
+          <TrashIcon class="w-4 h-4" /> Clear logs
+        </button>
+      </div>
     </div>
 
     <div class="flex flex-wrap items-center gap-2 mb-4">
@@ -62,6 +65,7 @@
 import { ref } from 'vue'
 import { Head, router } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
+import DateRangeFilter from '@/Components/admin/DateRangeFilter.vue'
 import Pagination from '@/Components/ui/Pagination.vue'
 import { MagnifyingGlassIcon, TrashIcon } from '@heroicons/vue/24/outline'
 
@@ -80,7 +84,7 @@ const actionClass = (a) => {
   return 'badge-gray'
 }
 
-const f = ref({ search: props.filters?.search || '', module: props.filters?.module || '', action: props.filters?.action || '' })
+const f = ref({ search: props.filters?.search || '', module: props.filters?.module || '', action: props.filters?.action || '', range: props.filters?.range, from: props.filters?.from, to: props.filters?.to })
 let t = null
 const apply = () => router.get(route('admin.audit-logs.index'), f.value, { preserveState: true, preserveScroll: true, replace: true })
 const applyDebounced = () => { clearTimeout(t); t = setTimeout(apply, 350) }

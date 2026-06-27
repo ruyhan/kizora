@@ -23,7 +23,8 @@ class InventoryController extends Controller
 
     public function index(Request $request): Response
     {
-        $query = Product::with('category:id,name');
+        $dr = \App\Support\DateRange::fromRequest($request, 'all');
+        $query = $dr->applyTo(Product::with('category:id,name'));
 
         if ($request->filled('search')) {
             $s = $request->search;
@@ -57,7 +58,7 @@ class InventoryController extends Controller
 
         return Inertia::render('Admin/Inventory/Index', [
             'products' => $products,
-            'filters' => $request->only(['search', 'status', 'sort']),
+            'filters' => array_merge($request->only(['search', 'status', 'sort']), $dr->filters()),
             'lowThreshold' => self::LOW_STOCK,
             'summary' => [
                 'total_products' => Product::count(),

@@ -29,6 +29,8 @@ class TemplatedMail extends Mailable implements ShouldQueue
         public string $bodyText,
         public int $logId,
         public ?string $replyToAddress = null,
+        public ?string $logoPath = null,
+        public ?string $logoFallback = null,
     ) {}
 
     public function envelope(): Envelope
@@ -41,10 +43,17 @@ class TemplatedMail extends Mailable implements ShouldQueue
 
     public function content(): Content
     {
+        // Rendered through a Blade wrapper so the logo placeholder can be swapped
+        // for an inline CID (via $message->embed) — which renders in Gmail too.
         return new Content(
-            htmlString: $this->bodyHtml,
+            view: 'emails.wrapper',
             text: 'emails.plain',
-            with: ['text' => $this->bodyText],
+            with: [
+                'html'         => $this->bodyHtml,
+                'logoPath'     => $this->logoPath,
+                'logoFallback' => $this->logoFallback,
+                'text'         => $this->bodyText,
+            ],
         );
     }
 

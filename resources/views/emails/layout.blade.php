@@ -30,7 +30,7 @@
                     <tr>
                         <td style="background:#17181B;padding:26px 32px;text-align:center;">
                             @if(!empty($brand['logo']))
-                                <img src="{{ $brand['logo'] }}" alt="{{ $brand['company_name'] ?? '' }}" height="34" style="height:34px;width:auto;max-width:200px;filter:brightness(0) invert(1);">
+                                <img src="{{ $brand['logo'] }}" alt="{{ $brand['company_name'] ?? '' }}" height="40" style="height:40px;width:auto;max-width:220px;display:inline-block;">
                             @else
                                 <span style="color:#ffffff;font-size:22px;font-weight:800;letter-spacing:-.02em;">{{ $brand['company_name'] ?? 'Kizora' }}</span>
                             @endif

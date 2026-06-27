@@ -28,20 +28,24 @@ class Order extends Model
         'estimated_delivery_date' => 'date',
     ];
 
-    /** Customer contact — registered user takes precedence over guest snapshot. */
+    /**
+     * Customer contact for THIS order. The per-order snapshot (what was entered
+     * at checkout) wins, falling back to the linked account — so changes made on
+     * the checkout form are honoured even for logged-in customers.
+     */
     public function getCustomerNameAttribute(): string
     {
-        return $this->user?->name ?: ($this->guest_name ?: 'Customer');
+        return $this->guest_name ?: ($this->user?->name ?: 'Customer');
     }
 
     public function getCustomerEmailAttribute(): ?string
     {
-        return $this->user?->email ?: $this->guest_email;
+        return $this->guest_email ?: $this->user?->email;
     }
 
     public function getCustomerPhoneAttribute(): ?string
     {
-        return $this->user?->phone ?: $this->guest_phone;
+        return $this->guest_phone ?: $this->user?->phone;
     }
 
     protected static function boot()

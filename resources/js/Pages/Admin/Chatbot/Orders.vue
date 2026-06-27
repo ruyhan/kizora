@@ -9,6 +9,7 @@
         <input v-model="f.search" @input="applyDebounced" type="text" placeholder="Search order # or customer…" class="input-field text-sm pl-9 py-2 w-full">
       </div>
       <SelectMenu :model-value="f.status" @update:model-value="v => { f.status = v; apply() }" :options="statusOptions" trigger-class="text-sm py-2" class="w-44" />
+      <DateRangeFilter route-name="admin.chatbot.orders" :filters="filters" :params="f" />
     </div>
 
     <div class="bg-white rounded-2xl shadow-sm border border-purple-50 overflow-hidden">
@@ -58,6 +59,7 @@ import Pagination from '@/Components/ui/Pagination.vue'
 import OrderModal from '@/Components/admin/OrderModal.vue'
 import BulkDeleteBar from '@/Components/admin/BulkDeleteBar.vue'
 import SelectMenu from '@/Components/ui/SelectMenu.vue'
+import DateRangeFilter from '@/Components/admin/DateRangeFilter.vue'
 import { statusBadge } from '@/composables/useOrderStatus'
 import { usePermissions } from '@/composables/usePermissions'
 import { MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
@@ -88,7 +90,7 @@ const bulkDelete = () => {
     onFinish: () => { bulkDeleting.value = false },
   })
 }
-const f = ref({ search: props.filters?.search || '', status: props.filters?.status || '' })
+const f = ref({ search: props.filters?.search || '', status: props.filters?.status || '', range: props.filters?.range, from: props.filters?.from, to: props.filters?.to })
 let t = null
 const apply = () => router.get(route('admin.chatbot.orders'), f.value, { preserveState: true, preserveScroll: true, replace: true })
 const applyDebounced = () => { clearTimeout(t); t = setTimeout(apply, 350) }

@@ -82,11 +82,18 @@
             </div>
             <input v-model="order.form.name" placeholder="Your name *" class="kz-in">
             <input v-model="order.form.phone" placeholder="Phone *" class="kz-in">
-            <input v-model="order.form.address" placeholder="Delivery address *" class="kz-in">
+            <input v-model="order.form.email" type="email" placeholder="Email (optional — for order confirmation)" class="kz-in">
             <div class="flex gap-2">
-              <button @click="order.form.inside_dhaka = true" :class="order.form.inside_dhaka ? 'ring-2' : 'opacity-60'" :style="{ '--tw-ring-color': cfg.primary_color }" class="flex-1 kz-in text-center">Inside Dhaka</button>
-              <button @click="order.form.inside_dhaka = false" :class="!order.form.inside_dhaka ? 'ring-2' : 'opacity-60'" :style="{ '--tw-ring-color': cfg.primary_color }" class="flex-1 kz-in text-center">Outside Dhaka</button>
+              <select v-model="order.form.city_id" class="kz-in flex-1">
+                <option :value="null" disabled>Delivery city *</option>
+                <option v-for="c in order.cities" :key="c.id" :value="c.id">{{ c.name }}</option>
+              </select>
+              <select v-model="order.form.delivery_area_id" :disabled="!orderAreas.length" class="kz-in flex-1">
+                <option :value="null" disabled>{{ order.cities.length ? 'Area *' : 'Loading…' }}</option>
+                <option v-for="a in orderAreas" :key="a.id" :value="a.id">{{ a.name }}</option>
+              </select>
             </div>
+            <input v-model="order.form.address" placeholder="Full delivery address (house, road) *" class="kz-in">
             <p v-if="order.error" class="text-error text-[11px]">{{ order.error }}</p>
             <div class="flex gap-2 pt-1">
               <button @click="order.active = false" class="flex-1 text-xs py-1.5 rounded-md border border-current opacity-70">Cancel</button>
@@ -97,7 +104,7 @@
 
         <!-- Input -->
         <form @submit.prevent="send" :class="dark ? 'bg-[#1b1c20] border-white/10' : 'bg-white border-black/5'" class="flex items-center gap-2 p-2.5 border-t shrink-0">
-          <input v-model="input" :disabled="sending" placeholder="Ask me anything…" :class="dark ? 'bg-[#2a2b30] text-gray-100' : 'bg-[#F1F1F2] text-charcoal'" class="flex-1 px-3 py-2 rounded-full text-sm outline-none">
+          <input ref="inputEl" v-model="input" placeholder="Ask me anything…" :class="dark ? 'bg-[#2a2b30] text-gray-100' : 'bg-[#F1F1F2] text-charcoal'" class="flex-1 px-3 py-2 rounded-full text-sm outline-none">
           <button type="submit" :disabled="!input.trim() || sending" :style="{ background: cfg.primary_color }" class="w-9 h-9 rounded-full text-white flex items-center justify-center disabled:opacity-50 shrink-0"><PaperAirplaneIcon class="w-4 h-4" /></button>
         </form>
       </div>
@@ -106,7 +113,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, nextTick } from 'vue'
+import { ref, reactive, computed, watch, nextTick } from 'vue'
 import { usePage, router } from '@inertiajs/vue3'
 import axios from 'axios'
 import { useToast } from 'vue-toastification'
@@ -132,7 +139,11 @@ const input = ref('')
 const sending = ref(false)
 const messages = ref([])
 const scroller = ref(null)
+const inputEl = ref(null)
 const carousels = {}
+
+// Keep the composer focused so the user can keep typing without re-clicking.
+const focusInput = () => nextTick(() => inputEl.value?.focus())
 
 const toggle = () => {
   open.value = !open.value
@@ -140,6 +151,7 @@ const toggle = () => {
     messages.value.push({ role: 'assistant', text: cfg.value.welcome_message })
   }
   scrollDown()
+  if (open.value) focusInput()
 }
 
 const scrollDown = () => nextTick(() => { if (scroller.value) scroller.value.scrollTop = scroller.value.scrollHeight })
@@ -159,6 +171,7 @@ const send = async () => {
   } finally {
     sending.value = false
     scrollDown()
+    focusInput() // keep the cursor in the box for the next message
   }
 }
 
@@ -172,24 +185,42 @@ const addCart = async (p) => {
 }
 
 // Order flow
-const order = reactive({ active: false, items: [], placing: false, error: '', form: { name: '', phone: '', address: '', inside_dhaka: true } })
+const order = reactive({
+  active: false, items: [], placing: false, error: '',
+  cities: [], // active delivery cities (with areas)
+  form: { name: '', phone: '', email: '', address: '', city_id: null, delivery_area_id: null },
+})
+// Areas for the chosen city
+const orderAreas = computed(() => order.cities.find((c) => c.id === order.form.city_id)?.areas || [])
+// Reset area when city changes
+watch(() => order.form.city_id, () => { order.form.delivery_area_id = null })
+
+const loadDeliveryOptions = async () => {
+  if (order.cities.length) return
+  try {
+    const { data } = await axios.get(route('chat.delivery-options'))
+    order.cities = data.cities || []
+  } catch { /* leave empty — confirm will validate */ }
+}
 const startOrder = (p) => {
   axios.post(route('chat.event'), { type: 'product_click', product_id: p.id }).catch(() => {})
   order.items = [{ product: p, quantity: 1 }]
   order.error = ''
   order.active = true
+  loadDeliveryOptions()
   messages.value.push({ role: 'assistant', text: `Great choice! Let's get "${p.name}" on its way. Just fill in your details below 👇` })
   scrollDown()
 }
 const confirmOrder = async () => {
   order.error = ''
-  if (!order.form.name.trim() || !order.form.phone.trim() || !order.form.address.trim()) { order.error = 'Please fill name, phone and address.'; return }
+  if (!order.form.name.trim() || !order.form.phone.trim() || !order.form.address.trim()) { order.error = 'Please fill in your name, phone and address.'; return }
+  if (!order.form.delivery_area_id) { order.error = 'Please select your delivery city and area.'; return }
   order.placing = true
   try {
     const { data } = await axios.post(route('chat.order'), {
       items: order.items.map((i) => ({ product_id: i.product.id, quantity: i.quantity })),
-      name: order.form.name, phone: order.form.phone, address: order.form.address,
-      inside_dhaka: order.form.inside_dhaka, payment_method: 'cod',
+      name: order.form.name, phone: order.form.phone, email: order.form.email || null,
+      address: order.form.address, delivery_area_id: order.form.delivery_area_id, payment_method: 'cod',
     })
     order.active = false
     messages.value.push({ role: 'assistant', text: `✅ Order ${data.order_number} placed! Total ৳${data.total.toLocaleString()} (delivery ${data.delivery_charge === 0 ? 'FREE' : '৳' + data.delivery_charge}). We'll contact you soon. Thank you!` })

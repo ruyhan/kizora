@@ -102,24 +102,50 @@
         </div>
       </div>
 
-      <!-- mobile search row -->
-      <Transition name="kz-collapse">
-        <div v-if="mobileSearchOpen" class="md:hidden pb-3 relative">
-          <MagnifyingGlassIcon class="absolute left-3.5 top-3 w-4 h-4 text-muted" />
-          <input v-model="searchQuery" @input="onSearchInput" @keydown.enter.prevent="submitSearch" type="text"
-            placeholder="Search products…" autofocus
-            class="w-full h-10 pl-10 pr-3 rounded-xl bg-[#F4F4F5] border border-transparent text-sm focus:bg-surface focus:border-[#D5D5D9] focus:outline-none">
-          <div v-if="showResults && searchResults.length" class="mt-2 bg-surface rounded-2xl border border-border p-2 max-h-80 overflow-y-auto">
-            <Link v-for="p in searchResults" :key="p.id" :href="route('shop.show', p.slug)" @click="closeAll"
-              class="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-[#F4F4F5]">
-              <img :src="p.featured_image_url" :alt="p.name" class="w-10 h-10 object-cover rounded-lg bg-[#F1F1F2]">
-              <span class="flex-1 min-w-0 text-sm text-charcoal truncate">{{ p.name }}</span>
-              <span class="text-sm font-bold text-ink">৳{{ Number(p.final_price).toLocaleString() }}</span>
-            </Link>
+    </div>
+
+    <!-- ── Mobile search modal ── -->
+    <Teleport to="body">
+      <Transition name="kz-search">
+        <div v-if="mobileSearchOpen" class="md:hidden fixed inset-0 z-[120] flex flex-col bg-surface">
+          <!-- Search header -->
+          <div class="flex items-center gap-2 px-4 pb-3 border-b border-border"
+            style="padding-top: max(0.75rem, env(safe-area-inset-top));">
+            <div class="relative flex-1">
+              <MagnifyingGlassIcon class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
+              <input ref="mobileSearchInput" v-model="searchQuery" @input="onSearchInput" @keydown.enter.prevent="submitSearch"
+                type="text" placeholder="Search products…"
+                class="w-full h-11 pl-10 pr-9 rounded-xl bg-[#F4F4F5] border border-transparent text-sm focus:bg-surface focus:border-[#D5D5D9] focus:outline-none">
+              <button v-if="searchQuery" @click="clearSearch" aria-label="Clear" class="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-ink">
+                <XMarkIcon class="w-4 h-4" />
+              </button>
+            </div>
+            <button @click="mobileSearchOpen = false" class="text-sm font-semibold text-ink px-1 shrink-0">Cancel</button>
+          </div>
+
+          <!-- Results -->
+          <div class="flex-1 overflow-y-auto overscroll-contain">
+            <div v-if="searchLoading" class="px-4 py-8 text-center text-sm text-muted">Searching…</div>
+            <template v-else-if="searchResults.length">
+              <Link v-for="p in searchResults" :key="p.id" :href="route('shop.show', p.slug)" @click="closeAll"
+                class="flex items-center gap-3 px-4 py-3 border-b border-border/60 active:bg-[#F4F4F5]">
+                <img :src="p.featured_image_url" :alt="p.name" class="w-12 h-12 object-cover rounded-lg bg-[#F1F1F2] shrink-0">
+                <span class="flex-1 min-w-0 text-sm text-charcoal truncate">{{ p.name }}</span>
+                <span class="text-sm font-bold text-ink shrink-0">৳{{ Number(p.final_price).toLocaleString() }}</span>
+              </Link>
+              <button @click="submitSearch" class="w-full text-center text-sm text-primary font-semibold py-4">
+                See all results for "{{ searchQuery }}"
+              </button>
+            </template>
+            <div v-else-if="searchQuery" class="px-4 py-12 text-center text-sm text-muted">No products found for "{{ searchQuery }}".</div>
+            <div v-else class="px-4 py-16 text-center text-sm text-muted">
+              <MagnifyingGlassIcon class="w-10 h-10 mx-auto mb-3 text-muted/40" />
+              Search our backpacks, bottles &amp; flasks.
+            </div>
           </div>
         </div>
       </Transition>
-    </div>
+    </Teleport>
 
     <!-- ── Desktop nav bar (with mega menu) ── -->
     <nav class="hidden md:block border-t border-border relative" @mouseleave="scheduleMegaClose">
@@ -206,7 +232,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { Link, usePage, router } from '@inertiajs/vue3'
 import axios from 'axios'
 import {
@@ -249,6 +275,9 @@ const userMenuOpen = ref(false)
 const userMenuRef = ref(null)
 const mobileMenuOpen = ref(false)
 const mobileSearchOpen = ref(false)
+const mobileSearchInput = ref(null)
+// Autofocus the field when the mobile search modal opens.
+watch(mobileSearchOpen, (v) => { if (v) nextTick(() => mobileSearchInput.value?.focus()) })
 const deskSearchRef = ref(null)
 
 // search
@@ -331,4 +360,7 @@ onUnmounted(() => {
 .kz-pop-enter-from, .kz-pop-leave-to { opacity: 0; transform: translateY(-6px); }
 .kz-collapse-enter-active, .kz-collapse-leave-active { transition: opacity .2s ease; }
 .kz-collapse-enter-from, .kz-collapse-leave-to { opacity: 0; }
+.kz-search-enter-active { transition: opacity .2s ease, transform .25s cubic-bezier(.16,1,.3,1); }
+.kz-search-leave-active { transition: opacity .15s ease, transform .15s ease; }
+.kz-search-enter-from, .kz-search-leave-to { opacity: 0; transform: translateY(-8px); }
 </style>

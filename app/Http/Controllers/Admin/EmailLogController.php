@@ -62,4 +62,12 @@ class EmailLogController extends Controller
 
         return back()->with('success', 'Email re-queued for ' . $log->recipient . '.');
     }
+
+    /** Delete all email logs. */
+    public function clear()
+    {
+        EmailLog::truncate();
+
+        return back()->with('success', 'Email logs cleared.');
+    }
 }

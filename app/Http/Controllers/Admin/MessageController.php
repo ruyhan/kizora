@@ -13,7 +13,8 @@ class MessageController extends Controller
 {
     public function contacts(Request $request)
     {
-        $query = ContactMessage::query()->latest();
+        $dr = \App\Support\DateRange::fromRequest($request, 'all');
+        $query = $dr->applyTo(ContactMessage::query())->latest();
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -49,7 +50,7 @@ class MessageController extends Controller
 
         return Inertia::render('Admin/Messages/Contacts', [
             'messages' => $messages,
-            'filters' => $request->only(['status', 'search']),
+            'filters' => array_merge($request->only(['status', 'search']), $dr->filters()),
             'counts' => $counts,
             'statuses' => ContactMessage::STATUSES,
         ]);

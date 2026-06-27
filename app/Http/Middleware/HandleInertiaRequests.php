@@ -6,6 +6,7 @@ use App\Models\Cart;
 use App\Models\Category;
 use App\Models\ContactMessage;
 use App\Models\Order;
+use App\Models\Review;
 use App\Models\Wishlist;
 use App\Services\Recaptcha\RecaptchaService;
 use App\Support\CatalogCache;
@@ -66,6 +67,7 @@ class HandleInertiaRequests extends Middleware
             'newOrdersCount'    => (Auth::check() && Auth::user()->isAdmin()) ? Order::web()->where('status', 'pending')->count() : 0,
             'unreadMessages'    => (Auth::check() && Auth::user()->isAdmin()) ? ContactMessage::where('is_read', false)->count() : 0,
             'newChatbotOrders'  => (Auth::check() && Auth::user()->isAdmin()) ? Order::chatbot()->where('status', 'pending')->count() : 0,
+            'newReviewsCount'   => (Auth::check() && Auth::user()->isAdmin()) ? Review::whereNull('seen_at')->count() : 0,
             'recaptcha' => app(RecaptchaService::class)->publicConfig(),
             // Editable content (JSON CMS) shared site-wide
             'site' => app(PageContent::class)->get('settings'),

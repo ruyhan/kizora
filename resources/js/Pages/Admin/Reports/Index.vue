@@ -8,8 +8,8 @@
         <p class="text-muted text-sm">Sales &amp; customer performance.</p>
       </div>
       <div class="flex items-center gap-2">
-        <SelectMenu :model-value="String(range)" @update:model-value="setRange" :options="rangeOptions" trigger-class="text-sm py-2" class="w-40" />
-        <a v-if="canExport" :href="route('admin.reports.export', { range })" class="btn-secondary text-sm px-4 py-2 inline-flex items-center gap-1.5">
+        <DateRangeFilter route-name="admin.reports.index" :filters="filters" />
+        <a v-if="canExport" :href="route('admin.reports.export', exportParams)" class="btn-secondary text-sm px-4 py-2 inline-flex items-center gap-1.5">
           <ArrowDownTrayIcon class="w-4 h-4" /> Export CSV
         </a>
       </div>
@@ -81,17 +81,9 @@
 
 <script setup>
 import { computed, h } from 'vue'
-import { Head, router } from '@inertiajs/vue3'
+import { Head } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
-import SelectMenu from '@/Components/ui/SelectMenu.vue'
-
-const rangeOptions = [
-  { value: '7', label: 'Last 7 days' },
-  { value: '30', label: 'Last 30 days' },
-  { value: '90', label: 'Last 90 days' },
-  { value: '365', label: 'Last 12 months' },
-  { value: 'all', label: 'All time' },
-]
+import DateRangeFilter from '@/Components/admin/DateRangeFilter.vue'
 import { Line, Doughnut } from 'vue-chartjs'
 import {
   Chart as ChartJS, Title, Tooltip, Legend, LineElement, PointElement,
@@ -104,13 +96,16 @@ import {
 ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, CategoryScale, LinearScale, ArcElement, Filler)
 
 const props = defineProps({
-  range: String, kpis: Object, daily: Array, byStatus: Object, byPayment: Object,
+  filters: Object, kpis: Object, daily: Array, byStatus: Object, byPayment: Object,
   topProducts: Array, topCustomers: Array, canExport: Boolean,
 })
 
 const Empty = () => h('p', { class: 'text-muted text-sm text-center w-full' }, 'No data for this range.')
 
-const setRange = (v) => router.get(route('admin.reports.index'), { range: v }, { preserveState: true, preserveScroll: true })
+// Forward the active range to the CSV export link.
+const exportParams = computed(() => props.filters?.range === 'custom'
+  ? { from: props.filters.from, to: props.filters.to }
+  : { range: props.filters?.range })
 
 const fmt = (n) => '৳' + Number(n || 0).toLocaleString()
 const kpiCards = computed(() => [

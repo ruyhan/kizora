@@ -23,7 +23,8 @@ class CustomerController extends Controller
 
     public function index(Request $request): Response
     {
-        $query = $this->consumerQuery()
+        $dr = \App\Support\DateRange::fromRequest($request, 'all');
+        $query = $dr->applyTo($this->consumerQuery())   // join-date range
             ->withCount('orders')
             ->withSum('orders as lifetime_spend', 'total')
             ->withMax('orders as last_order_at', 'created_at');
@@ -58,7 +59,7 @@ class CustomerController extends Controller
 
         return Inertia::render('Admin/Customers/Index', [
             'customers' => $customers,
-            'filters' => $request->only(['search', 'status', 'sort']),
+            'filters' => array_merge($request->only(['search', 'status', 'sort']), $dr->filters()),
             'totals' => [
                 'count' => $this->consumerQuery()->count(),
                 'active' => $this->consumerQuery()->where('status', 'active')->count(),

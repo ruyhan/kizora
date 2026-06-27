@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Order;
 use App\Models\User;
+use App\Support\DateRange;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -14,50 +15,34 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportController extends Controller
 {
-    private const RANGES = ['7', '30', '90', '365'];
-
-    /** Resolve the range key into [start, prevStart, days|null]. */
-    private function window(string $range): array
-    {
-        $days = in_array($range, self::RANGES, true) ? (int) $range : null;
-        $now = now();
-        return [
-            $days ? $now->copy()->subDays($days) : null,
-            $days ? $now->copy()->subDays($days * 2) : null,
-            $days,
-        ];
-    }
-
     public function index(Request $request): Response
     {
-        $range = (string) $request->get('range', '30');
-        [$start, $prevStart] = $this->window($range);
+        $dr = DateRange::fromRequest($request, '30');
 
         $pct = function (float $cur, float $prev): ?int {
             if ($prev <= 0) return null;
             return (int) round((($cur - $prev) / $prev) * 100);
         };
 
-        // Revenue counts every non-cancelled order.
         $revenueQ = fn ($from, $to) => (float) Order::where('status', '!=', 'cancelled')
             ->when($from, fn ($q) => $q->where('created_at', '>=', $from))
-            ->when($to, fn ($q) => $q->where('created_at', '<', $to))
+            ->when($to, fn ($q) => $q->where('created_at', '<=', $to))
             ->sum('total');
         $ordersQ = fn ($from, $to) => Order::when($from, fn ($q) => $q->where('created_at', '>=', $from))
-            ->when($to, fn ($q) => $q->where('created_at', '<', $to))->count();
+            ->when($to, fn ($q) => $q->where('created_at', '<=', $to))->count();
         $custQ = fn ($from, $to) => User::whereHas('role', fn ($q) => $q->where('slug', 'consumer'))
             ->when($from, fn ($q) => $q->where('created_at', '>=', $from))
-            ->when($to, fn ($q) => $q->where('created_at', '<', $to))->count();
+            ->when($to, fn ($q) => $q->where('created_at', '<=', $to))->count();
 
-        $revenue = $revenueQ($start, null);
-        $orders = $ordersQ($start, null);
-        $newCustomers = $custQ($start, null);
+        $revenue = $revenueQ($dr->start, $dr->end);
+        $orders = $ordersQ($dr->start, $dr->end);
+        $newCustomers = $custQ($dr->start, $dr->end);
         $aov = $orders > 0 ? $revenue / $orders : 0;
 
-        // Previous comparable period (only when a finite range is selected)
-        $revPrev = $start ? $revenueQ($prevStart, $start) : 0;
-        $ordPrev = $start ? $ordersQ($prevStart, $start) : 0;
-        $custPrev = $start ? $custQ($prevStart, $start) : 0;
+        $hasPrev = (bool) $dr->prevStart;
+        $revPrev = $hasPrev ? $revenueQ($dr->prevStart, $dr->prevEnd) : 0;
+        $ordPrev = $hasPrev ? $ordersQ($dr->prevStart, $dr->prevEnd) : 0;
+        $custPrev = $hasPrev ? $custQ($dr->prevStart, $dr->prevEnd) : 0;
         $aovPrev = $ordPrev > 0 ? $revPrev / $ordPrev : 0;
 
         $kpis = [
@@ -65,73 +50,86 @@ class ReportController extends Controller
             'orders'        => $orders,
             'aov'           => round($aov, 2),
             'new_customers' => $newCustomers,
-            'revenue_change'  => $start ? $pct($revenue, $revPrev) : null,
-            'orders_change'   => $start ? $pct($orders, $ordPrev) : null,
-            'aov_change'      => $start ? $pct($aov, $aovPrev) : null,
-            'customers_change' => $start ? $pct($newCustomers, $custPrev) : null,
+            'revenue_change'   => $hasPrev ? $pct($revenue, $revPrev) : null,
+            'orders_change'    => $hasPrev ? $pct($orders, $ordPrev) : null,
+            'aov_change'       => $hasPrev ? $pct($aov, $aovPrev) : null,
+            'customers_change' => $hasPrev ? $pct($newCustomers, $custPrev) : null,
         ];
 
         return Inertia::render('Admin/Reports/Index', [
-            'range' => $range,
+            'filters' => $dr->filters(),
             'kpis' => $kpis,
-            'daily' => $this->dailySales($start),
-            'byStatus' => Order::when($start, fn ($q) => $q->where('created_at', '>=', $start))
+            'daily' => $this->dailySales($dr),
+            'byStatus' => $dr->applyTo(Order::query())
                 ->selectRaw('status, count(*) as c')->groupBy('status')->pluck('c', 'status'),
-            'byPayment' => Order::when($start, fn ($q) => $q->where('created_at', '>=', $start))
+            'byPayment' => $dr->applyTo(Order::query())
                 ->selectRaw('payment_status, count(*) as c')->groupBy('payment_status')->pluck('c', 'payment_status'),
             'topProducts' => DB::table('order_items')
                 ->join('orders', 'orders.id', '=', 'order_items.order_id')
-                ->when($start, fn ($q) => $q->where('orders.created_at', '>=', $start))
                 ->where('orders.status', '!=', 'cancelled')
+                ->when($dr->start, fn ($q) => $q->where('orders.created_at', '>=', $dr->start))
+                ->when($dr->end, fn ($q) => $q->where('orders.created_at', '<=', $dr->end))
                 ->select('product_name', DB::raw('SUM(quantity) as sold'), DB::raw('SUM(order_items.total) as revenue'))
                 ->groupBy('product_name')->orderByDesc('sold')->take(8)->get(),
-            'topCustomers' => $this->topCustomers($start),
+            'topCustomers' => $this->topCustomers($dr),
             'canExport' => $request->user()->hasPermission('reports.export'),
         ]);
     }
 
     /** Total Sales Report — combines Website, POS and Chatbot channels. */
-    public function salesAnalysis(): Response
+    public function salesAnalysis(Request $request): Response
     {
-        $rev = fn ($q) => (float) $q->where('status', '!=', 'cancelled')->sum('total');
+        $dr = DateRange::fromRequest($request, '30');
+
+        $rev = fn ($q) => (float) $dr->applyTo($q->where('status', '!=', 'cancelled'))->sum('total');
+        $cnt = fn ($q) => $dr->applyTo($q)->count();
 
         $byChannel = [
-            ['channel' => 'Website', 'orders' => Order::web()->count(),     'revenue' => $rev(Order::web())],
-            ['channel' => 'POS',     'orders' => Order::pos()->count(),     'revenue' => $rev(Order::pos())],
-            ['channel' => 'Chatbot', 'orders' => Order::chatbot()->count(), 'revenue' => $rev(Order::chatbot())],
+            ['channel' => 'Website', 'orders' => $cnt(Order::web()),     'revenue' => $rev(Order::web())],
+            ['channel' => 'POS',     'orders' => $cnt(Order::pos()),     'revenue' => $rev(Order::pos())],
+            ['channel' => 'Chatbot', 'orders' => $cnt(Order::chatbot()), 'revenue' => $rev(Order::chatbot())],
         ];
         $totalRevenue = array_sum(array_column($byChannel, 'revenue'));
-        $paidOrders = Order::where('status', '!=', 'cancelled')->count();
+        $paidOrders = $dr->applyTo(Order::where('status', '!=', 'cancelled'))->count();
 
         return Inertia::render('Admin/Reports/SalesAnalysis', [
+            'filters' => $dr->filters(),
             'kpis' => [
                 'revenue' => round($totalRevenue, 2),
-                'orders' => Order::count(),
+                'orders' => $dr->applyTo(Order::query())->count(),
                 'aov' => $paidOrders ? round($totalRevenue / $paidOrders, 2) : 0,
-                'units' => (int) \Illuminate\Support\Facades\DB::table('order_items')
+                'units' => (int) DB::table('order_items')
                     ->join('orders', 'orders.id', '=', 'order_items.order_id')
-                    ->where('orders.status', '!=', 'cancelled')->sum('order_items.quantity'),
+                    ->where('orders.status', '!=', 'cancelled')
+                    ->when($dr->start, fn ($q) => $q->where('orders.created_at', '>=', $dr->start))
+                    ->when($dr->end, fn ($q) => $q->where('orders.created_at', '<=', $dr->end))
+                    ->sum('order_items.quantity'),
             ],
             'byChannel' => $byChannel,
-            'byStatus' => Order::selectRaw('status, count(*) as c')->groupBy('status')->pluck('c', 'status'),
-            'daily' => $this->dailySales(now()->subDays(30)),
-            'topProducts' => \Illuminate\Support\Facades\DB::table('order_items')
+            'byStatus' => $dr->applyTo(Order::query())->selectRaw('status, count(*) as c')->groupBy('status')->pluck('c', 'status'),
+            'daily' => $this->dailySales($dr),
+            'topProducts' => DB::table('order_items')
                 ->join('orders', 'orders.id', '=', 'order_items.order_id')
                 ->where('orders.status', '!=', 'cancelled')
-                ->select('order_items.product_name', \Illuminate\Support\Facades\DB::raw('SUM(order_items.quantity) as sold'), \Illuminate\Support\Facades\DB::raw('SUM(order_items.total) as revenue'))
+                ->when($dr->start, fn ($q) => $q->where('orders.created_at', '>=', $dr->start))
+                ->when($dr->end, fn ($q) => $q->where('orders.created_at', '<=', $dr->end))
+                ->select('order_items.product_name', DB::raw('SUM(order_items.quantity) as sold'), DB::raw('SUM(order_items.total) as revenue'))
                 ->groupBy('order_items.product_name')->orderByDesc('revenue')->limit(8)->get(),
-            'canExport' => request()->user()->hasPermission('reports.export'),
+            'canExport' => $request->user()->hasPermission('reports.export'),
         ]);
     }
 
-    public function salesExport(): StreamedResponse
+    public function salesExport(Request $request): StreamedResponse
     {
-        AuditLog::record('export', 'Reports', 'Exported total sales report');
-        $rev = fn ($q) => (float) $q->where('status', '!=', 'cancelled')->sum('total');
+        $dr = DateRange::fromRequest($request, '30');
+        AuditLog::record('export', 'Reports', 'Exported total sales report (' . $dr->label . ')');
+
+        $rev = fn ($q) => (float) $dr->applyTo($q->where('status', '!=', 'cancelled'))->sum('total');
+        $cnt = fn ($q) => $dr->applyTo($q)->count();
         $rows = [
-            ['Website', Order::web()->count(), $rev(Order::web())],
-            ['POS', Order::pos()->count(), $rev(Order::pos())],
-            ['Chatbot', Order::chatbot()->count(), $rev(Order::chatbot())],
+            ['Website', $cnt(Order::web()),     $rev(Order::web())],
+            ['POS',     $cnt(Order::pos()),     $rev(Order::pos())],
+            ['Chatbot', $cnt(Order::chatbot()), $rev(Order::chatbot())],
         ];
 
         return response()->streamDownload(function () use ($rows) {
@@ -144,22 +142,20 @@ class ReportController extends Controller
         }, 'total-sales-' . now()->format('Y-m-d') . '.csv', ['Content-Type' => 'text/csv']);
     }
 
-    private function dailySales($start)
+    private function dailySales(DateRange $dr)
     {
-        return Order::where('status', '!=', 'cancelled')
-            ->when($start, fn ($q) => $q->where('created_at', '>=', $start))
+        return $dr->applyTo(Order::where('status', '!=', 'cancelled'))
             ->selectRaw('DATE(created_at) as date, SUM(total) as revenue, COUNT(*) as orders')
             ->groupBy('date')->orderBy('date')->get();
     }
 
-    private function topCustomers($start)
+    private function topCustomers(DateRange $dr)
     {
-        $rows = Order::whereNotNull('user_id')
-            ->when($start, fn ($q) => $q->where('created_at', '>=', $start))
-            ->where('status', '!=', 'cancelled')
+        $rows = $dr->applyTo(Order::whereNotNull('user_id')->where('status', '!=', 'cancelled'))
             ->selectRaw('user_id, COUNT(*) as orders, SUM(total) as spend')
             ->groupBy('user_id')->orderByDesc('spend')->take(8)->get();
         $names = User::whereIn('id', $rows->pluck('user_id'))->pluck('name', 'id');
+
         return $rows->map(fn ($r) => [
             'name' => $names[$r->user_id] ?? '—',
             'orders' => $r->orders,
@@ -169,11 +165,10 @@ class ReportController extends Controller
 
     public function export(Request $request): StreamedResponse
     {
-        $range = (string) $request->get('range', '30');
-        [$start] = $this->window($range);
-        AuditLog::record('export', 'Reports', "Exported sales report ({$range})");
+        $dr = DateRange::fromRequest($request, '30');
+        AuditLog::record('export', 'Reports', "Exported sales report ({$dr->label})");
 
-        $rows = $this->dailySales($start);
+        $rows = $this->dailySales($dr);
 
         return response()->streamDownload(function () use ($rows) {
             $out = fopen('php://output', 'w');

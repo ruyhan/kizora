@@ -17,9 +17,11 @@ class MediaController extends Controller
     /** Full library page */
     public function index(Request $request)
     {
+        $dr = \App\Support\DateRange::fromRequest($request, 'all');
+
         return Inertia::render('Admin/Media/Index', [
             'media'   => $this->query($request)->paginate(40)->withQueryString(),
-            'filters' => ['search' => $request->get('search', '')],
+            'filters' => array_merge(['search' => $request->get('search', '')], $dr->filters()),
         ]);
     }
 
@@ -33,7 +35,7 @@ class MediaController extends Controller
 
     private function query(Request $request)
     {
-        $query = MediaFile::latest();
+        $query = \App\Support\DateRange::fromRequest($request, 'all')->applyTo(MediaFile::latest());
         if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('original_name', 'like', "%{$search}%")

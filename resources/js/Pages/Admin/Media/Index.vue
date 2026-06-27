@@ -33,11 +33,14 @@
           multiple class="hidden" @change="onInputChange" :disabled="uploading">
       </label>
 
-      <!-- Search -->
-      <div class="relative max-w-sm">
-        <MagnifyingGlassIcon class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
-        <input v-model="search" @input="onSearch" type="text"
-          placeholder="Search by file name…" class="input-field pl-10 text-sm">
+      <!-- Search + date filter -->
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="relative flex-1 max-w-sm">
+          <MagnifyingGlassIcon class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
+          <input v-model="search" @input="onSearch" type="text"
+            placeholder="Search by file name…" class="input-field pl-10 text-sm w-full">
+        </div>
+        <DateRangeFilter route-name="admin.media.index" :filters="filters" :params="{ search }" />
       </div>
 
       <!-- Grid -->
@@ -124,6 +127,7 @@ import { Head, Link, router } from '@inertiajs/vue3'
 import axios from 'axios'
 import { useToast } from 'vue-toastification'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
+import DateRangeFilter from '@/Components/admin/DateRangeFilter.vue'
 import { useDragUpload, validateImages } from '@/composables/useDragUpload'
 import { ArrowUpTrayIcon, MagnifyingGlassIcon, PhotoIcon, TrashIcon, LinkIcon } from '@heroicons/vue/24/outline'
 
@@ -131,11 +135,14 @@ const props = defineProps({ media: Object, filters: Object })
 const toast = useToast()
 
 const search = ref(props.filters?.search || '')
+const dateParams = () => props.filters?.range === 'custom'
+  ? { from: props.filters.from, to: props.filters.to }
+  : { range: props.filters?.range }
 let searchTimer = null
 const onSearch = () => {
   clearTimeout(searchTimer)
   searchTimer = setTimeout(() => {
-    router.get(route('admin.media.index'), { search: search.value }, { preserveState: true, preserveScroll: true, replace: true })
+    router.get(route('admin.media.index'), { search: search.value, ...dateParams() }, { preserveState: true, preserveScroll: true, replace: true })
   }, 350)
 }
 

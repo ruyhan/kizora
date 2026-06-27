@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Review extends Model
 {
-    protected $fillable = ['product_id', 'user_id', 'rating', 'comment', 'is_approved'];
+    protected $fillable = ['product_id', 'user_id', 'rating', 'comment', 'is_approved', 'seen_at'];
 
     protected $casts = [
         'is_approved' => 'boolean',
+        'seen_at'     => 'datetime',
     ];
 
     public function product()

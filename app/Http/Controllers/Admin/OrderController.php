@@ -27,17 +27,23 @@ class OrderController extends Controller
 
     public function index(Request $request): Response
     {
+        $dr = \App\Support\DateRange::fromRequest($request, 'all');
+
         // Website orders only — POS & Chatbot orders live in their own sections.
-        $query = Order::web()->with('user')->latest();
+        $query = $dr->applyTo(Order::web()->with('user'))->latest();
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
         if ($request->filled('search')) {
-            $query->where('order_number', 'like', "%{$request->search}%");
+            $s = $request->search;
+            $query->where(fn ($q) => $q->where('order_number', 'like', "%{$s}%")
+                ->orWhere('guest_name', 'like', "%{$s}%")
+                ->orWhere('guest_phone', 'like', "%{$s}%")
+                ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$s}%")->orWhere('phone', 'like', "%{$s}%")));
         }
 
-        $orders = $query->paginate(20)->through(fn ($o) => [
+        $orders = $query->paginate(20)->withQueryString()->through(fn ($o) => [
             'id' => $o->id,
             'order_number' => $o->order_number,
             'source' => $o->source,
@@ -59,7 +65,7 @@ class OrderController extends Controller
 
         return Inertia::render('Admin/Orders/Index', [
             'orders' => $orders,
-            'filters' => $request->only(['status', 'search']),
+            'filters' => array_merge($request->only(['status', 'search']), $dr->filters()),
             'counts' => $counts,
         ]);
     }

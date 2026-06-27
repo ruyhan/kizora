@@ -15,6 +15,15 @@
         </button>
       </div>
 
+      <!-- Search + date filter -->
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="relative flex-1 min-w-[200px]">
+          <MagnifyingGlassIcon class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+          <input v-model="f.search" @input="applyDebounced" type="text" placeholder="Search categories…" class="input-field text-sm pl-9 py-2 w-full">
+        </div>
+        <DateRangeFilter route-name="admin.categories.index" :filters="filters" :params="f" />
+      </div>
+
       <!-- Over-limit notice -->
       <div v-if="featuredCount > featuredLimit" class="flex items-start gap-2.5 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-sm">
         <ExclamationTriangleIcon class="w-5 h-5 shrink-0 mt-px" />
@@ -203,12 +212,13 @@
 import { ref, computed } from 'vue'
 import { Head, router } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
-import { PlusIcon, PencilSquareIcon, TrashIcon, XMarkIcon, FolderOpenIcon, PhotoIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/outline'
+import { PlusIcon, PencilSquareIcon, TrashIcon, XMarkIcon, FolderOpenIcon, PhotoIcon, ExclamationTriangleIcon, MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
 import { StarIcon } from '@heroicons/vue/24/solid'
 import CategoryIcon, { CATEGORY_ICON_OPTIONS as iconOptions } from '@/Components/icons/CategoryIcon.vue'
 import MediaPicker from '@/Components/MediaPicker.vue'
 import SelectMenu from '@/Components/ui/SelectMenu.vue'
 import BulkDeleteBar from '@/Components/admin/BulkDeleteBar.vue'
+import DateRangeFilter from '@/Components/admin/DateRangeFilter.vue'
 import { useToast } from 'vue-toastification'
 import { usePermissions } from '@/composables/usePermissions'
 
@@ -218,7 +228,14 @@ const props = defineProps({
   featuredCount: { type: Number, default: 0 },
   featuredLimit: { type: Number, default: 8 },
   canManageFeatured: { type: Boolean, default: false },
+  filters: { type: Object, default: () => ({}) },
 })
+
+// Search + date filter
+const f = ref({ search: props.filters?.search || '', range: props.filters?.range, from: props.filters?.from, to: props.filters?.to })
+let _t
+const apply = () => router.get(route('admin.categories.index'), f.value, { preserveState: true, preserveScroll: true, replace: true })
+const applyDebounced = () => { clearTimeout(_t); _t = setTimeout(apply, 350) }
 
 // Bulk selection / delete
 const toast = useToast()

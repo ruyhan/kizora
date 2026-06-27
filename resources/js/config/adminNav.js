@@ -4,7 +4,7 @@ import {
   Squares2X2Icon, ArchiveBoxIcon, TagIcon, TicketIcon, PhotoIcon,
   ClipboardDocumentListIcon, EnvelopeIcon, DocumentTextIcon, Cog6ToothIcon,
   UsersIcon, UserGroupIcon, ShieldCheckIcon, ClipboardDocumentCheckIcon, ChartBarIcon,
-  CubeIcon, BuildingStorefrontIcon, ShoppingCartIcon,
+  CubeIcon, BuildingStorefrontIcon, ShoppingCartIcon, StarIcon,
   ChatBubbleLeftRightIcon, SparklesIcon, PresentationChartLineIcon,
 } from '@heroicons/vue/24/outline'
 
@@ -23,6 +23,7 @@ export const adminNavSections = [
       { label: 'Products',      route: 'admin.products.index',   match: 'admin.products*',   icon: ArchiveBoxIcon, permission: 'products.view' },
       { label: 'Categories',    route: 'admin.categories.index', match: 'admin.categories*', icon: TagIcon, permission: 'categories.view' },
       { label: 'Inventory',     route: 'admin.inventory.index',  match: 'admin.inventory*',  icon: CubeIcon, permission: 'inventory.view' },
+      { label: 'Reviews',       route: 'admin.reviews.index',    match: 'admin.reviews*',    icon: StarIcon, permission: 'products.view' },
       { label: 'Media Library', route: 'admin.media.index',      match: 'admin.media.index', icon: PhotoIcon, permission: 'media.view' },
     ],
   },

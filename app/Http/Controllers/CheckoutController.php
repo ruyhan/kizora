@@ -161,9 +161,11 @@ class CheckoutController extends Controller
         DB::transaction(function () use ($request, $cartItems, $subtotal, $deliveryCharge, $discount, $total, $coupon, $couponCode, $identifier, $area) {
             $order = Order::create([
                 'user_id' => Auth::id(),
-                'guest_name' => Auth::check() ? null : $request->name,
-                'guest_email' => Auth::check() ? null : $request->email,
-                'guest_phone' => Auth::check() ? null : $request->phone,
+                // Snapshot the contact details entered at checkout (even when logged
+                // in) so edits on the checkout form are captured on the order.
+                'guest_name' => $request->name,
+                'guest_email' => $request->email,
+                'guest_phone' => $request->phone,
                 'delivery_address' => $request->address,
                 // Snapshot the area/city/postal used at order time
                 'delivery_city' => $area->city->name,

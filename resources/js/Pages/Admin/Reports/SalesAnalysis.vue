@@ -7,9 +7,12 @@
         <h1 class="font-display text-2xl font-bold text-charcoal">Sales Analysis</h1>
         <p class="text-muted text-sm">Total sales report across Website, POS &amp; AI Chatbot.</p>
       </div>
-      <a v-if="canExport" :href="route('admin.reports.sales-export')" class="btn-secondary text-sm px-4 py-2 inline-flex items-center gap-1.5">
-        <ArrowDownTrayIcon class="w-4 h-4" /> Export
-      </a>
+      <div class="flex items-center gap-2">
+        <DateRangeFilter route-name="admin.reports.sales" :filters="filters" />
+        <a v-if="canExport" :href="route('admin.reports.sales-export', exportParams)" class="btn-secondary text-sm px-4 py-2 inline-flex items-center gap-1.5">
+          <ArrowDownTrayIcon class="w-4 h-4" /> Export
+        </a>
+      </div>
     </div>
 
     <!-- KPIs -->
@@ -54,7 +57,7 @@
     <div class="grid lg:grid-cols-2 gap-4">
       <div class="bg-white rounded-2xl border border-purple-50 p-5">
         <h3 class="font-display font-semibold text-charcoal mb-1">Revenue trend</h3>
-        <p class="text-muted text-xs mb-4">Last 30 days (all channels)</p>
+        <p class="text-muted text-xs mb-4">{{ filters?.label }} (all channels)</p>
         <div class="h-64"><Line v-if="daily.length" :data="lineData" :options="lopts" /><p v-else class="text-muted text-sm text-center pt-20">No data.</p></div>
       </div>
       <div class="bg-white rounded-2xl border border-purple-50 overflow-hidden">
@@ -78,12 +81,17 @@
 import { computed } from 'vue'
 import { Head } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
+import DateRangeFilter from '@/Components/admin/DateRangeFilter.vue'
 import { Line, Doughnut } from 'vue-chartjs'
 import { Chart as ChartJS, Title, Tooltip, Legend, LineElement, PointElement, ArcElement, CategoryScale, LinearScale, Filler } from 'chart.js'
 import { BanknotesIcon, ShoppingBagIcon, CalculatorIcon, CubeIcon, ArrowDownTrayIcon } from '@heroicons/vue/24/outline'
 ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, ArcElement, CategoryScale, LinearScale, Filler)
 
-const props = defineProps({ kpis: Object, byChannel: Array, byStatus: Object, daily: Array, topProducts: Array, canExport: Boolean })
+const props = defineProps({ filters: Object, kpis: Object, byChannel: Array, byStatus: Object, daily: Array, topProducts: Array, canExport: Boolean })
+
+const exportParams = computed(() => props.filters?.range === 'custom'
+  ? { from: props.filters.from, to: props.filters.to }
+  : { range: props.filters?.range })
 
 const channelColor = { Website: '#17181B', POS: '#0EA5E9', Chatbot: '#ED1C24' }
 const totalRev = computed(() => props.byChannel.reduce((s, c) => s + Number(c.revenue), 0))

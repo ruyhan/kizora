@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\ChatbotConversation;
 use App\Models\ChatbotEvent;
 use App\Models\ChatbotMessage;
+use App\Models\DeliveryArea;
+use App\Models\DeliveryCity;
 use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -16,6 +18,7 @@ use App\Support\DeliverySettings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class ChatController extends Controller
 {
@@ -85,6 +88,25 @@ class ChatController extends Controller
         return response()->json(['ok' => true]);
     }
 
+    /** Active delivery cities + their areas, for the chatbot order form. */
+    public function deliveryOptions()
+    {
+        $cities = DeliveryCity::active()
+            ->with(['areas' => fn ($q) => $q->orderBy('name')])
+            ->orderBy('name')
+            ->get()
+            ->map(fn ($c) => [
+                'id'    => $c->id,
+                'name'  => $c->name,
+                'areas' => $c->areas->map(fn ($a) => [
+                    'id'   => $a->id,
+                    'name' => $a->postal_code ? "{$a->name} ({$a->postal_code})" : $a->name,
+                ])->values(),
+            ])->values();
+
+        return response()->json(['cities' => $cities]);
+    }
+
     public function placeOrder(Request $request)
     {
         if (! $this->settings->enabled()) {
@@ -97,10 +119,19 @@ class ChatController extends Controller
             'items.*.quantity' => 'required|integer|min:1|max:50',
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:30',
+            'email' => 'nullable|email|max:255',
             'address' => 'required|string|max:500',
-            'inside_dhaka' => 'required|boolean',
+            'delivery_area_id' => ['required', Rule::exists('delivery_areas', 'id')],
             'payment_method' => 'nullable|string|max:30',
+        ], [
+            'delivery_area_id.required' => 'Please choose your delivery city and area.',
         ]);
+
+        // Delivery address must map to an ACTIVE delivery city.
+        $area = DeliveryArea::with('city')->find($data['delivery_area_id']);
+        if (! $area || ! $area->city || ! $area->city->is_active) {
+            return response()->json(['error' => 'Sorry, we don\'t deliver to that city yet. Please pick an active delivery city.'], 422);
+        }
 
         $products = Product::whereIn('id', collect($data['items'])->pluck('product_id'))->get()->keyBy('id');
         foreach ($data['items'] as $line) {
@@ -110,18 +141,22 @@ class ChatController extends Controller
         }
 
         $subtotal = collect($data['items'])->sum(fn ($l) => (float) $products[$l['product_id']]->final_price * $l['quantity']);
-        $deliveryCharge = $this->delivery->chargeForInside((bool) $data['inside_dhaka'], $subtotal);
+        // Exact charge from the chosen active city/area (same rule as checkout).
+        $deliveryCharge = $this->delivery->chargeFor($area, $subtotal);
         $total = $subtotal + $deliveryCharge;
         $conversation = $this->conversation($request);
 
-        $order = DB::transaction(function () use ($data, $products, $subtotal, $deliveryCharge, $total, $conversation) {
+        $order = DB::transaction(function () use ($data, $products, $subtotal, $deliveryCharge, $total, $conversation, $area) {
             $order = Order::create([
                 'source' => 'chatbot',
                 'user_id' => Auth::id(),
                 'guest_name' => Auth::check() ? null : $data['name'],
                 'guest_phone' => Auth::check() ? null : $data['phone'],
+                'guest_email' => Auth::check() ? null : ($data['email'] ?? null),
                 'delivery_address' => $data['address'],
-                'delivery_city' => $data['inside_dhaka'] ? 'Dhaka' : 'Outside Dhaka',
+                'delivery_city' => $area->city->name,
+                'delivery_area' => $area->name,
+                'delivery_postal_code' => $area->postal_code,
                 'status' => 'pending',
                 'subtotal' => $subtotal,
                 'delivery_charge' => $deliveryCharge,

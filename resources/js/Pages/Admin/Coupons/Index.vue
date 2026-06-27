@@ -15,6 +15,15 @@
         </button>
       </div>
 
+      <!-- Search + date filter -->
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="relative flex-1 min-w-[200px]">
+          <MagnifyingGlassIcon class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+          <input v-model="f.search" @input="applyDebounced" type="text" placeholder="Search coupon code…" class="input-field text-sm pl-9 py-2 w-full">
+        </div>
+        <DateRangeFilter route-name="admin.coupons.index" :filters="filters" :params="f" />
+      </div>
+
       <!-- Table -->
       <div class="bg-white rounded-2xl shadow-sm border border-purple-100 overflow-hidden">
         <table class="w-full text-sm">
@@ -135,15 +144,21 @@ import { useToast } from 'vue-toastification'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import SelectMenu from '@/Components/ui/SelectMenu.vue'
 import BulkDeleteBar from '@/Components/admin/BulkDeleteBar.vue'
+import DateRangeFilter from '@/Components/admin/DateRangeFilter.vue'
 import { usePermissions } from '@/composables/usePermissions'
-import { PlusIcon, PencilSquareIcon, TrashIcon, XMarkIcon, TicketIcon } from '@heroicons/vue/24/outline'
+import { PlusIcon, PencilSquareIcon, TrashIcon, XMarkIcon, TicketIcon, MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
 
 const typeOptions = [
   { value: 'percentage', label: 'Percentage (%)' },
   { value: 'fixed', label: 'Fixed Amount (Tk)' },
 ]
 
-const props = defineProps({ coupons: Array })
+const props = defineProps({ coupons: Array, filters: { type: Object, default: () => ({}) } })
+
+const f = ref({ search: props.filters?.search || '', range: props.filters?.range, from: props.filters?.from, to: props.filters?.to })
+let _t
+const apply = () => router.get(route('admin.coupons.index'), f.value, { preserveState: true, preserveScroll: true, replace: true })
+const applyDebounced = () => { clearTimeout(_t); _t = setTimeout(apply, 350) }
 
 const toast = useToast()
 const { can } = usePermissions()

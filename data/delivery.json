@@ -2,6 +2,6 @@
     "free_delivery_enabled": false,
     "free_delivery_type": "all",
     "free_delivery_minimum_amount": 1000,
-    "inside_dhaka_delivery_charge": 80,
-    "outside_dhaka_delivery_charge": 150
+    "inside_dhaka_delivery_charge": 60,
+    "outside_dhaka_delivery_charge": 120
 }

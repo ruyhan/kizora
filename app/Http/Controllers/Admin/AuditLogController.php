@@ -12,7 +12,8 @@ class AuditLogController extends Controller
 {
     public function index(Request $request): Response
     {
-        $query = AuditLog::query()->latest();
+        $dr = \App\Support\DateRange::fromRequest($request, 'all');
+        $query = $dr->applyTo(AuditLog::query())->latest();
 
         if ($request->filled('search')) {
             $s = $request->search;
@@ -39,7 +40,7 @@ class AuditLogController extends Controller
             'logs' => $logs,
             'modules' => AuditLog::distinct()->orderBy('module')->pluck('module'),
             'actions' => AuditLog::distinct()->orderBy('action')->pluck('action'),
-            'filters' => $request->only(['search', 'module', 'action']),
+            'filters' => array_merge($request->only(['search', 'module', 'action']), $dr->filters()),
             'total' => AuditLog::count(),
         ]);
     }

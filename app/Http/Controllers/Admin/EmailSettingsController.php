@@ -35,6 +35,7 @@ class EmailSettingsController extends Controller
     {
         $data = $request->validate([
             'enabled'          => 'boolean',
+            'queue'            => 'boolean',
             'driver'           => 'required|string|max:40',
             'host'             => 'nullable|string|max:255',
             'port'             => 'nullable|string|max:10',
@@ -131,6 +132,8 @@ class EmailSettingsController extends Controller
         if ($request->has('socials')) {
             $brand['socials'] = $request->input('socials') ?: [];
         }
+        // Embed the logo (base64) so the preview matches what gets sent.
+        $brand['logo'] = $this->settings->embedAsDataUri($brand['logo'] ?? '');
 
         $html = view('emails.layout', [
             'subject' => $brand['company_name'] ?? 'Preview',

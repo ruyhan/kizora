@@ -2,11 +2,21 @@
   <AdminLayout>
     <Head title="Products" />
 
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center justify-between mb-5">
       <h1 class="font-display text-2xl font-bold text-charcoal">Products</h1>
       <Link :href="route('admin.products.create')" class="btn-primary text-sm px-5 py-2.5">
         + Add Product
       </Link>
+    </div>
+
+    <!-- Search + filters -->
+    <div class="flex flex-wrap items-center gap-2 mb-5">
+      <div class="relative flex-1 min-w-[200px]">
+        <MagnifyingGlassIcon class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+        <input v-model="f.search" @input="applyDebounced" type="text" placeholder="Search products or SKU…" class="input-field text-sm pl-9 py-2 w-full">
+      </div>
+      <SelectMenu :model-value="f.category" @update:model-value="v => { f.category = v; apply() }" :options="categorySelect" trigger-class="text-sm py-2" class="w-48" />
+      <DateRangeFilter route-name="admin.products.index" :filters="filters" :params="f" />
     </div>
 
     <div class="bg-white rounded-2xl shadow-sm border border-purple-50 overflow-hidden">
@@ -301,17 +311,30 @@ import MediaPicker from '@/Components/MediaPicker.vue'
 import VariationsEditor from '@/Components/admin/VariationsEditor.vue'
 import SelectMenu from '@/Components/ui/SelectMenu.vue'
 import BulkDeleteBar from '@/Components/admin/BulkDeleteBar.vue'
+import DateRangeFilter from '@/Components/admin/DateRangeFilter.vue'
 import { useToast } from 'vue-toastification'
 import { usePermissions } from '@/composables/usePermissions'
 import axios from 'axios'
-import { XMarkIcon, TrashIcon, ArrowUturnLeftIcon, PhotoIcon, PlusIcon, EyeIcon } from '@heroicons/vue/24/outline'
+import { XMarkIcon, TrashIcon, ArrowUturnLeftIcon, PhotoIcon, PlusIcon, EyeIcon, MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
   products: Object,
   categories: Array,
+  filters: { type: Object, default: () => ({}) },
 })
 
 const categoryOptions = computed(() => (props.categories || []).map(c => ({ value: c.id, label: c.name })))
+const categorySelect = computed(() => [{ value: '', label: 'All categories' }, ...categoryOptions.value])
+
+// Search + category + date filters
+const f = ref({
+  search: props.filters?.search || '',
+  category: props.filters?.category || '',
+  range: props.filters?.range, from: props.filters?.from, to: props.filters?.to,
+})
+let _t
+const apply = () => router.get(route('admin.products.index'), f.value, { preserveState: true, preserveScroll: true, replace: true })
+const applyDebounced = () => { clearTimeout(_t); _t = setTimeout(apply, 350) }
 
 // Bulk selection / delete
 const toast = useToast()

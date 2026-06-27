@@ -2,6 +2,15 @@
   <AdminLayout>
     <Head title="Admin Dashboard" />
 
+    <!-- Header + date range -->
+    <div class="flex items-center justify-between gap-3 mb-6">
+      <div>
+        <h1 class="font-display text-2xl font-bold text-charcoal">Dashboard</h1>
+        <p class="text-muted text-sm">{{ filters?.label }} overview</p>
+      </div>
+      <DateRangeFilter route-name="admin.dashboard" :filters="filters" />
+    </div>
+
     <!-- Stats Grid -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
       <div v-for="stat in statCards" :key="stat.label"
@@ -158,6 +167,7 @@
 import { computed } from 'vue'
 import { Head, Link } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
+import DateRangeFilter from '@/Components/admin/DateRangeFilter.vue'
 import { statusBadge } from '@/composables/useOrderStatus'
 import {
   Chart as ChartJS,
@@ -189,6 +199,7 @@ ChartJS.register(
 )
 
 const props = defineProps({
+  filters: Object,
   stats: Object,
   recentOrders: Array,
   salesData: Array,

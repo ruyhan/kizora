@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\Review;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -12,7 +13,9 @@ class OrderController extends Controller
 {
     public function index(): Response
     {
-        $orders = Order::with('items')
+        $reviewed = Review::where('user_id', Auth::id())->pluck('product_id')->flip();
+
+        $orders = Order::with('items.product:id,slug')
             ->where('user_id', Auth::id())
             ->latest()
             ->paginate(10)
@@ -26,6 +29,15 @@ class OrderController extends Controller
                 'payment_method' => $o->payment_method,
                 'items_count' => $o->items->count(),
                 'created_at' => $o->created_at->format('d M Y'),
+                'can_review' => $o->status === 'completed',
+                'items' => $o->items->map(fn($i) => [
+                    'id' => $i->id,
+                    'product_id' => $i->product_id,
+                    'name' => $i->product_name,
+                    'image' => $i->product_image,
+                    'slug' => $i->product?->slug,
+                    'reviewed' => isset($reviewed[$i->product_id]),
+                ])->values(),
             ]);
 
         return Inertia::render('Account/Orders', ['orders' => $orders]);
@@ -35,7 +47,11 @@ class OrderController extends Controller
     {
         if ($order->user_id !== Auth::id()) abort(403);
 
-        $order->load('items');
+        $order->load('items.product:id,slug');
+
+        $reviewed = Review::where('user_id', Auth::id())
+            ->whereIn('product_id', $order->items->pluck('product_id')->filter())
+            ->pluck('product_id')->flip();
 
         return Inertia::render('Account/OrderDetail', [
             'order' => [
@@ -55,10 +71,14 @@ class OrderController extends Controller
                 'delivery_city' => $order->delivery_city,
                 'notes' => $order->notes,
                 'created_at' => $order->created_at->format('d M Y, h:i A'),
+                'can_review' => $order->status === 'completed',
                 'items' => $order->items->map(fn($i) => [
                     'id' => $i->id,
+                    'product_id' => $i->product_id,
                     'product_name' => $i->product_name,
                     'product_image' => $i->product_image,
+                    'slug' => $i->product?->slug,
+                    'reviewed' => isset($reviewed[$i->product_id]),
                     'price' => $i->price,
                     'quantity' => $i->quantity,
                     'total' => $i->total,

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use App\Services\Chatbot\ChatbotAiService;
 use App\Support\ChatbotSettings;
 use App\Support\PageContent;
 use Illuminate\Http\Request;
@@ -60,5 +61,23 @@ class ChatbotSettingsController extends Controller
         AuditLog::record('updated', 'Chatbot Settings', 'Updated chatbot configuration');
 
         return back()->with('success', 'Chatbot settings saved.');
+    }
+
+    /** Live "Test connection" — pings the AI provider with the typed or saved key. */
+    public function test(Request $request, ChatbotAiService $ai)
+    {
+        $data = $request->validate([
+            'provider'           => 'required|in:groq,openrouter',
+            'model'              => 'nullable|string|max:120',
+            'groq_api_key'       => 'nullable|string|max:300',
+            'openrouter_api_key' => 'nullable|string|max:300',
+        ]);
+
+        $provider = $data['provider'];
+        $typed = trim($provider === 'openrouter' ? ($data['openrouter_api_key'] ?? '') : ($data['groq_api_key'] ?? ''));
+        $apiKey = $typed !== '' ? $typed : $this->chatbot->apiKeyFor($provider);
+        $model = $data['model'] ?: $this->chatbot->model();
+
+        return response()->json($ai->testConnection($provider, $apiKey, $model));
     }
 }

@@ -3,7 +3,7 @@
     <div class="flex items-end justify-around px-2 pt-1.5">
 
       <Link :href="route('home')" class="bottom-nav-item" :class="active('home')">
-        <HomeIcon class="w-6 h-6" />
+        <component :is="isActive('home') ? HomeSolid : HomeIcon" class="w-6 h-6" />
         <span>Home</span>
       </Link>
 
@@ -24,7 +24,7 @@
       </button>
 
       <Link v-if="auth?.user" :href="route('wishlist.index')" class="bottom-nav-item relative" :class="active('wishlist')">
-        <HeartIcon class="w-6 h-6" />
+        <component :is="isActive('wishlist') ? HeartSolid : HeartIcon" class="w-6 h-6" />
         <span v-if="wishlist_count > 0" class="absolute top-0 right-2.5 min-w-4 h-4 px-1 rounded-full bg-accent text-white text-[10px] flex items-center justify-center font-bold">{{ wishlist_count }}</span>
         <span>Saved</span>
       </Link>
@@ -38,7 +38,7 @@
         <span>Account</span>
       </Link>
       <Link v-else :href="route('login')" class="bottom-nav-item" :class="active('login')">
-        <UserIcon class="w-6 h-6" />
+        <component :is="isActive('login') ? UserSolid : UserIcon" class="w-6 h-6" />
         <span>Login</span>
       </Link>
 
@@ -50,13 +50,15 @@
 import { computed } from 'vue'
 import { Link, usePage } from '@inertiajs/vue3'
 import { HomeIcon, Squares2X2Icon, ShoppingBagIcon, HeartIcon, UserIcon, MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
+import { HomeIcon as HomeSolid, HeartIcon as HeartSolid, UserIcon as UserSolid } from '@heroicons/vue/24/solid'
 
 const page = usePage()
 const auth = page.props.auth
 const cart_count = computed(() => page.props.cart_count ?? 0)
 const wishlist_count = computed(() => page.props.wishlist_count ?? 0)
 
-const active = (name) => (route().current(name) || route().current(name + '*') ? 'text-ink' : 'text-muted')
+const isActive = (name) => route().current(name) || route().current(name + '*')
+const active = (name) => (isActive(name) ? 'text-ink' : 'text-muted')
 const openCart = () => window.dispatchEvent(new Event('open-cart'))
 const openCategories = () => window.dispatchEvent(new Event('open-category-menu'))
 const openSearch = () => window.dispatchEvent(new Event('open-search'))

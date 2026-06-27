@@ -28,11 +28,22 @@ class ProductController extends Controller
         return $ordered->values();
     }
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $products = Product::with('category')
-            ->latest()
+        $dr = \App\Support\DateRange::fromRequest($request, 'all');
+        $query = $dr->applyTo(Product::with('category'));
+
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(fn ($q) => $q->where('name', 'like', "%{$s}%")->orWhere('sku', 'like', "%{$s}%"));
+        }
+        if ($request->filled('category')) {
+            $query->where('category_id', $request->category);
+        }
+
+        $products = $query->latest()
             ->paginate(20)
+            ->withQueryString()
             ->through(fn($p) => [
                 'id'                  => $p->id,
                 'name'                => $p->name,
@@ -56,6 +67,7 @@ class ProductController extends Controller
         return Inertia::render('Admin/Products/Index', [
             'products'   => $products,
             'categories' => $this->categoriesForSelect(),
+            'filters'    => array_merge($request->only(['search', 'category']), $dr->filters()),
         ]);
     }
 

@@ -3,6 +3,10 @@
     <Head title="Chatbot Analytics" />
     <ChatbotTabs />
 
+    <div class="flex items-center justify-end mb-4">
+      <DateRangeFilter route-name="admin.chatbot.analytics" :filters="filters" />
+    </div>
+
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <div v-for="k in kpiCards" :key="k.label" class="bg-white rounded-2xl border border-purple-50 p-5">
         <span class="w-10 h-10 rounded-xl flex items-center justify-center" :class="k.bg"><component :is="k.icon" class="w-5 h-5" :class="k.color" /></span>
@@ -46,12 +50,13 @@ import { h, computed } from 'vue'
 import { Head } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import ChatbotTabs from '@/Components/admin/ChatbotTabs.vue'
+import DateRangeFilter from '@/Components/admin/DateRangeFilter.vue'
 import { Bar, Doughnut } from 'vue-chartjs'
 import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, ArcElement, CategoryScale, LinearScale } from 'chart.js'
 import { ChatBubbleLeftRightIcon, ShoppingBagIcon, BanknotesIcon, ArrowTrendingUpIcon } from '@heroicons/vue/24/outline'
 ChartJS.register(Title, Tooltip, Legend, BarElement, ArcElement, CategoryScale, LinearScale)
 
-const props = defineProps({ kpis: Object, mostAsked: Array, mostClicked: Array, leadingToOrders: Array, topQuestions: Array, topCategories: Array })
+const props = defineProps({ filters: Object, kpis: Object, mostAsked: Array, mostClicked: Array, leadingToOrders: Array, topQuestions: Array, topCategories: Array })
 
 const kpiCards = computed(() => [
   { label: 'Conversations', value: Number(props.kpis.conversations).toLocaleString(), icon: ChatBubbleLeftRightIcon, bg: 'bg-purple-50', color: 'text-primary' },

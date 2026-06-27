@@ -29,6 +29,7 @@
       </div>
       <SelectMenu :model-value="f.role" @update:model-value="v => { f.role = v; apply() }" :options="filterRoleOptions" trigger-class="text-sm py-2" class="w-40" />
       <SelectMenu :model-value="f.status" @update:model-value="v => { f.status = v; apply() }" :options="filterStatusOptions" trigger-class="text-sm py-2" class="w-36" />
+      <DateRangeFilter route-name="admin.users.index" :filters="filters" :params="f" />
     </div>
 
     <!-- Bulk bar -->
@@ -191,6 +192,7 @@ import Modal from '@/Components/ui/Modal.vue'
 import Avatar from '@/Components/ui/Avatar.vue'
 import Pagination from '@/Components/ui/Pagination.vue'
 import SelectMenu from '@/Components/ui/SelectMenu.vue'
+import DateRangeFilter from '@/Components/admin/DateRangeFilter.vue'
 import { usePermissions } from '@/composables/usePermissions'
 import { useToast } from 'vue-toastification'
 import {
@@ -218,7 +220,7 @@ const toast = useToast()
 const statusClass = (s) => ({ active: 'badge-success', inactive: 'badge-gray', suspended: 'badge-error' }[s] || 'badge-gray')
 
 // ── Filters ──
-const f = ref({ search: props.filters?.search || '', role: props.filters?.role || '', status: props.filters?.status || '' })
+const f = ref({ search: props.filters?.search || '', role: props.filters?.role || '', status: props.filters?.status || '', range: props.filters?.range, from: props.filters?.from, to: props.filters?.to })
 let t = null
 const apply = () => router.get(route('admin.users.index'), f.value, { preserveState: true, preserveScroll: true, replace: true })
 const applyDebounced = () => { clearTimeout(t); t = setTimeout(apply, 350) }

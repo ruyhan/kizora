@@ -9,10 +9,19 @@ use Inertia\Inertia;
 
 class CouponController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $coupons = Coupon::latest()->get();
-        return Inertia::render('Admin/Coupons/Index', compact('coupons'));
+        $dr = \App\Support\DateRange::fromRequest($request, 'all');
+        $query = $dr->applyTo(Coupon::query());
+
+        if ($request->filled('search')) {
+            $query->where('code', 'like', "%{$request->search}%");
+        }
+
+        return Inertia::render('Admin/Coupons/Index', [
+            'coupons' => $query->latest()->get(),
+            'filters' => array_merge($request->only(['search']), $dr->filters()),
+        ]);
     }
 
     public function store(Request $request)

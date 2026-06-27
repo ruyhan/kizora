@@ -123,4 +123,9 @@ return [
         'marketing.edit'   => 'Edit Campaigns',
         'marketing.delete' => 'Delete Campaigns',
     ],
+    'Accounts' => [
+        'accounting.view'   => 'View Accounts',
+        'accounting.manage' => 'Manage Transactions & Settings',
+        'accounting.import' => 'Import Accounting Data',
+    ],
 ];

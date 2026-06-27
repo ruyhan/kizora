@@ -262,6 +262,32 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/recaptcha',  [AdminRecaptchaController::class, 'index'])->middleware('permission:settings.view')->name('recaptcha.index');
     Route::post('/recaptcha', [AdminRecaptchaController::class, 'update'])->middleware('permission:settings.edit')->name('recaptcha.update');
 
+    // Accounts (accounting module)
+    Route::prefix('accounts')->name('accounts.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\Accounts\DashboardController::class, 'index'])->middleware('permission:accounting.view')->name('dashboard');
+
+        Route::get('transactions',        [\App\Http\Controllers\Admin\Accounts\TransactionController::class, 'index'])->middleware('permission:accounting.view')->name('transactions');
+        Route::post('transactions',       [\App\Http\Controllers\Admin\Accounts\TransactionController::class, 'store'])->middleware('permission:accounting.manage')->name('transactions.store');
+        Route::get('transactions/export', [\App\Http\Controllers\Admin\Accounts\TransactionController::class, 'export'])->middleware('permission:accounting.view')->name('transactions.export');
+        Route::put('transactions/{transaction}',    [\App\Http\Controllers\Admin\Accounts\TransactionController::class, 'update'])->middleware('permission:accounting.manage')->name('transactions.update');
+        Route::delete('transactions/{transaction}', [\App\Http\Controllers\Admin\Accounts\TransactionController::class, 'destroy'])->middleware('permission:accounting.manage')->name('transactions.destroy');
+        Route::post('transactions/bulk-delete',     [\App\Http\Controllers\Admin\Accounts\TransactionController::class, 'bulkDestroy'])->middleware('permission:accounting.manage')->name('transactions.bulk-destroy');
+
+        Route::get('monthly',         [\App\Http\Controllers\Admin\Accounts\SummaryController::class, 'monthly'])->middleware('permission:accounting.view')->name('monthly');
+        Route::get('partner-capital', [\App\Http\Controllers\Admin\Accounts\SummaryController::class, 'partnerCapital'])->middleware('permission:accounting.view')->name('partner-capital');
+        Route::get('cash-bank',       [\App\Http\Controllers\Admin\Accounts\SummaryController::class, 'cashBank'])->middleware('permission:accounting.view')->name('cash-bank');
+        Route::get('ledger',          [\App\Http\Controllers\Admin\Accounts\SummaryController::class, 'ledger'])->middleware('permission:accounting.view')->name('ledger');
+        Route::get('ledger-detail',   [\App\Http\Controllers\Admin\Accounts\SummaryController::class, 'ledgerHead'])->middleware('permission:accounting.view')->name('ledger.head');
+
+        Route::get('settings',  [\App\Http\Controllers\Admin\Accounts\SettingsController::class, 'index'])->middleware('permission:accounting.manage')->name('settings');
+        Route::post('settings', [\App\Http\Controllers\Admin\Accounts\SettingsController::class, 'update'])->middleware('permission:accounting.manage')->name('settings.update');
+
+        Route::get('import',          [\App\Http\Controllers\Admin\Accounts\ImportController::class, 'index'])->middleware('permission:accounting.import')->name('import');
+        Route::post('import/preview', [\App\Http\Controllers\Admin\Accounts\ImportController::class, 'preview'])->middleware('permission:accounting.import')->name('import.preview');
+        Route::post('import/commit',  [\App\Http\Controllers\Admin\Accounts\ImportController::class, 'commit'])->middleware('permission:accounting.import')->name('import.commit');
+        Route::post('import/{batch}/rollback', [\App\Http\Controllers\Admin\Accounts\ImportController::class, 'rollback'])->middleware('permission:accounting.import')->name('import.rollback');
+    });
+
     // Email Configuration (Settings → SMTP · Branding · Templates · Logs)
     Route::prefix('email')->name('email.')->group(function () {
         Route::get('smtp',         [\App\Http\Controllers\Admin\EmailSettingsController::class, 'smtp'])->middleware('permission:settings.view')->name('smtp');

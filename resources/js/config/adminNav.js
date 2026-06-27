@@ -5,7 +5,7 @@ import {
   ClipboardDocumentListIcon, EnvelopeIcon, DocumentTextIcon, Cog6ToothIcon,
   UsersIcon, UserGroupIcon, ShieldCheckIcon, ClipboardDocumentCheckIcon, ChartBarIcon,
   CubeIcon, BuildingStorefrontIcon, ShoppingCartIcon, StarIcon,
-  ChatBubbleLeftRightIcon, SparklesIcon, PresentationChartLineIcon,
+  ChatBubbleLeftRightIcon, SparklesIcon, PresentationChartLineIcon, BanknotesIcon,
 } from '@heroicons/vue/24/outline'
 
 export const adminNavSections = [
@@ -34,6 +34,12 @@ export const adminNavSections = [
       { label: 'Customers', route: 'admin.customers.index',  match: 'admin.customers*',         icon: UserGroupIcon, permission: 'customers.view' },
       { label: 'Coupons',  route: 'admin.coupons.index',     match: 'admin.coupons*',           icon: TicketIcon, permission: 'marketing.view' },
       { label: 'Messages', route: 'admin.messages.contacts', match: 'admin.messages.contacts*', icon: EnvelopeIcon, permission: 'customers.view' },
+    ],
+  },
+  {
+    label: 'Finance',
+    items: [
+      { label: 'Accounts', route: 'admin.accounts.dashboard', match: 'admin.accounts*', icon: BanknotesIcon, permission: 'accounting.view' },
     ],
   },
   {

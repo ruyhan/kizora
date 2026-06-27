@@ -50,43 +50,51 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:modelValue'])
 
-// IDs can arrive as numbers or strings depending on the DB driver/serialisation
-// (works locally but breaks after deploy if compared with ===). Compare loosely.
-const sameId = (a, b) => a != null && b != null && String(a) === String(b)
+// IDs can arrive as numbers OR strings depending on the DB driver / JSON
+// serialisation, and that can differ between local and the live server. Normalise
+// every id to a Number so the city/area selects match consistently everywhere
+// (otherwise picking an area re-derived the city id as a different type and the
+// strict-equality select dropped the chosen city).
+const toId = (v) => (v === null || v === undefined || v === '') ? null : Number(v)
 
-const cityIdOfArea = (areaId) => props.areas.find(a => sameId(a.id, areaId))?.delivery_city_id ?? null
+const cityIdOfArea = (areaId) => {
+  const id = toId(areaId)
+  const area = props.areas.find(a => toId(a.id) === id)
+  return area ? toId(area.delivery_city_id) : null
+}
 
-const selectedAreaId = ref(props.modelValue)
+const selectedAreaId = ref(toId(props.modelValue))
 const selectedCityId = ref(cityIdOfArea(props.modelValue))
 
-// Options for the searchable selects
+// Options for the searchable selects (ids normalised to Number)
 const cityOptions = computed(() =>
   [...props.cities]
     .sort((a, b) => a.name.localeCompare(b.name))
-    .map(c => ({ value: c.id, label: c.name }))
+    .map(c => ({ value: toId(c.id), label: c.name }))
 )
 const areaOptions = computed(() =>
   props.areas
-    .filter(a => sameId(a.delivery_city_id, selectedCityId.value))
-    .map(a => ({ value: a.id, label: a.postal_code ? `${a.name} (${a.postal_code})` : a.name }))
+    .filter(a => toId(a.delivery_city_id) === selectedCityId.value)
+    .map(a => ({ value: toId(a.id), label: a.postal_code ? `${a.name} (${a.postal_code})` : a.name }))
 )
 
-const selectedCity = computed(() => props.cities.find(c => sameId(c.id, selectedCityId.value)) ?? null)
+const selectedCity = computed(() => props.cities.find(c => toId(c.id) === selectedCityId.value) ?? null)
 const showUnavailable = computed(() => selectedCity.value && !selectedCity.value.is_active)
 
 const onCitySelect = (cityId) => {
-  selectedCityId.value = cityId
+  selectedCityId.value = toId(cityId)
   selectedAreaId.value = null
   emit('update:modelValue', null)
 }
 const onAreaSelect = (areaId) => {
-  selectedAreaId.value = areaId
-  emit('update:modelValue', areaId)
+  selectedAreaId.value = toId(areaId)
+  emit('update:modelValue', toId(areaId))
 }
 
-// Sync if parent changes value (autofill)
+// Keep the city in sync with the area when the parent value changes (autofill, or
+// right after an area is chosen) — re-derive the city from the area's city id.
 watch(() => props.modelValue, (val) => {
-  selectedAreaId.value = val
-  if (val) selectedCityId.value = cityIdOfArea(val)
+  selectedAreaId.value = toId(val)
+  if (val !== null && val !== undefined) selectedCityId.value = cityIdOfArea(val)
 })
 </script>

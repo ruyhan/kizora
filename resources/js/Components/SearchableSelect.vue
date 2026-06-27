@@ -82,9 +82,13 @@ const emit = defineEmits(['update:modelValue'])
 const query       = ref('')
 const searchInput = ref(null)
 
-const selectedLabel = computed(() =>
-  props.options.find(o => o.value === props.modelValue)?.label ?? ''
-)
+// Match the selected option by loose (string-coerced) value so a number-vs-string
+// type difference (e.g. DB ids serialised differently on the live server) never
+// blanks the displayed label.
+const selectedLabel = computed(() => {
+  if (props.modelValue === null || props.modelValue === undefined) return ''
+  return props.options.find(o => String(o.value) === String(props.modelValue))?.label ?? ''
+})
 
 const filtered = computed(() => {
   const q = query.value.trim().toLowerCase()

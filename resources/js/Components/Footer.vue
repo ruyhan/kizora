@@ -78,30 +78,27 @@
         <!-- Mobile layout: centered stack -->
         <div class="flex flex-col items-center gap-2 md:hidden">
           <p class="text-gray-500 text-xs text-center">
-            © {{ new Date().getFullYear() }} {{ site.site_name }}
+            {{ copyrightText }}
           </p>
           <p class="text-purple-400 text-xs text-center">
             {{ footer.tagline }}
           </p>
           <div class="flex items-center gap-2 text-xs text-gray-500">
-            <Link :href="route('privacy')" class="hover:text-white transition-colors">Privacy</Link>
-            <span>·</span>
-            <Link :href="route('terms')" class="hover:text-white transition-colors">Terms</Link>
-            <span>·</span>
-            <Link :href="route('faq')" class="hover:text-white transition-colors">FAQ</Link>
+            <template v-for="(l, i) in legalLinks" :key="i">
+              <Link :href="l.url" class="hover:text-white transition-colors">{{ l.label }}</Link>
+              <span v-if="i < legalLinks.length - 1">·</span>
+            </template>
           </div>
         </div>
 
         <!-- Desktop layout: left-right -->
         <div class="hidden md:flex items-center justify-between gap-4">
           <p class="text-gray-500 text-sm">
-            © {{ new Date().getFullYear() }} {{ site.site_name }}. All rights reserved. ·
+            {{ copyrightText }} ·
             <span class="text-purple-400">{{ footer.tagline }}</span>
           </p>
           <div class="flex gap-6 text-sm">
-            <Link :href="route('privacy')" class="text-gray-500 hover:text-white transition-colors">Privacy</Link>
-            <Link :href="route('terms')" class="text-gray-500 hover:text-white transition-colors">Terms</Link>
-            <Link :href="route('faq')" class="text-gray-500 hover:text-white transition-colors">FAQ</Link>
+            <Link v-for="(l, i) in legalLinks" :key="i" :href="l.url" class="text-gray-500 hover:text-white transition-colors">{{ l.label }}</Link>
           </div>
         </div>
 
@@ -127,6 +124,22 @@ const categoryGroups = computed(() => {
   const chosen = Array.isArray(footer.value.footer_categories) ? footer.value.footer_categories : []
   return chosen.length ? tree.filter((c) => chosen.includes(c.slug)) : tree
 })
+
+// Bottom bar: copyright (with {year} placeholder) + legal links — editable in admin.
+const copyrightText = computed(() => {
+  const year = new Date().getFullYear()
+  const tpl = footer.value.copyright || `© {year} ${site.value.site_name || 'Kizora'}. All rights reserved.`
+  // Prefer the {year} token; if a literal year was typed instead, refresh the
+  // last 20xx in the string so it never goes stale (also handles "2020–2026").
+  return tpl.includes('{year}')
+    ? tpl.replace(/\{year\}/g, year)
+    : tpl.replace(/20\d{2}(?![\s\S]*20\d{2})/, year)
+})
+const legalLinks = computed(() => footer.value.legal_links?.length ? footer.value.legal_links : [
+  { label: 'Privacy', url: '/privacy' },
+  { label: 'Terms', url: '/terms' },
+  { label: 'FAQ', url: '/faq' },
+])
 const footerLinks = computed(() => footer.value.links?.length ? footer.value.links : [
   { label: 'Home', url: '/' },
   { label: 'Shop', url: '/shop' },

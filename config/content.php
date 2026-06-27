@@ -386,6 +386,17 @@ return [
             ]],
             ['key' => 'footer_categories', 'label' => 'Categories column', 'type' => 'categories',
                 'help' => 'Choose which categories appear in the footer’s Categories column. Leave all unchecked to show every category. Order follows the Categories sort order.'],
+            ['key' => 'copyright', 'label' => 'Copyright text (bottom bar)', 'type' => 'text',
+                'default' => '© {year} Kizora. All rights reserved.',
+                'help' => 'Use {year} to auto-insert the current year.'],
+            ['key' => 'legal_links', 'label' => 'Bottom-bar links (right side)', 'type' => 'list', 'item' => [
+                ['key' => 'label', 'label' => 'Label', 'type' => 'text'],
+                ['key' => 'url', 'label' => 'Link', 'type' => 'text'],
+            ], 'default' => [
+                ['label' => 'Privacy', 'url' => '/privacy'],
+                ['label' => 'Terms', 'url' => '/terms'],
+                ['label' => 'FAQ', 'url' => '/faq'],
+            ]],
         ],
     ],
 

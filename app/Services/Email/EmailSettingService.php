@@ -4,6 +4,7 @@ namespace App\Services\Email;
 
 use App\Models\WebsiteSetting;
 use App\Support\PageContent;
+use Illuminate\Support\Facades\Crypt;
 use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport;
 
 /**
@@ -21,7 +22,7 @@ class EmailSettingService
     /** @return array<string,mixed> */
     public function smtp(bool $maskSecret = true): array
     {
-        $pass = (string) WebsiteSetting::get('mail_password', '');
+        $pass = $this->readPassword();
 
         return [
             'enabled'          => WebsiteSetting::get('mail_enabled', '0') === '1',
@@ -60,7 +61,21 @@ class EmailSettingService
 
         // Only overwrite the password when a new, non-masked value is provided.
         if (! empty($data['password']) && $data['password'] !== self::MASK) {
-            WebsiteSetting::set('mail_password', $data['password']);
+            WebsiteSetting::set('mail_password', Crypt::encryptString($data['password']));
+        }
+    }
+
+    /** Decrypt the stored SMTP password; falls back to raw for legacy plaintext values. */
+    private function readPassword(): string
+    {
+        $raw = (string) WebsiteSetting::get('mail_password', '');
+        if ($raw === '') {
+            return '';
+        }
+        try {
+            return Crypt::decryptString($raw);
+        } catch (\Throwable) {
+            return $raw; // legacy plaintext stored before encryption was added
         }
     }
 
@@ -161,6 +176,14 @@ class EmailSettingService
         $content = app(PageContent::class)->get('settings');
         $socials = json_decode((string) WebsiteSetting::get('email_socials', ''), true) ?: [];
 
+        // Fallback to the site's social links (platform => url) when no email-specific override is set.
+        $contentSocials = [];
+        foreach ((array) ($content['social_links'] ?? []) as $s) {
+            if (! empty($s['platform']) && ! empty($s['url'])) {
+                $contentSocials[$s['platform']] = $s['url'];
+            }
+        }
+
         return [
             'logo'              => $this->embedAsDataUri(WebsiteSetting::get('email_logo', '') ?: ($content['logo_light'] ?? '') ?: ($content['logo'] ?? '')),
             'banner'            => (string) WebsiteSetting::get('email_banner', ''),
@@ -169,10 +192,7 @@ class EmailSettingService
             'phone'             => WebsiteSetting::get('email_phone', '') ?: ($content['phone_1'] ?? ''),
             'website'           => WebsiteSetting::get('email_website', '') ?: config('app.url'),
             'support_email'     => WebsiteSetting::get('email_support_email', '') ?: ($content['email'] ?? ''),
-            'socials'           => ! empty($socials) ? $socials : array_filter([
-                'facebook'  => $content['facebook'] ?? '',
-                'instagram' => $content['instagram'] ?? '',
-            ]),
+            'socials'           => ! empty($socials) ? $socials : $contentSocials,
             'footer_disclaimer' => WebsiteSetting::get('email_footer_disclaimer', '')
                 ?: 'You are receiving this email because you placed an order or have an account with us.',
             'footer_copyright'  => WebsiteSetting::get('email_footer_copyright', '')

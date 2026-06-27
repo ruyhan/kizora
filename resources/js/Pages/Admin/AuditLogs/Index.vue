@@ -9,7 +9,7 @@
       </div>
       <div class="flex items-center gap-2">
         <DateRangeFilter route-name="admin.audit-logs.index" :filters="filters" :params="f" />
-        <button v-if="total > 0" @click="clearLogs" class="btn-secondary text-error text-sm px-4 py-2 inline-flex items-center gap-1.5">
+        <button v-if="total > 0 && can('audit.delete')" @click="clearLogs" class="btn-secondary text-error text-sm px-4 py-2 inline-flex items-center gap-1.5">
           <TrashIcon class="w-4 h-4" /> Clear logs
         </button>
       </div>
@@ -68,8 +68,10 @@ import AdminLayout from '@/Layouts/AdminLayout.vue'
 import DateRangeFilter from '@/Components/admin/DateRangeFilter.vue'
 import Pagination from '@/Components/ui/Pagination.vue'
 import { MagnifyingGlassIcon, TrashIcon } from '@heroicons/vue/24/outline'
+import { usePermissions } from '@/composables/usePermissions'
 
 const props = defineProps({ logs: Object, modules: Array, actions: Array, filters: Object, total: { type: Number, default: 0 } })
+const { can } = usePermissions()
 
 const clearLogs = () => {
   if (confirm('Clear all audit logs? This cannot be undone.')) {

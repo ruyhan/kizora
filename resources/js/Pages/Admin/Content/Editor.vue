@@ -36,7 +36,7 @@
           </span>
         </div>
         <select v-else-if="field.type === 'select'" v-model="form.content[field.key]" class="input-field">
-          <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
+          <option v-for="opt in field.options" :key="optVal(opt)" :value="optVal(opt)">{{ optLabel(opt) }}</option>
         </select>
         <!-- segmented control (options: [{value,label}]) -->
         <div v-else-if="field.type === 'segmented'" class="inline-flex flex-wrap gap-1 p-1 rounded-xl bg-[#F1F1F2]">
@@ -77,7 +77,7 @@
                 <label v-if="sub.type !== 'toggle'" class="block text-xs font-medium text-muted mb-1">{{ sub.label }}</label>
                 <textarea v-if="sub.type === 'textarea'" v-model="item[sub.key]" rows="2" class="input-field text-sm"></textarea>
                 <select v-else-if="sub.type === 'select'" v-model="item[sub.key]" class="input-field text-sm">
-                  <option v-for="opt in sub.options" :key="opt" :value="opt">{{ opt }}</option>
+                  <option v-for="opt in sub.options" :key="optVal(opt)" :value="optVal(opt)">{{ optLabel(opt) }}</option>
                 </select>
                 <div v-else-if="sub.type === 'image'" class="flex items-center gap-3">
                   <div class="w-16 h-16 rounded-lg border border-purple-100 bg-purple-50/40 flex items-center justify-center overflow-hidden shrink-0">
@@ -103,6 +103,21 @@
           <button type="button" @click="addItem(field)" class="inline-flex items-center gap-1.5 text-sm font-semibold text-ink hover:text-accent transition-colors">
             <PlusIcon class="w-4 h-4" /> Add {{ field.label.replace(/s$/, '') }}
           </button>
+        </div>
+
+        <!-- categories picker (dynamic checklist from the live catalogue) -->
+        <div v-else-if="field.type === 'categories'">
+          <p v-if="!categoryOptions.length" class="text-muted text-sm">No categories yet.</p>
+          <div v-else class="grid sm:grid-cols-2 gap-x-6 gap-y-1.5">
+            <label v-for="opt in categoryOptions" :key="opt.value" class="flex items-center gap-2.5 cursor-pointer py-1">
+              <input type="checkbox" :checked="isChecked(field.key, opt.value)" @change="toggleCat(field.key, opt.value)"
+                class="w-4 h-4 rounded border-purple-200" style="accent-color:#17181B">
+              <span class="text-sm text-charcoal">{{ opt.label }}</span>
+            </label>
+          </div>
+          <p class="text-muted text-xs pt-2">
+            {{ (form.content[field.key] || []).length ? `${form.content[field.key].length} selected` : 'None selected → showing all' }}
+          </p>
         </div>
       </div>
 
@@ -132,6 +147,7 @@ const props = defineProps({
   label:  String,
   fields: { type: Array, default: () => [] },
   values: { type: Object, default: () => ({}) },
+  categoryOptions: { type: Array, default: () => [] },
 })
 
 const form = useForm({ content: JSON.parse(JSON.stringify(props.values)) })
@@ -144,6 +160,19 @@ const visible = (field) => {
   return conds.every((c) => String(form.content[c.key]) === String(c.value))
 }
 const visibleFields = computed(() => props.fields.filter(visible))
+
+// select options accept either plain strings or { value, label } objects
+const optVal = (o) => (o && typeof o === 'object') ? o.value : o
+const optLabel = (o) => (o && typeof o === 'object') ? o.label : o
+
+// categories checklist (stores an ordered array of selected slugs; empty = show all)
+const isChecked = (key, val) => Array.isArray(form.content[key]) && form.content[key].includes(val)
+const toggleCat = (key, val) => {
+  if (!Array.isArray(form.content[key])) form.content[key] = []
+  const arr = form.content[key]
+  const i = arr.indexOf(val)
+  if (i === -1) arr.push(val); else arr.splice(i, 1)
+}
 
 const blankItem = (field) => Object.fromEntries((field.item || []).map((s) => [s.key, '']))
 const addItem = (field) => { if (!Array.isArray(form.content[field.key])) form.content[field.key] = []; form.content[field.key].push(blankItem(field)) }

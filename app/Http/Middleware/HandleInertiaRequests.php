@@ -73,6 +73,7 @@ class HandleInertiaRequests extends Middleware
             'site' => app(PageContent::class)->get('settings'),
             'footer' => app(PageContent::class)->get('footer'),
             'header' => app(PageContent::class)->get('header'),
+            'megamenu' => app(PageContent::class)->get('megamenu'),
             'productSettings' => app(PageContent::class)->get('product'),
             'delivery' => app(DeliverySettings::class)->publicConfig(),
             'chatbot' => app(ChatbotSettings::class)->publicConfig(),

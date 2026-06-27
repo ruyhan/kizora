@@ -30,8 +30,31 @@ return [
             ['key' => 'address', 'label' => 'Address', 'type' => 'textarea', 'default' => 'House 7, Road 12, Banani, Dhaka 1213, Bangladesh'],
             ['key' => 'opening_hours', 'label' => 'Opening hours', 'type' => 'text', 'default' => 'Sat – Thu: 10:00 AM – 9:00 PM'],
             ['key' => 'map_url', 'label' => 'Google Maps URL', 'type' => 'url', 'default' => 'https://maps.google.com'],
-            ['key' => 'facebook', 'label' => 'Facebook URL', 'type' => 'url', 'default' => 'https://facebook.com/kizora'],
-            ['key' => 'instagram', 'label' => 'Instagram URL', 'type' => 'url', 'default' => 'https://instagram.com/kizora'],
+            ['key' => 'social_links', 'label' => 'Social media links', 'type' => 'list',
+                'help' => 'Add as many as you like — pick a platform and paste its URL. They appear in the footer in this order.',
+                'item' => [
+                    ['key' => 'platform', 'label' => 'Platform', 'type' => 'select', 'options' => [
+                        ['value' => 'facebook',  'label' => 'Facebook'],
+                        ['value' => 'instagram', 'label' => 'Instagram'],
+                        ['value' => 'twitter',   'label' => 'X (Twitter)'],
+                        ['value' => 'youtube',   'label' => 'YouTube'],
+                        ['value' => 'tiktok',    'label' => 'TikTok'],
+                        ['value' => 'linkedin',  'label' => 'LinkedIn'],
+                        ['value' => 'whatsapp',  'label' => 'WhatsApp'],
+                        ['value' => 'pinterest', 'label' => 'Pinterest'],
+                        ['value' => 'telegram',  'label' => 'Telegram'],
+                        ['value' => 'snapchat',  'label' => 'Snapchat'],
+                        ['value' => 'threads',   'label' => 'Threads'],
+                        ['value' => 'github',    'label' => 'GitHub'],
+                        ['value' => 'website',   'label' => 'Website / Other'],
+                    ]],
+                    ['key' => 'url', 'label' => 'URL', 'type' => 'url'],
+                ],
+                'default' => [
+                    ['platform' => 'facebook',  'url' => 'https://facebook.com/kizora'],
+                    ['platform' => 'instagram', 'url' => 'https://instagram.com/kizora'],
+                ],
+            ],
             ['key' => 'currency_symbol', 'label' => 'Currency symbol', 'type' => 'text', 'default' => '৳'],
 
             ['key' => 'maintenance_mode', 'label' => 'Maintenance mode', 'type' => 'toggle', 'default' => false, 'help' => 'When ON, visitors see a maintenance page (HTTP 503). You and other admins can still sign in, use the admin panel, and browse the live site — so you can update things safely.'],
@@ -106,7 +129,7 @@ return [
 
     'header' => [
         'label' => 'Header & Menu',
-        'desc'  => 'Main menu, utility links and the mega-menu promo tile.',
+        'desc'  => 'Main menu and utility links in the top bar. (The mega menu has its own section.)',
         'icon'  => 'layout',
         'fields' => [
             ['key' => 'nav', 'label' => 'Main menu', 'type' => 'list', 'item' => [
@@ -127,11 +150,21 @@ return [
                 ['label' => 'Track order', 'url' => '/track-order', 'icon' => 'truck'],
                 ['label' => 'Help', 'url' => '/faq', 'icon' => 'help'],
             ]],
-            ['key' => 'promo_eyebrow', 'label' => 'Mega menu promo — eyebrow', 'type' => 'text', 'default' => 'New in'],
-            ['key' => 'promo_title', 'label' => 'Mega menu promo — title', 'type' => 'text', 'default' => 'The 2026 carry collection'],
-            ['key' => 'promo_cta', 'label' => 'Mega menu promo — button text', 'type' => 'text', 'default' => 'Shop new arrivals'],
-            ['key' => 'promo_link', 'label' => 'Mega menu promo — link', 'type' => 'text', 'default' => '/shop?sort=latest'],
-            ['key' => 'mega_columns', 'label' => 'Mega menu — number of category columns (order follows Categories sort)', 'type' => 'number', 'default' => 3],
+        ],
+    ],
+
+    'megamenu' => [
+        'label' => 'Mega Menu',
+        'desc'  => 'The "Shop" dropdown — which categories show as columns and the promo tile.',
+        'icon'  => 'layout',
+        'fields' => [
+            ['key' => 'categories', 'label' => 'Category columns', 'type' => 'categories',
+                'help' => 'Choose which categories appear as columns in the mega menu (their sub-categories show automatically). Leave all unchecked to auto-show the first few. Order follows the Categories sort order.'],
+            ['key' => 'mega_columns', 'label' => 'Max category columns (used only when none are chosen above)', 'type' => 'number', 'default' => 3],
+            ['key' => 'promo_eyebrow', 'label' => 'Promo tile — eyebrow', 'type' => 'text', 'default' => 'New in'],
+            ['key' => 'promo_title', 'label' => 'Promo tile — title', 'type' => 'text', 'default' => 'The 2026 carry collection'],
+            ['key' => 'promo_cta', 'label' => 'Promo tile — button text', 'type' => 'text', 'default' => 'Shop new arrivals'],
+            ['key' => 'promo_link', 'label' => 'Promo tile — link', 'type' => 'text', 'default' => '/shop?sort=latest'],
         ],
     ],
 
@@ -336,7 +369,7 @@ return [
 
     'footer' => [
         'label' => 'Footer',
-        'desc'  => 'Footer about text, tagline and quick links (the Categories column is automatic).',
+        'desc'  => 'Footer about text, tagline, quick links and which categories appear.',
         'icon'  => 'layout',
         'fields' => [
             ['key' => 'about', 'label' => 'About text', 'type' => 'textarea', 'default' => 'Kizora designs premium backpacks, water bottles, flasks and everyday‑carry essentials built to move with you — for school, work and the road ahead.'],
@@ -351,6 +384,8 @@ return [
                 ['label' => 'Contact', 'url' => '/contact'],
                 ['label' => 'Track Order', 'url' => '/track-order'],
             ]],
+            ['key' => 'footer_categories', 'label' => 'Categories column', 'type' => 'categories',
+                'help' => 'Choose which categories appear in the footer’s Categories column. Leave all unchecked to show every category. Order follows the Categories sort order.'],
         ],
     ],
 

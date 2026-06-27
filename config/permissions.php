@@ -128,4 +128,8 @@ return [
         'accounting.manage' => 'Manage Transactions & Settings',
         'accounting.import' => 'Import Accounting Data',
     ],
+    'Audit Logs' => [
+        'audit.view'   => 'View Audit Logs',
+        'audit.delete' => 'Clear Audit Logs',
+    ],
 ];

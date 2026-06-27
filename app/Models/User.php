@@ -31,6 +31,25 @@ class User extends Authenticatable
     /** Cached per-request permission slugs. */
     private ?array $permissionCache = null;
 
+    /**
+     * Send the password-reset link using the store's branded, editable email
+     * template (logged + SMTP-aware). Falls back to Laravel's default mail if
+     * the email system is disabled or the template is off, so reset never breaks.
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $url = route('password.reset', ['token' => $token]) . '?email=' . urlencode($this->email);
+
+        $sent = app(\App\Services\Email\EmailService::class)->send('password_reset', $this->email, [
+            'customer_name' => $this->name,
+            'reset_link'    => $url,
+        ]);
+
+        if (! $sent) {
+            $this->notify(new \Illuminate\Auth\Notifications\ResetPassword($token));
+        }
+    }
+
     public function role()
     {
         return $this->belongsTo(Role::class);

@@ -48,12 +48,22 @@
           <h1 class="font-display text-3xl font-bold text-charcoal mb-1.5">Forgot Password?</h1>
           <p class="text-muted text-sm mb-8">Enter your email and we'll send you a reset link.</p>
 
-          <form class="space-y-5">
+          <div v-if="sent" class="rounded-2xl bg-green-50 border border-green-100 p-5 text-center">
+            <CheckCircleIcon class="w-10 h-10 text-success mx-auto mb-2" />
+            <p class="text-charcoal font-medium">Check your inbox</p>
+            <p class="text-muted text-sm mt-1">If that email is registered, a password reset link is on its way. The link expires in 60 minutes.</p>
+          </div>
+
+          <form v-else class="space-y-5" @submit.prevent="submit">
             <div>
               <label class="text-sm font-medium text-charcoal mb-1.5 block">Email Address</label>
-              <input type="email" class="input-field" placeholder="your@email.com" required>
+              <input v-model="form.email" type="email" class="input-field" :class="{ 'border-error': errors.email }" placeholder="your@email.com" required>
+              <p v-if="errors.email" class="text-error text-xs mt-1">{{ errors.email }}</p>
             </div>
-            <button type="submit" class="btn-primary w-full py-3.5 text-base">Send Reset Link</button>
+            <RecaptchaCheckbox form="forgot_password" />
+            <button type="submit" :disabled="processing" class="btn-primary w-full py-3.5 text-base disabled:opacity-60">
+              {{ processing ? 'Sending…' : 'Send Reset Link' }}
+            </button>
           </form>
 
           <div class="mt-6 pt-6 border-t border-purple-100">
@@ -72,10 +82,32 @@
 </template>
 
 <script setup>
-import { Head, Link } from '@inertiajs/vue3'
+import { ref, reactive } from 'vue'
+import { Head, Link, router, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
-import { LockClosedIcon } from '@heroicons/vue/24/outline'
+import { LockClosedIcon, CheckCircleIcon } from '@heroicons/vue/24/outline'
 import { useBrandLogo } from '@/composables/useBrandLogo'
+import RecaptchaCheckbox from '@/Components/RecaptchaCheckbox.vue'
+import { useRecaptcha } from '@/composables/useRecaptcha'
 
 const { light: lightLogo, dark: darkLogo, darkInvert } = useBrandLogo()
+const { getToken } = useRecaptcha()
+
+const form = reactive({ email: '' })
+const errors = ref({})
+const processing = ref(false)
+const sent = ref(false)
+
+const submit = async () => {
+  processing.value = true
+  errors.value = {}
+  let token = null
+  try { token = await getToken('forgot_password') } catch { /* recaptcha optional */ }
+  router.post(route('password.email'), { ...form, recaptcha_token: token }, {
+    preserveScroll: true,
+    onSuccess: () => { sent.value = !usePage().props.errors?.email; },
+    onError: (e) => { errors.value = e },
+    onFinish: () => { processing.value = false },
+  })
+}
 </script>

@@ -10,8 +10,16 @@
     "address": null,
     "opening_hours": null,
     "map_url": null,
-    "facebook": "https://facebook.com/kizora",
-    "instagram": "https://instagram.com/kizora",
+    "social_links": [
+        {
+            "platform": "facebook",
+            "url": "https://facebook.com/kizora"
+        },
+        {
+            "platform": "instagram",
+            "url": "https://instagram.com/kizora"
+        }
+    ],
     "currency_symbol": "৳",
     "maintenance_mode": false,
     "maintenance_title": "We’ll be right back",

@@ -78,22 +78,30 @@ import { megaMenuPromo } from '@/config/categories'
 defineEmits(['navigate', 'hoverin', 'hoverout'])
 
 const page = usePage()
-// Category columns (count set in Admin → Header & Menu); order follows Categories sort.
+// Category columns — controlled in Admin → Pages & Content → Mega Menu.
+// If specific categories are chosen, show those (in Categories sort order);
+// otherwise auto-show the first N (mega_columns).
 const groups = computed(() => {
-  const n = Number(page.props.header?.mega_columns) || 3
-  return (page.props.categoryTree || []).slice(0, Math.max(1, n))
+  const mm = page.props.megamenu || {}
+  const tree = page.props.categoryTree || []
+  const chosen = Array.isArray(mm.categories) ? mm.categories : []
+  if (chosen.length) {
+    return tree.filter((c) => chosen.includes(c.slug))
+  }
+  const n = Number(mm.mega_columns) || 3
+  return tree.slice(0, Math.max(1, n))
 })
 // columns = category columns + 1 promo tile, on lg+ (mobile stays 2-col)
 const gridStyle = computed(() => ({
   '--kz-cols': groups.value.length + 1,
 }))
 const promo = computed(() => {
-  const h = page.props.header || {}
+  const mm = page.props.megamenu || {}
   return {
-    eyebrow: h.promo_eyebrow || megaMenuPromo.eyebrow,
-    title:   h.promo_title   || megaMenuPromo.title,
-    cta:     h.promo_cta     || megaMenuPromo.cta,
-    link:    h.promo_link    || '/shop',
+    eyebrow: mm.promo_eyebrow || megaMenuPromo.eyebrow,
+    title:   mm.promo_title   || megaMenuPromo.title,
+    cta:     mm.promo_cta     || megaMenuPromo.cta,
+    link:    mm.promo_link    || '/shop',
   }
 })
 </script>

@@ -11,6 +11,7 @@ use App\Services\Recaptcha\RecaptchaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -103,6 +104,52 @@ class AuthController extends Controller
     public function showForgotPassword(): Response
     {
         return Inertia::render('Auth/ForgotPassword');
+    }
+
+    /** Email a password-reset link (generic response — no account enumeration). */
+    public function sendResetLink(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        if ($msg = $this->recaptcha->verifyRequest($request, 'forgot_password')) {
+            return back()->withErrors(['email' => $msg]);
+        }
+
+        Password::sendResetLink($request->only('email'));
+
+        // Always report success so the form can't be used to probe which emails exist.
+        return back()->with('success', 'If that email is registered, a password reset link is on its way.');
+    }
+
+    public function showResetPassword(Request $request, string $token): Response
+    {
+        return Inertia::render('Auth/ResetPassword', [
+            'token' => $token,
+            'email' => $request->query('email', ''),
+        ]);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token'    => 'required',
+            'email'    => 'required|email',
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ]);
+
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function (User $user, string $password) {
+                $user->forceFill(['password' => Hash::make($password)])->save();
+            }
+        );
+
+        if ($status === Password::PASSWORD_RESET) {
+            AuditLog::record('password_reset', 'Auth', 'Password reset via email link');
+            return redirect()->route('login')->with('success', 'Your password has been reset. Please sign in.');
+        }
+
+        return back()->withErrors(['email' => __($status)]);
     }
 
     /** Invitation acceptance (public — invitee sets their own password) */

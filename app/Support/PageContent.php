@@ -44,7 +44,7 @@ class PageContent
         $out = [];
         foreach ($this->fields($group) as $f) {
             $out[$f['key']] = $f['default'] ?? match ($f['type'] ?? 'text') {
-                'list'   => [],
+                'list', 'categories' => [],
                 'toggle' => false,
                 'number' => 0,
                 default  => '',

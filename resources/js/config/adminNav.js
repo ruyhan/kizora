@@ -62,7 +62,7 @@ export const adminNavSections = [
     items: [
       { label: 'Users',                route: 'admin.users.index',      match: 'admin.users*',      icon: UsersIcon, permission: 'users.view' },
       { label: 'Roles & Permissions',  route: 'admin.roles.index',      match: 'admin.roles*',      icon: ShieldCheckIcon, permission: 'roles.view' },
-      { label: 'Audit Logs',           route: 'admin.audit-logs.index', match: 'admin.audit-logs*', icon: ClipboardDocumentCheckIcon, permission: 'reports.view' },
+      { label: 'Audit Logs',           route: 'admin.audit-logs.index', match: 'admin.audit-logs*', icon: ClipboardDocumentCheckIcon, permission: 'audit.view' },
     ],
   },
   {

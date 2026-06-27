@@ -99,6 +99,28 @@ HTML,
 HTML,
             ],
 
+            'contact_received_admin' => [
+                'name'      => 'Admin — New Contact Message',
+                'group'     => 'Admin',
+                'subject'   => 'New contact message from {contact_name}',
+                'variables' => ['contact_name', 'contact_email', 'contact_phone', 'contact_subject', 'contact_message'],
+                'body'      => <<<HTML
+<div style="background:#EEF2FF;color:#4338CA;font-weight:700;font-size:13px;letter-spacing:.04em;text-transform:uppercase;padding:10px 14px;border-radius:8px;margin:0 0 18px;">✉️ New contact message</div>
+<h1 style="margin:0 0 16px;font-size:20px;color:#17181B;">{contact_subject}</h1>
+
+<table role="presentation" width="100%" style="margin:0 0 18px;border-collapse:collapse;background:#f7f7f8;border-radius:10px;font-size:14px;color:#52525b;">
+  <tr><td style="padding:10px 16px;">Name</td><td style="padding:10px 16px;text-align:right;color:#17181B;font-weight:600;">{contact_name}</td></tr>
+  <tr><td style="padding:10px 16px;">Email</td><td style="padding:10px 16px;text-align:right;color:#17181B;">{contact_email}</td></tr>
+  <tr><td style="padding:10px 16px;">Phone</td><td style="padding:10px 16px;text-align:right;color:#17181B;">{contact_phone}</td></tr>
+</table>
+
+<p style="margin:0 0 6px;color:#9b9ba3;font-size:13px;text-transform:uppercase;letter-spacing:.04em;">Message</p>
+<div style="background:#ffffff;border:1px solid #ececf0;border-radius:10px;padding:16px;color:#52525b;font-size:15px;line-height:1.7;white-space:pre-wrap;">{contact_message}</div>
+
+<p style="margin:18px 0 0;"><a href="mailto:{contact_email}" style="display:inline-block;background:#17181B;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;line-height:1;padding:13px 24px;border-radius:10px;">Reply to {contact_name}</a></p>
+HTML,
+            ],
+
             'order_processing' => [
                 'name'      => 'Customer — Order Processing',
                 'group'     => 'Customer',
@@ -157,6 +179,19 @@ HTML,
 </table>
 <p style="margin:0 0 22px;color:#52525b;font-size:15px;line-height:1.6;">If this was a mistake or you have any questions, our team is here to help.</p>
 <p style="margin:0;"><a href="mailto:{support_email}" style="display:inline-block;background:#17181B;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;line-height:1;padding:13px 24px;border-radius:10px;">Contact support</a></p>
+HTML,
+            ],
+
+            'password_reset' => [
+                'name'      => 'Account — Password Reset',
+                'group'     => 'Account',
+                'subject'   => 'Reset your password',
+                'variables' => ['customer_name', 'reset_link'],
+                'body'      => <<<HTML
+<h1 style="margin:0 0 8px;font-size:22px;color:#17181B;">Reset your password</h1>
+<p style="margin:0 0 18px;color:#52525b;font-size:15px;line-height:1.6;">Hi {customer_name}, we received a request to reset your password. Click the button below to choose a new one — this link expires in 60 minutes.</p>
+<p style="margin:0 0 22px;"><a href="{reset_link}" style="display:inline-block;background:#17181B;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;line-height:1;padding:13px 24px;border-radius:10px;">Reset password</a></p>
+<p style="margin:0;color:#9b9ba3;font-size:13px;line-height:1.6;">If you didn't request a password reset, you can safely ignore this email — your password won't change.</p>
 HTML,
             ],
         ];

@@ -400,4 +400,45 @@ return [
         ],
     ],
 
+    'auth' => [
+        'label' => 'Login & Register',
+        'desc'  => 'Headings and marketing copy on the sign-in and create-account pages.',
+        'icon'  => 'layout',
+        'fields' => [
+            ['key' => 'login_heading',    'label' => 'Login — side panel heading',  'type' => 'text',     'default' => 'Carry your world'],
+            ['key' => 'login_subtext',    'label' => 'Login — side panel text',     'type' => 'textarea', 'default' => 'Premium backpacks, bottles & flasks designed to move with you — built to last, priced for everyone.'],
+            ['key' => 'login_title',      'label' => 'Login — form heading',         'type' => 'text',     'default' => 'Welcome Back'],
+            ['key' => 'login_subtitle',   'label' => 'Login — form subheading',      'type' => 'text',     'default' => 'Sign in to your account to continue'],
+            ['key' => 'register_heading',  'label' => 'Register — side panel heading', 'type' => 'text',     'default' => 'Join Kizora'],
+            ['key' => 'register_subtext',  'label' => 'Register — side panel text',    'type' => 'textarea', 'default' => 'Create your account to unlock exclusive deals, faster checkout, order tracking and a personalised experience.'],
+            ['key' => 'register_title',     'label' => 'Register — form heading',       'type' => 'text',     'default' => 'Create Account'],
+            ['key' => 'register_subtitle',  'label' => 'Register — form subheading',    'type' => 'text',     'default' => 'Join Kizora to enjoy exclusive benefits'],
+            ['key' => 'register_perks', 'label' => 'Register — benefits list', 'type' => 'list', 'item' => [
+                ['key' => 'text', 'label' => 'Benefit', 'type' => 'text'],
+            ], 'default' => [
+                ['text' => 'Track all your orders easily'],
+                ['text' => 'Exclusive discounts & offers'],
+                ['text' => 'Save your favourite items'],
+            ]],
+            ['key' => 'forgot_heading',  'label' => 'Forgot password — side panel heading', 'type' => 'text',     'default' => 'Recover Your Account'],
+            ['key' => 'forgot_subtext',  'label' => 'Forgot password — side panel text',    'type' => 'textarea', 'default' => "No worries — it happens to everyone. Enter your email and we'll send you a secure reset link."],
+            ['key' => 'forgot_title',     'label' => 'Forgot password — form heading',       'type' => 'text',     'default' => 'Forgot Password?'],
+            ['key' => 'forgot_subtitle',  'label' => 'Forgot password — form subheading',    'type' => 'text',     'default' => "Enter your email and we'll send you a reset link."],
+            ['key' => 'reset_heading',   'label' => 'Reset password — side panel heading',  'type' => 'text',     'default' => 'Set a New Password'],
+            ['key' => 'reset_subtext',   'label' => 'Reset password — side panel text',     'type' => 'textarea', 'default' => "Choose a strong password you don't use anywhere else."],
+            ['key' => 'reset_title',      'label' => 'Reset password — form heading',         'type' => 'text',     'default' => 'Reset Password'],
+            ['key' => 'reset_subtitle',   'label' => 'Reset password — form subheading',      'type' => 'text',     'default' => 'Enter a new password for your account.'],
+        ],
+    ],
+
+    'order_success' => [
+        'label' => 'Order Success Page',
+        'desc'  => 'The confirmation message shown after a customer places an order.',
+        'icon'  => 'layout',
+        'fields' => [
+            ['key' => 'heading', 'label' => 'Heading', 'type' => 'text',     'default' => 'Order Placed!'],
+            ['key' => 'message', 'label' => 'Message', 'type' => 'textarea', 'default' => "Thank you for your order. We'll start preparing it right away!"],
+        ],
+    ],
+
 ];

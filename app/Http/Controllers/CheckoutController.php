@@ -254,6 +254,7 @@ class CheckoutController extends Controller
 
         return Inertia::render('OrderSuccess', [
             'orderNumber' => $orderNumber,
+            'content' => app(\App\Support\PageContent::class)->get('order_success'),
         ]);
     }
 }

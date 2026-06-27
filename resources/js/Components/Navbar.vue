@@ -91,8 +91,8 @@
               </div>
             </Transition>
           </div>
-          <Link v-else :href="route('login')" class="hidden md:inline-flex items-center justify-center btn-primary h-10 w-10 ml-1" aria-label="Login" title="Login">
-            <UserIcon class="w-5 h-5" />
+          <Link v-else :href="route('login')" class="hidden md:inline-flex items-center justify-center h-10 w-10 rounded-xl bg-ink text-white hover:bg-[#2A2C31] transition-colors ml-1" aria-label="Login" title="Login">
+            <UserIcon class="w-5 h-5 shrink-0" />
           </Link>
 
           <!-- mobile hamburger -->

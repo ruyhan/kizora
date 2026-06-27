@@ -50,9 +50,13 @@
               <div :ref="el => setCarousel(i, el)" class="flex gap-2 overflow-x-auto scrollbar-hide scroll-smooth snap-x px-1 pb-1">
                 <div v-for="p in m.products" :key="p.id" :class="[dark ? 'bg-[#2a2b30] border-white/10' : 'bg-white border-black/5']"
                   class="snap-start shrink-0 w-36 rounded-xl border overflow-hidden">
-                  <img :src="p.image || '/images/product-placeholder.svg'" class="w-full h-24 object-cover bg-purple-50" alt="">
+                  <Link :href="route('shop.show', p.slug)" @click="trackClick(p)" class="block">
+                    <img :src="p.image || '/images/product-placeholder.svg'" class="w-full h-24 object-cover bg-purple-50 hover:opacity-90 transition-opacity" alt="">
+                  </Link>
                   <div class="p-2">
-                    <p class="text-xs font-semibold leading-tight line-clamp-2 h-8">{{ p.name }}</p>
+                    <Link :href="route('shop.show', p.slug)" @click="trackClick(p)" class="block">
+                      <p class="text-xs font-semibold leading-tight line-clamp-2 h-8 hover:underline">{{ p.name }}</p>
+                    </Link>
                     <p class="text-sm font-bold mt-0.5" :style="{ color: cfg.primary_color }">৳{{ p.price.toLocaleString() }}</p>
                     <div class="flex gap-1 mt-1.5">
                       <button @click="addCart(p)" :style="{ background: cfg.primary_color }" class="flex-1 text-white text-[11px] py-1 rounded-md">Add</button>
@@ -114,7 +118,7 @@
 
 <script setup>
 import { ref, reactive, computed, watch, nextTick } from 'vue'
-import { usePage, router } from '@inertiajs/vue3'
+import { usePage, router, Link } from '@inertiajs/vue3'
 import axios from 'axios'
 import { useToast } from 'vue-toastification'
 import { useCartStore } from '@/stores/cart'
@@ -182,6 +186,11 @@ const scrollCarousel = (i, dir) => { const el = carousels[i]; if (el) el.scrollB
 const addCart = async (p) => {
   axios.post(route('chat.event'), { type: 'product_click', product_id: p.id }).catch(() => {})
   try { await cart.add(p.id, 1); toast.success(`${p.name} added to cart`) } catch { toast.error('Could not add to cart.') }
+}
+
+// Card image/title → product detail page (tracks the click like Add/Order do)
+const trackClick = (p) => {
+  axios.post(route('chat.event'), { type: 'product_click', product_id: p.id }).catch(() => {})
 }
 
 // Order flow

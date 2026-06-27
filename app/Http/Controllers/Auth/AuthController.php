@@ -22,7 +22,9 @@ class AuthController extends Controller
 
     public function showLogin(): Response
     {
-        return Inertia::render('Auth/Login');
+        return Inertia::render('Auth/Login', [
+            'authContent' => app(\App\Support\PageContent::class)->get('auth'),
+        ]);
     }
 
     public function login(Request $request)
@@ -61,7 +63,9 @@ class AuthController extends Controller
 
     public function showRegister(): Response
     {
-        return Inertia::render('Auth/Register');
+        return Inertia::render('Auth/Register', [
+            'authContent' => app(\App\Support\PageContent::class)->get('auth'),
+        ]);
     }
 
     public function register(Request $request)
@@ -103,7 +107,9 @@ class AuthController extends Controller
 
     public function showForgotPassword(): Response
     {
-        return Inertia::render('Auth/ForgotPassword');
+        return Inertia::render('Auth/ForgotPassword', [
+            'authContent' => app(\App\Support\PageContent::class)->get('auth'),
+        ]);
     }
 
     /** Email a password-reset link (generic response — no account enumeration). */
@@ -126,6 +132,7 @@ class AuthController extends Controller
         return Inertia::render('Auth/ResetPassword', [
             'token' => $token,
             'email' => $request->query('email', ''),
+            'authContent' => app(\App\Support\PageContent::class)->get('auth'),
         ]);
     }
 

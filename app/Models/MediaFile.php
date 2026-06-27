@@ -13,10 +13,15 @@ class MediaFile extends Model
 
     protected $appends = ['file_url', 'human_size'];
 
-    /** Full public URL */
+    /**
+     * Root-relative public URL (e.g. /storage/media/xxx.png).
+     * Relative on purpose so picked URLs saved into CMS content work on ANY
+     * domain (localhost + production) without baking in a host — avoids the
+     * "site wants to access 127.0.0.1" / broken-image issue after deploy.
+     */
     public function getFileUrlAttribute(): string
     {
-        return asset('storage/' . $this->file_path);
+        return '/storage/' . ltrim($this->file_path, '/');
     }
 
     public function getHumanSizeAttribute(): string

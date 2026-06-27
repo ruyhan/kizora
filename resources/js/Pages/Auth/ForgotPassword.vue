@@ -24,10 +24,10 @@
             :style="darkInvert ? 'filter: brightness(0) invert(1);' : ''">
 
           <h2 class="font-display text-4xl font-bold text-white mb-4 leading-snug">
-            Recover Your<br>Account
+            {{ c.forgot_heading || 'Recover Your Account' }}
           </h2>
           <p class="text-white/60 text-sm leading-relaxed max-w-xs mx-auto">
-            No worries — it happens to everyone. Enter your email and we'll send you a secure reset link.
+            {{ c.forgot_subtext || "No worries — it happens to everyone. Enter your email and we'll send you a secure reset link." }}
           </p>
 
           <div class="mt-10 w-16 h-16 rounded-2xl bg-white/12 flex items-center justify-center mx-auto">
@@ -45,8 +45,8 @@
             <img :src="lightLogo" alt="Kizora" class="h-8 w-auto object-contain">
           </div>
 
-          <h1 class="font-display text-3xl font-bold text-charcoal mb-1.5">Forgot Password?</h1>
-          <p class="text-muted text-sm mb-8">Enter your email and we'll send you a reset link.</p>
+          <h1 class="font-display text-3xl font-bold text-charcoal mb-1.5">{{ c.forgot_title || 'Forgot Password?' }}</h1>
+          <p class="text-muted text-sm mb-8">{{ c.forgot_subtitle || "Enter your email and we'll send you a reset link." }}</p>
 
           <div v-if="sent" class="rounded-2xl bg-green-50 border border-green-100 p-5 text-center">
             <CheckCircleIcon class="w-10 h-10 text-success mx-auto mb-2" />
@@ -82,13 +82,16 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { Head, Link, router, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { LockClosedIcon, CheckCircleIcon } from '@heroicons/vue/24/outline'
 import { useBrandLogo } from '@/composables/useBrandLogo'
 import RecaptchaCheckbox from '@/Components/RecaptchaCheckbox.vue'
 import { useRecaptcha } from '@/composables/useRecaptcha'
+
+const props = defineProps({ authContent: { type: Object, default: () => ({}) } })
+const c = computed(() => props.authContent || {})
 
 const { light: lightLogo, dark: darkLogo, darkInvert } = useBrandLogo()
 const { getToken } = useRecaptcha()

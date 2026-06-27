@@ -13,8 +13,8 @@
             <div class="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-purple-400/20 blur-3xl pointer-events-none"></div>
             <div class="relative z-10">
               <img :src="darkLogo" alt="Kizora" class="h-12 w-auto object-contain mx-auto mb-8" :style="darkInvert ? 'filter: brightness(0) invert(1);' : ''">
-              <h2 class="font-display text-4xl font-bold text-white mb-4 leading-snug">Set a New<br>Password</h2>
-              <p class="text-white/60 text-sm leading-relaxed max-w-xs mx-auto">Choose a strong password you don't use anywhere else.</p>
+              <h2 class="font-display text-4xl font-bold text-white mb-4 leading-snug">{{ c.reset_heading || 'Set a New Password' }}</h2>
+              <p class="text-white/60 text-sm leading-relaxed max-w-xs mx-auto">{{ c.reset_subtext || "Choose a strong password you don't use anywhere else." }}</p>
               <div class="mt-10 w-16 h-16 rounded-2xl bg-white/12 flex items-center justify-center mx-auto">
                 <LockClosedIcon class="w-8 h-8 text-white" />
               </div>
@@ -28,8 +28,8 @@
                 <img :src="lightLogo" alt="Kizora" class="h-8 w-auto object-contain">
               </div>
 
-              <h1 class="font-display text-3xl font-bold text-charcoal mb-1.5">Reset Password</h1>
-              <p class="text-muted text-sm mb-8">Enter a new password for your account.</p>
+              <h1 class="font-display text-3xl font-bold text-charcoal mb-1.5">{{ c.reset_title || 'Reset Password' }}</h1>
+              <p class="text-muted text-sm mb-8">{{ c.reset_subtitle || 'Enter a new password for your account.' }}</p>
 
               <form class="space-y-5" @submit.prevent="submit">
                 <div>
@@ -71,8 +71,14 @@ import { Head, Link, useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { LockClosedIcon } from '@heroicons/vue/24/outline'
 import { useBrandLogo } from '@/composables/useBrandLogo'
+import { computed } from 'vue'
 
-const props = defineProps({ token: String, email: { type: String, default: '' } })
+const props = defineProps({
+  token: String,
+  email: { type: String, default: '' },
+  authContent: { type: Object, default: () => ({}) },
+})
+const c = computed(() => props.authContent || {})
 const { light: lightLogo, dark: darkLogo, darkInvert } = useBrandLogo()
 
 const form = useForm({

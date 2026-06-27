@@ -24,31 +24,19 @@
             :style="darkInvert ? 'filter: brightness(0) invert(1);' : ''">
 
           <h2 class="font-display text-3xl xl:text-4xl font-bold text-white mb-4 leading-snug whitespace-nowrap">
-            Join Kizora
+            {{ c.register_heading || 'Join Kizora' }}
           </h2>
           <p class="text-white/60 text-sm leading-relaxed max-w-sm mx-auto mb-10 text-balance">
-            Create your account to unlock exclusive deals, faster checkout, order tracking and a personalised experience.
+            {{ c.register_subtext || 'Create your account to unlock exclusive deals, faster checkout, order tracking and a personalised experience.' }}
           </p>
 
           <!-- Perks list -->
           <div class="flex flex-col gap-3 text-left max-w-xs mx-auto">
-            <div class="flex items-center gap-3">
+            <div v-for="(perk, i) in perks" :key="i" class="flex items-center gap-3">
               <div class="w-9 h-9 rounded-xl bg-white/12 flex items-center justify-center shrink-0">
-                <ClipboardDocumentCheckIcon class="w-4.5 h-4.5 text-white" />
+                <component :is="perkIcons[i] || CheckBadgeIcon" class="w-4.5 h-4.5 text-white" />
               </div>
-              <span class="text-white/75 text-sm">Track all your orders easily</span>
-            </div>
-            <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-xl bg-white/12 flex items-center justify-center shrink-0">
-                <TagIcon class="w-4.5 h-4.5 text-white" />
-              </div>
-              <span class="text-white/75 text-sm">Exclusive discounts & offers</span>
-            </div>
-            <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-xl bg-white/12 flex items-center justify-center shrink-0">
-                <HeartIcon class="w-4.5 h-4.5 text-white" />
-              </div>
-              <span class="text-white/75 text-sm">Save your favourite items</span>
+              <span class="text-white/75 text-sm">{{ perk.text }}</span>
             </div>
           </div>
         </div>
@@ -58,8 +46,8 @@
       <div class="flex-1 bg-white flex items-center justify-center px-6 py-12 lg:px-14 overflow-y-auto">
         <div class="w-full max-w-md">
 
-          <h1 class="font-display text-3xl font-bold text-charcoal mb-1.5">Create Account</h1>
-          <p class="text-muted text-sm mb-8">Join Kizora to enjoy exclusive benefits</p>
+          <h1 class="font-display text-3xl font-bold text-charcoal mb-1.5">{{ c.register_title || 'Create Account' }}</h1>
+          <p class="text-muted text-sm mb-8">{{ c.register_subtitle || 'Join Kizora to enjoy exclusive benefits' }}</p>
 
           <form @submit.prevent="submit" class="space-y-5">
             <div>
@@ -126,8 +114,18 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import RecaptchaCheckbox from '@/Components/RecaptchaCheckbox.vue'
 import PhoneInput from '@/Components/ui/PhoneInput.vue'
 import { useRecaptcha } from '@/composables/useRecaptcha'
-import { ClipboardDocumentCheckIcon, TagIcon, HeartIcon } from '@heroicons/vue/24/outline'
+import { ClipboardDocumentCheckIcon, TagIcon, HeartIcon, CheckBadgeIcon } from '@heroicons/vue/24/outline'
 import { useBrandLogo } from '@/composables/useBrandLogo'
+import { computed } from 'vue'
+
+const props = defineProps({ authContent: { type: Object, default: () => ({}) } })
+const c = computed(() => props.authContent || {})
+const perkIcons = [ClipboardDocumentCheckIcon, TagIcon, HeartIcon, CheckBadgeIcon]
+const perks = computed(() => c.value.register_perks?.length ? c.value.register_perks : [
+  { text: 'Track all your orders easily' },
+  { text: 'Exclusive discounts & offers' },
+  { text: 'Save your favourite items' },
+])
 
 const { dark: darkLogo, darkInvert } = useBrandLogo()
 

@@ -25,10 +25,10 @@
             :style="darkInvert ? 'filter: brightness(0) invert(1);' : ''">
 
           <h2 class="font-display text-3xl xl:text-4xl font-bold text-white mb-4 leading-snug whitespace-nowrap">
-            Carry your world
+            {{ c.login_heading || 'Carry your world' }}
           </h2>
           <p class="text-white/60 text-sm leading-relaxed max-w-sm mx-auto text-balance">
-            Premium backpacks, bottles &amp; flasks designed to move with you — built to last, priced for everyone.
+            {{ c.login_subtext || 'Premium backpacks, bottles & flasks designed to move with you — built to last, priced for everyone.' }}
           </p>
         </div>
       </div>
@@ -37,8 +37,8 @@
       <div class="flex-1 bg-white flex items-center justify-center px-6 py-12 lg:px-14 overflow-y-auto">
         <div class="w-full max-w-md">
 
-          <h1 class="font-display text-3xl font-bold text-charcoal mb-1.5">Welcome Back</h1>
-          <p class="text-muted text-sm mb-8">Sign in to your account to continue</p>
+          <h1 class="font-display text-3xl font-bold text-charcoal mb-1.5">{{ c.login_title || 'Welcome Back' }}</h1>
+          <p class="text-muted text-sm mb-8">{{ c.login_subtitle || 'Sign in to your account to continue' }}</p>
 
           <form @submit.prevent="submit" class="space-y-5">
             <div>
@@ -112,6 +112,10 @@ const { dark: darkLogo, darkInvert } = useBrandLogo()
 import RecaptchaCheckbox from '@/Components/RecaptchaCheckbox.vue'
 import { useRecaptcha } from '@/composables/useRecaptcha'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
+import { computed } from 'vue'
+
+const props = defineProps({ authContent: { type: Object, default: () => ({}) } })
+const c = computed(() => props.authContent || {})
 
 const { getToken } = useRecaptcha()
 const form = ref({ email: '', password: '', remember: false })

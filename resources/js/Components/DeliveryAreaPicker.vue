@@ -50,7 +50,11 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:modelValue'])
 
-const cityIdOfArea = (areaId) => props.areas.find(a => a.id === areaId)?.delivery_city_id ?? null
+// IDs can arrive as numbers or strings depending on the DB driver/serialisation
+// (works locally but breaks after deploy if compared with ===). Compare loosely.
+const sameId = (a, b) => a != null && b != null && String(a) === String(b)
+
+const cityIdOfArea = (areaId) => props.areas.find(a => sameId(a.id, areaId))?.delivery_city_id ?? null
 
 const selectedAreaId = ref(props.modelValue)
 const selectedCityId = ref(cityIdOfArea(props.modelValue))
@@ -63,11 +67,11 @@ const cityOptions = computed(() =>
 )
 const areaOptions = computed(() =>
   props.areas
-    .filter(a => a.delivery_city_id === selectedCityId.value)
+    .filter(a => sameId(a.delivery_city_id, selectedCityId.value))
     .map(a => ({ value: a.id, label: a.postal_code ? `${a.name} (${a.postal_code})` : a.name }))
 )
 
-const selectedCity = computed(() => props.cities.find(c => c.id === selectedCityId.value) ?? null)
+const selectedCity = computed(() => props.cities.find(c => sameId(c.id, selectedCityId.value)) ?? null)
 const showUnavailable = computed(() => selectedCity.value && !selectedCity.value.is_active)
 
 const onCitySelect = (cityId) => {

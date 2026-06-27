@@ -6,18 +6,18 @@
     "tagline": "Carry your world.",
     "email": "hello@kizoralifestyle.com",
     "phone_1": "+880 1730-728954",
-    "phone_2": "+880 1730-728905",
+    "phone_2": null,
     "address": null,
     "opening_hours": null,
     "map_url": null,
     "social_links": [
         {
             "platform": "facebook",
-            "url": "https://facebook.com/kizora"
+            "url": "https://www.facebook.com/kizoralifestyle"
         },
         {
-            "platform": "instagram",
-            "url": "https://instagram.com/kizora"
+            "platform": "youtube",
+            "url": "https://www.youtube.com/@Kizoralifestyle"
         }
     ],
     "currency_symbol": "৳",

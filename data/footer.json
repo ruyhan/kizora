@@ -1,4 +1,32 @@
 {
     "about": "Kizora designs premium backpacks, water bottles, flasks and everyday‑carry essentials built to move with you — for school, work and the road ahead.",
-    "tagline": "Carry your world."
+    "tagline": "Carry your world.",
+    "links": [
+        {
+            "label": "Home",
+            "url": "/"
+        },
+        {
+            "label": "Shop",
+            "url": "/shop"
+        },
+        {
+            "label": "About Us",
+            "url": "/about"
+        },
+        {
+            "label": "Contact",
+            "url": "/contact"
+        },
+        {
+            "label": "Track Order",
+            "url": "/track-order"
+        }
+    ],
+    "footer_categories": [
+        "coffee-sipper",
+        "water-bottles",
+        "bags",
+        "toys"
+    ]
 }

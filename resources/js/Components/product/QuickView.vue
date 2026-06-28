@@ -41,7 +41,7 @@
             <template v-else>
               <button v-for="(o, oi) in g.options" :key="oi" type="button" @click="selectOption(gi, o)"
                 :class="selected[gi] === o ? 'border-ink bg-ink text-white' : 'border-border text-charcoal hover:border-ink'"
-                class="min-w-9 h-9 px-3 rounded-lg border-2 text-xs font-semibold transition-all">{{ o.value }}</button>
+                class="min-w-8 h-8 px-2.5 rounded-lg border-2 text-xs font-semibold transition-all">{{ o.value }}</button>
             </template>
           </div>
         </div>

@@ -68,7 +68,7 @@
       <div v-for="g in optionGroups" :key="g._gi" class="flex items-center gap-1 mb-2 flex-wrap">
         <button v-for="(o, oi) in g.options.slice(0, 6)" :key="oi" type="button"
           @click.prevent.stop="selectOption(g._gi, o)"
-          :class="selectedMap[g._gi] === o ? 'bg-ink text-white border-ink' : 'border-border text-charcoal hover:border-ink/40'"
+          :class="selectedMap[g._gi] === o ? 'bg-ink text-white border-ink' : 'bg-white border-border text-charcoal hover:border-ink/40'"
           class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-md border text-[10px] font-semibold leading-none transition-colors cursor-pointer">
           {{ o.value }}
         </button>

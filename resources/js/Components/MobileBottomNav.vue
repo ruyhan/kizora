@@ -14,9 +14,9 @@
 
       <!-- Cart (center, elevated) -->
       <button @click="openCart" class="relative flex flex-1 basis-0 flex-col items-center gap-1 -mt-5">
-        <span data-cart-fab class="w-14 h-14 rounded-2xl bg-ink flex items-center justify-center shadow-lg relative">
+        <span data-cart-fab class="w-14 h-14 rounded-2xl bg-accent flex items-center justify-center shadow-lg relative">
           <ShoppingBagIcon class="w-6 h-6 text-white" />
-          <span v-if="cart_count > 0" class="absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 rounded-full bg-accent text-white text-[10px] flex items-center justify-center font-bold shadow">
+          <span v-if="cart_count > 0" class="absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 rounded-full bg-ink text-white text-[10px] flex items-center justify-center font-bold shadow">
             {{ cart_count }}
           </span>
         </span>

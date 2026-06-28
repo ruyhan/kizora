@@ -20,7 +20,7 @@ class HomeController extends Controller
     private function base()
     {
         return Product::query()
-            ->select(['id', 'name', 'slug', 'price', 'discount_price', 'featured_image', 'short_description', 'stock', 'is_featured', 'category_id', 'has_variations', 'variations', 'usps'])
+            ->select(['id', 'name', 'slug', 'sku', 'price', 'discount_price', 'featured_image', 'short_description', 'stock', 'is_featured', 'category_id', 'has_variations', 'variations', 'usps'])
             ->with('category:id,name,slug')
             ->withAvg('reviews', 'rating')
             ->withCount('reviews')
@@ -88,6 +88,7 @@ class HomeController extends Controller
             'id' => $product->id,
             'name' => $product->name,
             'slug' => $product->slug,
+            'sku' => $product->sku,
             'price' => $product->price,
             'discount_price' => $product->discount_price,
             'final_price' => $product->final_price,

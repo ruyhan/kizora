@@ -26,6 +26,7 @@ class WishlistController extends Controller
                     'id' => $w->product->id,
                     'name' => $w->product->name,
                     'slug' => $w->product->slug,
+                    'sku' => $w->product->sku,
                     'price' => $w->product->price,
                     'discount_price' => $w->product->discount_price,
                     'final_price' => $w->product->final_price,

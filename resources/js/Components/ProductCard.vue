@@ -1,5 +1,5 @@
 <template>
-  <div class="card group relative flex flex-col overflow-hidden h-full">
+  <div class="card group relative flex flex-col overflow-hidden h-full" style="background-color: #f6f6f6;">
 
     <!-- Discount Badge -->
     <div v-if="product.discount_percentage > 0"
@@ -37,17 +37,22 @@
 
       <!-- Rating (left) + category (right) on a single row -->
       <div class="flex items-center justify-between gap-2 mb-2">
-        <Rating :value="product.average_rating || 0" :count="product.review_count || 0" size="sm" class="shrink-0" />
-        <span v-if="product.category?.name" class="hidden sm:inline-flex badge badge-purple text-xs shrink-0">
+        <Rating :value="product.average_rating || 0" :count="product.review_count || 0" size="sm" tone="ink" class="shrink-0" />
+        <span v-if="product.category?.name" class="hidden sm:inline-flex badge bg-white border border-border text-charcoal text-xs shrink-0">
           {{ product.category?.name }}
         </span>
       </div>
 
-      <!-- Product Name -->
-      <Link :href="route('shop.show', product.slug)"
-        class="font-display font-semibold text-charcoal text-[13px] sm:text-base lg:text-lg leading-tight hover:text-primary transition-colors mb-2 line-clamp-2">
-        {{ product.name }}
-      </Link>
+      <!-- Product Name + SKU -->
+      <div class="mb-2">
+        <Link :href="route('shop.show', product.slug)"
+          class="block font-display font-semibold text-charcoal text-[15px] sm:text-base lg:text-lg leading-tight hover:text-primary transition-colors line-clamp-2">
+          {{ product.name }}
+        </Link>
+        <p v-if="product.sku" class="mt-0.5 text-muted text-[13px] sm:text-sm font-display uppercase tracking-wide">
+          {{ product.sku }}
+        </p>
+      </div>
 
       <!-- Colour variations — click selects & swaps the image instantly -->
       <div v-if="colorGroupData" class="flex items-center gap-1.5 mb-2 flex-wrap">

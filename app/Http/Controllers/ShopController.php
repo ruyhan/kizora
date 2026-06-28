@@ -20,7 +20,7 @@ class ShopController extends Controller
     public function index(Request $request): Response
     {
         $query = Product::query()
-            ->select(['id', 'name', 'slug', 'price', 'discount_price', 'featured_image', 'short_description', 'stock', 'is_featured', 'category_id', 'has_variations', 'variations', 'usps'])
+            ->select(['id', 'name', 'slug', 'sku', 'price', 'discount_price', 'featured_image', 'short_description', 'stock', 'is_featured', 'category_id', 'has_variations', 'variations', 'usps'])
             ->with('category:id,name,slug')
             ->withAvg('reviews', 'rating')
             ->withCount('reviews')
@@ -90,6 +90,7 @@ class ShopController extends Controller
             'id' => $p->id,
             'name' => $p->name,
             'slug' => $p->slug,
+            'sku' => $p->sku,
             'price' => $p->price,
             'discount_price' => $p->discount_price,
             'final_price' => $p->final_price,
@@ -208,6 +209,7 @@ class ShopController extends Controller
                 'id' => $p->id,
                 'name' => $p->name,
                 'slug' => $p->slug,
+                'sku' => $p->sku,
                 'price' => $p->price,
                 'discount_price' => $p->discount_price,
                 'final_price' => $p->final_price,

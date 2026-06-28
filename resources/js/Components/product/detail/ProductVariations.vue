@@ -9,8 +9,8 @@
         <template v-if="g.type === 'color'">
           <button v-for="(o, oi) in g.options" :key="oi" type="button" @click="pick(gi, o)"
             :style="{ backgroundColor: o.value }"
-            :class="modelValue[gi] === o ? 'ring-2 ring-ink ring-offset-2' : 'ring-1 ring-border hover:ring-purple-300'"
-            class="w-8 h-8 rounded-full transition-all" :aria-label="o.label || o.value" :title="o.label || o.value"></button>
+            :class="modelValue[gi] === o ? 'ring-2 ring-ink ring-offset-2 scale-110' : 'hover:scale-110'"
+            class="w-[26px] h-[26px] rounded-full shrink-0 border-[3px] border-white shadow-[0_2px_6px_rgba(23,24,27,0.25)] transition-all duration-200 cursor-pointer" :aria-label="o.label || o.value" :title="o.label || o.value"></button>
         </template>
         <!-- Button options (size, material, …) -->
         <template v-else>

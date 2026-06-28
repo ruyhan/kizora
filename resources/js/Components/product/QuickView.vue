@@ -35,8 +35,8 @@
             <template v-if="g.type === 'color'">
               <button v-for="(o, oi) in g.options" :key="oi" type="button" @click="selectOption(gi, o)"
                 :style="{ backgroundColor: o.value }"
-                :class="selected[gi] === o ? 'ring-2 ring-ink ring-offset-2' : 'ring-1 ring-border hover:ring-purple-300'"
-                class="w-7 h-7 rounded-full transition-all" :title="o.label || o.value"></button>
+                :class="selected[gi] === o ? 'ring-2 ring-ink ring-offset-2 scale-110' : 'hover:scale-110'"
+                class="w-[26px] h-[26px] rounded-full shrink-0 border-[3px] border-white shadow-[0_2px_6px_rgba(23,24,27,0.25)] transition-all duration-200 cursor-pointer" :title="o.label || o.value"></button>
             </template>
             <template v-else>
               <button v-for="(o, oi) in g.options" :key="oi" type="button" @click="selectOption(gi, o)"

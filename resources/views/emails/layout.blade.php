@@ -45,13 +45,20 @@
 
                     {{-- Header --}}
                     <tr>
-                        <td class="kz-header" style="background:#17181B;padding:26px 32px;text-align:center;">
-                            @if(!empty($brand['logo']))
-                                <img src="{{ $brand['logo'] }}" alt="{{ $brand['company_name'] ?? '' }}" height="40" style="height:40px;width:auto;max-width:220px;display:inline-block;">
-                            @else
-                                <span style="color:#ffffff;font-size:22px;font-weight:800;letter-spacing:-.02em;">{{ $brand['company_name'] ?? 'Kizora' }}</span>
-                            @endif
-                        </td>
+                        @if(!empty($brand['header_badge']))
+                            {{-- Logo pre-baked onto a dark image: stays dark + crisp even under mobile dark-mode inversion. --}}
+                            <td class="kz-header" style="background:#17181B;padding:0;font-size:0;line-height:0;mso-line-height-rule:exactly;">
+                                <img src="{{ $brand['logo'] }}" alt="{{ $brand['company_name'] ?? '' }}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0;">
+                            </td>
+                        @else
+                            <td class="kz-header" style="background:#17181B;padding:26px 32px;text-align:center;">
+                                @if(!empty($brand['logo']))
+                                    <img src="{{ $brand['logo'] }}" alt="{{ $brand['company_name'] ?? '' }}" height="40" style="height:40px;width:auto;max-width:220px;display:inline-block;">
+                                @else
+                                    <span style="color:#ffffff;font-size:22px;font-weight:800;letter-spacing:-.02em;">{{ $brand['company_name'] ?? 'Kizora' }}</span>
+                                @endif
+                            </td>
+                        @endif
                     </tr>
 
                     @if(!empty($brand['banner']))

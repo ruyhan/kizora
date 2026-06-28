@@ -279,6 +279,14 @@ HTML,
         $logoPath = null;
         if ($forSend && $logoFallback) {
             $logoPath = $this->settings->logoFile();   // local file → CID embed
+            // Bake the logo onto a solid dark header image. Mobile dark modes (notably the
+            // Gmail app) recolour background COLOURS but never repaint IMAGES — so a pre-
+            // composited dark header stays dark with a crisp logo in every client.
+            if ($logoPath && ($badge = $this->headerBadge($logoPath))) {
+                $logoPath = $badge;
+                $logoFallback = 'data:image/png;base64,' . base64_encode((string) @file_get_contents($badge));
+                $brand['header_badge'] = true;
+            }
             $brand['logo'] = self::LOGO_TOKEN;
         }
 
@@ -314,6 +322,50 @@ HTML,
         $text = preg_replace("/[ \t]+/", ' ', $text);
         $text = preg_replace("/\n{3,}/", "\n\n", $text);
         return trim($text);
+    }
+
+    /**
+     * Composite the logo onto a solid dark (#17181B) full-width header image and cache it.
+     * Returns the PNG path, or null if it can't be built (no GD / unsupported logo e.g. SVG)
+     * — in which case the caller falls back to the normal logo-on-coloured-cell header.
+     */
+    private function headerBadge(string $logoFile): ?string
+    {
+        if (! is_file($logoFile) || ! extension_loaded('gd')) {
+            return null;
+        }
+
+        $dir = storage_path('app/email-cache');
+        if (! is_dir($dir)) {
+            @mkdir($dir, 0775, true);
+        }
+        $out = $dir . '/header-' . md5($logoFile . '|' . @filemtime($logoFile)) . '.png';
+        if (is_file($out)) {
+            return $out;
+        }
+
+        $logo = @imagecreatefromstring((string) @file_get_contents($logoFile));
+        if (! $logo) {
+            return null;   // e.g. SVG — GD can't rasterise it
+        }
+
+        // @2x canvas for crisp retina rendering (renders at 600×100 in the email).
+        $W = 1200; $H = 200;
+        $canvas = imagecreatetruecolor($W, $H);
+        imagefilledrectangle($canvas, 0, 0, $W, $H, imagecolorallocate($canvas, 0x17, 0x18, 0x1B));
+        imagealphablending($canvas, true);   // blend the (possibly transparent) logo over the dark bg
+
+        $lw = imagesx($logo); $lh = imagesy($logo);
+        $targetH = 88; $scale = $targetH / $lh;
+        $tw = (int) round($lw * $scale); $th = $targetH;
+        if ($tw > 560) { $scale = 560 / $lw; $tw = 560; $th = (int) round($lh * $scale); }
+        imagecopyresampled($canvas, $logo, (int) (($W - $tw) / 2), (int) (($H - $th) / 2), 0, 0, $tw, $th, $lw, $lh);
+
+        imagepng($canvas, $out);
+        imagedestroy($canvas);
+        imagedestroy($logo);
+
+        return is_file($out) ? $out : null;
     }
 
     /** Render an arbitrary (possibly unsaved) subject+body with sample data — for the live preview. */

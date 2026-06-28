@@ -56,6 +56,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Asset URL
+    |--------------------------------------------------------------------------
+    |
+    | Forces asset()/Storage URLs to a fixed root. Set ASSET_URL to the public
+    | site (e.g. https://beta.kizoralifestyle.com) in production so image links
+    | never fall back to an internal host like localhost behind a proxy.
+    | Leave unset (null) to keep the default request-host behaviour.
+    |
+    */
+
+    'asset_url' => env('ASSET_URL'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

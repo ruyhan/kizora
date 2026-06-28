@@ -60,7 +60,7 @@
           @click.prevent.stop="selectOption(colorGi, o)"
           :style="{ backgroundColor: o.value }"
           :class="selectedMap[colorGi] === o ? 'ring-2 ring-ink ring-offset-2 ring-offset-[#f6f6f6] scale-110' : 'hover:scale-110'"
-          class="w-[26px] h-[26px] rounded-full shrink-0 border-[3px] border-white shadow-[0_2px_6px_rgba(23,24,27,0.25)] transition-all duration-200 cursor-pointer"
+          class="w-[22px] h-[22px] sm:w-[26px] sm:h-[26px] rounded-full shrink-0 border-2 sm:border-[3px] border-white shadow-[0_2px_6px_rgba(23,24,27,0.25)] transition-all duration-200 cursor-pointer"
           :aria-label="`Colour ${o.label || o.value}`" :title="o.label || o.value"></button>
       </div>
 

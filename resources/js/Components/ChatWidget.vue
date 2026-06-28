@@ -1,11 +1,10 @@
 <template>
   <div v-if="cfg.enabled" :class="dark ? 'kz-chat-dark' : ''">
-    <!-- Floating button -->
-    <button v-show="!open" @click="toggle" :style="{ background: cfg.primary_color }"
-      :class="[pos, rounded ? 'rounded-full' : 'rounded-xl', hideOnMobile ? 'hidden md:flex' : 'flex']"
-      class="fixed z-[80] w-14 h-14 shadow-xl items-center justify-center text-white hover:scale-105 active:scale-95 transition-transform">
-      <img v-if="cfg.widget_icon" :src="cfg.widget_icon" class="w-7 h-7 object-contain" alt="chat">
-      <ChatBubbleOvalLeftEllipsisIcon v-else class="w-7 h-7" />
+    <!-- Floating launcher — red greeting speech bubble -->
+    <button v-show="!open" @click="toggle" type="button"
+      :class="[pos, hideOnMobile ? 'hidden md:flex' : 'flex']"
+      class="fixed z-[80] items-center bg-accent text-white font-display font-semibold text-[13px] sm:text-lg px-4 py-2.5 sm:px-5 sm:py-3 rounded-tl-full rounded-tr-full rounded-bl-full rounded-br-none shadow-xl hover:scale-105 active:scale-95 transition-transform whitespace-nowrap">
+      {{ greetingText }}
     </button>
 
     <!-- Panel -->
@@ -123,7 +122,7 @@ import axios from 'axios'
 import { useToast } from 'vue-toastification'
 import { useCartStore } from '@/stores/cart'
 import {
-  ChatBubbleOvalLeftEllipsisIcon, SparklesIcon, XMarkIcon, PaperAirplaneIcon,
+  SparklesIcon, XMarkIcon, PaperAirplaneIcon,
   ChevronLeftIcon, ChevronRightIcon,
 } from '@heroicons/vue/24/outline'
 
@@ -139,6 +138,13 @@ const toast = useToast()
 const cart = useCartStore()
 
 const open = ref(false)
+
+// The launcher is a red greeting bubble: "Hi, <agent name>!" (agent name from chatbot config).
+const greetingText = computed(() => {
+  const name = cfg.value.name?.trim()
+  return name ? `Hi, ${name}!` : 'Hi there! 👋'
+})
+
 const input = ref('')
 const sending = ref(false)
 const messages = ref([])

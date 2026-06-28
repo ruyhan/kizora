@@ -3,15 +3,30 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="x-apple-disable-message-reformatting">
+    {{-- Lock the email to its designed (light) palette so a device's dark mode can't recolour it. --}}
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
     <title>Kizora invitation</title>
+    <style>
+        :root { color-scheme: light; supported-color-schemes: light; }
+        @media (prefers-color-scheme: dark) {
+            body, .kz-bg { background:#f4f4f5 !important; }
+            .kz-card { background:#ffffff !important; }
+            .kz-header { background:#17181B !important; }
+        }
+        [data-ogsb] .kz-bg { background:#f4f4f5 !important; }
+        [data-ogsb] .kz-card { background:#ffffff !important; }
+        [data-ogsb] .kz-header { background:#17181B !important; }
+    </style>
 </head>
 <body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 16px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="kz-bg" style="background:#f4f4f5;padding:32px 16px;">
         <tr>
             <td align="center">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #ececef;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="kz-card" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #ececef;">
                     <tr>
-                        <td style="background:#17181B;padding:24px 28px;">
+                        <td class="kz-header" style="background:#17181B;padding:24px 28px;">
                             <span style="color:#ffffff;font-size:22px;font-weight:800;letter-spacing:-0.5px;">Kizora</span>
                         </td>
                     </tr>

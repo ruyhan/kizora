@@ -22,6 +22,7 @@ class ShopController extends Controller
         $query = Product::query()
             ->select(['id', 'name', 'slug', 'sku', 'price', 'discount_price', 'featured_image', 'short_description', 'stock', 'is_featured', 'category_id', 'has_variations', 'variations', 'usps'])
             ->with('category:id,name,slug')
+            ->with('firstImage')
             ->withAvg('reviews', 'rating')
             ->withCount('reviews')
             ->where('is_active', true);
@@ -96,6 +97,7 @@ class ShopController extends Controller
             'final_price' => $p->final_price,
             'discount_percentage' => $p->discount_percentage,
             'featured_image_url' => $p->featured_image_url,
+            'hover_image' => $p->firstImage?->image_url,
             'short_description' => $p->short_description,
             'usps'           => $p->usps ?? [],
             'category'       => ['name' => $p->category->name, 'slug' => $p->category->slug],
@@ -198,7 +200,7 @@ class ShopController extends Controller
             ->where('is_active', true)
             ->firstOrFail();
 
-        $related = Product::with('category')
+        $related = Product::with(['category', 'firstImage'])
             ->withAvg('reviews', 'rating')->withCount('reviews')
             ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
@@ -215,6 +217,7 @@ class ShopController extends Controller
                 'final_price' => $p->final_price,
                 'discount_percentage' => $p->discount_percentage,
                 'featured_image_url' => $p->featured_image_url,
+                'hover_image' => $p->firstImage?->image_url,
                 'short_description' => $p->short_description,
                 'usps' => $p->usps ?? [],
                 'category' => ['name' => $p->category->name, 'slug' => $p->category->slug],

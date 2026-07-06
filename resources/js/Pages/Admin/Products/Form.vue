@@ -33,6 +33,11 @@
                 <label class="text-sm font-medium text-charcoal mb-1.5 block">Full Description</label>
                 <textarea v-model="form.description" rows="5" class="input-field" placeholder="Detailed product description"></textarea>
               </div>
+              <div>
+                <label class="text-sm font-medium text-charcoal mb-1.5 block">Tags</label>
+                <input v-model="form.tagsInput" type="text" class="input-field" placeholder="e.g. black, leather, waterproof">
+                <p class="text-xs text-muted mt-1">Comma separated — used for shop filters and recommendations.</p>
+              </div>
             </div>
           </div>
 
@@ -78,6 +83,11 @@
                 <input v-model="form.stock" type="number" class="input-field" required>
                 <p v-if="errors.stock" class="text-error text-xs mt-1">{{ errors.stock }}</p>
               </div>
+              <div>
+                <label class="text-sm font-medium text-charcoal mb-1.5 block">SKU</label>
+                <input v-model="form.sku" type="text" class="input-field" placeholder="e.g. KZ-BP-004">
+                <p v-if="errors.sku" class="text-error text-xs mt-1">{{ errors.sku }}</p>
+              </div>
             </div>
           </div>
 
@@ -113,16 +123,23 @@
                 {{ galleryCount }} image{{ galleryCount !== 1 ? 's' : '' }}
               </span>
             </div>
-            <p class="text-xs text-muted mb-3">Clickable thumbnails on the product page.</p>
+            <p class="text-xs text-muted mb-3">Clickable thumbnails on the product page. Drag to reorder.</p>
 
             <!-- Saved gallery (edit mode) -->
             <div v-if="existingGallery.length" class="mb-3">
               <p class="text-[10px] font-semibold text-muted uppercase tracking-wider mb-2">Saved</p>
               <div class="grid grid-cols-3 gap-2">
-                <div v-for="img in existingGallery" :key="img.id"
-                  class="relative group aspect-square rounded-lg overflow-hidden bg-purple-50"
-                  :class="pendingDeleteIds.includes(img.id) ? 'opacity-40 ring-2 ring-error' : ''">
-                  <img :src="img.image_url" alt="" class="w-full h-full object-cover">
+                <div v-for="(img, i) in existingGallery" :key="img.id"
+                  draggable="true"
+                  @dragstart="savedDrag.onDragStart(i, $event)" @dragover="savedDrag.onDragOver(i, $event)"
+                  @drop="savedDrag.onDrop(i, $event)" @dragend="savedDrag.onDragEnd"
+                  class="relative group aspect-square rounded-lg overflow-hidden bg-purple-50 cursor-grab active:cursor-grabbing"
+                  :class="[
+                    pendingDeleteIds.includes(img.id) ? 'opacity-40 ring-2 ring-error' : '',
+                    savedDrag.dragIndex.value === i ? 'opacity-50' : '',
+                    savedDrag.overIndex.value === i && savedDrag.dragIndex.value !== i ? 'ring-2 ring-primary' : '',
+                  ]">
+                  <img :src="img.image_url" alt="" draggable="false" class="w-full h-full object-cover">
                   <button type="button" @click="toggleDelete(img.id)"
                     class="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
                     <div class="flex flex-col items-center gap-0.5 text-white">
@@ -140,8 +157,15 @@
               <p class="text-[10px] font-semibold text-muted uppercase tracking-wider mb-2">Selected</p>
               <div class="grid grid-cols-3 gap-2">
                 <div v-for="(m, i) in galleryMedia" :key="m.id"
-                  class="relative group aspect-square rounded-lg overflow-hidden bg-purple-50">
-                  <img :src="m.file_url" alt="" class="w-full h-full object-cover">
+                  draggable="true"
+                  @dragstart="newDrag.onDragStart(i, $event)" @dragover="newDrag.onDragOver(i, $event)"
+                  @drop="newDrag.onDrop(i, $event)" @dragend="newDrag.onDragEnd"
+                  class="relative group aspect-square rounded-lg overflow-hidden bg-purple-50 cursor-grab active:cursor-grabbing"
+                  :class="[
+                    newDrag.dragIndex.value === i ? 'opacity-50' : '',
+                    newDrag.overIndex.value === i && newDrag.dragIndex.value !== i ? 'ring-2 ring-primary' : '',
+                  ]">
+                  <img :src="m.file_url" alt="" draggable="false" class="w-full h-full object-cover">
                   <button type="button" @click="galleryMedia.splice(i, 1)"
                     class="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
                     <XMarkIcon class="w-4 h-4 text-white" />
@@ -207,6 +231,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue'
 import MediaPicker from '@/Components/MediaPicker.vue'
 import VariationsEditor from '@/Components/admin/VariationsEditor.vue'
 import SelectMenu from '@/Components/ui/SelectMenu.vue'
+import { useDragReorder } from '@/composables/useDragReorder'
 import { PhotoIcon, TrashIcon, XMarkIcon, ArrowUturnLeftIcon, PlusIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
@@ -222,6 +247,8 @@ const processing = ref(false)
 const form = ref({
   category_id:       props.product?.category_id       || '',
   name:              props.product?.name               || '',
+  sku:               props.product?.sku                || '',
+  tagsInput:         (props.product?.tags || []).join(', '),
   short_description: props.product?.short_description  || '',
   description:       props.product?.description        || '',
   usps:              JSON.parse(JSON.stringify(props.product?.usps || [])),
@@ -257,6 +284,11 @@ const galleryCount = computed(() =>
   (existingGallery.value.length - pendingDeleteIds.value.length) + galleryMedia.value.length
 )
 
+// Drag & drop sequencing — saved images persist via gallery_order on submit;
+// newly selected ones are saved in the order of the gallery_paths array.
+const savedDrag = useDragReorder(existingGallery)
+const newDrag   = useDragReorder(galleryMedia)
+
 const toggleDelete = (id) => {
   const idx = pendingDeleteIds.value.indexOf(id)
   if (idx === -1) pendingDeleteIds.value.push(id)
@@ -275,9 +307,12 @@ const submit = () => {
   errors.value = {}
 
   const payload = { ...form.value }
+  payload.tags = payload.tagsInput.split(',').map(t => t.trim()).filter(Boolean)
+  delete payload.tagsInput
   if (featuredPath.value) payload.featured_image_path = featuredPath.value
   payload.gallery_paths      = galleryMedia.value.map(m => m.file_path)
   payload.delete_gallery_ids = pendingDeleteIds.value
+  if (props.product && existingGallery.value.length) payload.gallery_order = existingGallery.value.map(g => g.id)
 
   const url = props.product
     ? route('admin.products.update', props.product.id)

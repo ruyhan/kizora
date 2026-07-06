@@ -22,6 +22,7 @@ class HomeController extends Controller
         return Product::query()
             ->select(['id', 'name', 'slug', 'sku', 'price', 'discount_price', 'featured_image', 'short_description', 'stock', 'is_featured', 'category_id', 'has_variations', 'variations', 'usps'])
             ->with('category:id,name,slug')
+            ->with('firstImage')
             ->withAvg('reviews', 'rating')
             ->withCount('reviews')
             ->where('is_active', true);
@@ -94,6 +95,7 @@ class HomeController extends Controller
             'final_price' => $product->final_price,
             'discount_percentage' => $product->discount_percentage,
             'featured_image_url' => $product->featured_image_url,
+            'hover_image' => $product->firstImage?->image_url,
             'short_description' => $product->short_description,
             'category' => [
                 'name' => $product->category->name,

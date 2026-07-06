@@ -15,14 +15,26 @@
       <HeartIcon v-else class="w-3 h-3 sm:w-4 sm:h-4" />
     </button>
 
-    <!-- Product Image -->
-    <div class="relative overflow-hidden aspect-square bg-purple-50 shrink-0">
+    <!-- Product Image — rounded-t + isolate keep the zoomed image clipped inside
+         the card's rounded border (scaled layers bleed over the corner otherwise) -->
+    <div class="relative overflow-hidden rounded-t-2xl isolate aspect-square bg-purple-50 shrink-0">
       <Link :href="route('shop.show', product.slug)" prefetch class="block w-full h-full">
         <img
           :src="displayImage || '/images/product-placeholder.svg'"
           :alt="product.name"
           class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           loading="lazy"
+          draggable="false"
+        >
+        <!-- First gallery image — fades in over the main image on hover -->
+        <img
+          v-if="hoverImage"
+          :src="hoverImage"
+          :alt="product.name"
+          aria-hidden="true"
+          class="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500 pointer-events-none"
+          loading="lazy"
+          draggable="false"
         >
       </Link>
       <!-- Quick view (desktop hover) -->
@@ -164,6 +176,14 @@ const selectedVariations = computed(() => buildSelectedVariations(props.product,
 const displayImage = computed(() =>
   Object.values(selectedMap.value).find((o) => o?.image)?.image || props.product.featured_image_url
 )
+
+// First gallery image, revealed on hover — skipped when a variation image is
+// active (that choice wins) or when it would just repeat the main image.
+const hoverImage = computed(() => {
+  if (Object.values(selectedMap.value).find((o) => o?.image)) return null
+  const h = props.product.hover_image
+  return h && h !== props.product.featured_image_url ? h : null
+})
 
 // "Added" state is per-variation: a line matches only when the product AND the
 // currently-selected variation combination are the same — so each distinct

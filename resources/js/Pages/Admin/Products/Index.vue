@@ -43,7 +43,7 @@
                     class="w-12 h-12 object-cover rounded-xl bg-purple-50">
                   <div>
                     <p class="font-medium text-charcoal text-sm">{{ product.name }}</p>
-                    <p class="text-xs text-muted">{{ product.slug }}</p>
+                    <p class="text-xs text-muted">{{ product.sku || product.slug }}</p>
                   </div>
                 </div>
               </td>
@@ -149,14 +149,21 @@
                     {{ galleryDisplayCount }} image{{ galleryDisplayCount !== 1 ? 's' : '' }}
                   </span>
                 </div>
-                <p class="text-xs text-muted mb-3">JPG, PNG, WebP · Max 2 MB each</p>
+                <p class="text-xs text-muted mb-3">JPG, PNG, WebP · Max 2 MB each · Drag to reorder</p>
 
                 <!-- Saved thumbnails -->
                 <div v-if="editGallery.length" class="grid grid-cols-5 gap-2 mb-3">
-                  <div v-for="img in editGallery" :key="img.id"
-                    class="relative group aspect-square rounded-lg overflow-hidden bg-white"
-                    :class="editDeleteIds.includes(img.id) ? 'opacity-40 ring-2 ring-error' : ''">
-                    <img :src="img.image_url" alt="" class="w-full h-full object-cover">
+                  <div v-for="(img, i) in editGallery" :key="img.id"
+                    draggable="true"
+                    @dragstart="savedDrag.onDragStart(i, $event)" @dragover="savedDrag.onDragOver(i, $event)"
+                    @drop="savedDrag.onDrop(i, $event)" @dragend="savedDrag.onDragEnd"
+                    class="relative group aspect-square rounded-lg overflow-hidden bg-white cursor-grab active:cursor-grabbing"
+                    :class="[
+                      editDeleteIds.includes(img.id) ? 'opacity-40 ring-2 ring-error' : '',
+                      savedDrag.dragIndex.value === i ? 'opacity-50' : '',
+                      savedDrag.overIndex.value === i && savedDrag.dragIndex.value !== i ? 'ring-2 ring-primary' : '',
+                    ]">
+                    <img :src="img.image_url" alt="" draggable="false" class="w-full h-full object-cover">
                     <button type="button" @click="toggleGalleryDelete(img.id)"
                       class="absolute inset-0 flex items-center justify-center bg-black/50
                              opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
@@ -172,8 +179,15 @@
                 <!-- Newly selected from library -->
                 <div v-if="editGalleryMedia.length" class="grid grid-cols-5 gap-2 mb-3">
                   <div v-for="(m, i) in editGalleryMedia" :key="m.id"
-                    class="relative group aspect-square rounded-lg overflow-hidden bg-white">
-                    <img :src="m.file_url" alt="" class="w-full h-full object-cover">
+                    draggable="true"
+                    @dragstart="newDrag.onDragStart(i, $event)" @dragover="newDrag.onDragOver(i, $event)"
+                    @drop="newDrag.onDrop(i, $event)" @dragend="newDrag.onDragEnd"
+                    class="relative group aspect-square rounded-lg overflow-hidden bg-white cursor-grab active:cursor-grabbing"
+                    :class="[
+                      newDrag.dragIndex.value === i ? 'opacity-50' : '',
+                      newDrag.overIndex.value === i && newDrag.dragIndex.value !== i ? 'ring-2 ring-primary' : '',
+                    ]">
+                    <img :src="m.file_url" alt="" draggable="false" class="w-full h-full object-cover">
                     <button type="button" @click="editGalleryMedia.splice(i, 1)"
                       class="absolute inset-0 flex items-center justify-center bg-black/50
                              opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
@@ -222,6 +236,13 @@
                 <textarea v-model="editForm.description" rows="4" class="input-field" placeholder="Detailed description"></textarea>
               </div>
 
+              <!-- Tags -->
+              <div>
+                <label class="text-sm font-medium text-charcoal mb-1.5 block">Tags</label>
+                <input v-model="editForm.tagsInput" type="text" class="input-field" placeholder="e.g. black, leather, waterproof">
+                <p class="text-xs text-muted mt-1">Comma separated — used for shop filters and recommendations.</p>
+              </div>
+
               <!-- USPs -->
               <div>
                 <label class="text-sm font-medium text-charcoal mb-1.5 block">Key selling points (USP)</label>
@@ -258,6 +279,11 @@
                   <label class="text-sm font-medium text-charcoal mb-1.5 block">Stock *</label>
                   <input v-model="editForm.stock" type="number" class="input-field" required>
                   <p v-if="editErrors.stock" class="text-error text-xs mt-1">{{ editErrors.stock }}</p>
+                </div>
+                <div>
+                  <label class="text-sm font-medium text-charcoal mb-1.5 block">SKU</label>
+                  <input v-model="editForm.sku" type="text" class="input-field" placeholder="e.g. KZ-BP-004">
+                  <p v-if="editErrors.sku" class="text-error text-xs mt-1">{{ editErrors.sku }}</p>
                 </div>
               </div>
 
@@ -314,6 +340,7 @@ import BulkDeleteBar from '@/Components/admin/BulkDeleteBar.vue'
 import DateRangeFilter from '@/Components/admin/DateRangeFilter.vue'
 import { useToast } from 'vue-toastification'
 import { usePermissions } from '@/composables/usePermissions'
+import { useDragReorder } from '@/composables/useDragReorder'
 import axios from 'axios'
 import { XMarkIcon, TrashIcon, ArrowUturnLeftIcon, PhotoIcon, PlusIcon, EyeIcon, MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
 
@@ -383,8 +410,12 @@ const galleryDisplayCount = computed(() =>
   (editGallery.value.length - editDeleteIds.value.length) + editGalleryMedia.value.length
 )
 
+// Drag & drop sequencing — saved images persist via gallery_order on save
+const savedDrag = useDragReorder(editGallery)
+const newDrag   = useDragReorder(editGalleryMedia)
+
 const editForm = ref({
-  id: null, name: '', category_id: '', short_description: '',
+  id: null, name: '', sku: '', tagsInput: '', category_id: '', short_description: '',
   description: '', usps: [], has_variations: false, variations: [],
   price: '', discount_price: '',
   stock: 0, is_active: true, is_featured: false, show_on_hero: false,
@@ -401,6 +432,8 @@ const openEdit = (product) => {
   editForm.value = {
     id:                product.id,
     name:              product.name,
+    sku:               product.sku || '',
+    tagsInput:         (product.tags || []).join(', '),
     category_id:       product.category_id,
     short_description: product.short_description || '',
     description:       product.description || '',
@@ -454,6 +487,8 @@ const submitEdit = () => {
   const payload = {
     _method: 'PUT',
     name:              editForm.value.name,
+    sku:               editForm.value.sku || '',
+    tags:              editForm.value.tagsInput.split(',').map(t => t.trim()).filter(Boolean),
     category_id:       editForm.value.category_id,
     short_description: editForm.value.short_description || '',
     description:       editForm.value.description || '',
@@ -468,6 +503,7 @@ const submitEdit = () => {
     show_on_hero:      editForm.value.show_on_hero ? 1 : 0,
     gallery_paths:      editGalleryMedia.value.map(m => m.file_path),
     delete_gallery_ids: editDeleteIds.value,
+    gallery_order:      editGallery.value.map(g => g.id),
   }
   if (editFeaturedPath.value) payload.featured_image_path = editFeaturedPath.value
 

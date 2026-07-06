@@ -16,6 +16,7 @@ class WishlistController extends Controller
         $wishlists = Wishlist::with([
                 'product' => fn ($q) => $q->withAvg('reviews', 'rating')->withCount('reviews'),
                 'product.category',
+                'product.firstImage',
             ])
             ->where('user_id', Auth::id())
             ->latest()
@@ -32,6 +33,7 @@ class WishlistController extends Controller
                     'final_price' => $w->product->final_price,
                     'discount_percentage' => $w->product->discount_percentage,
                     'featured_image_url' => $w->product->featured_image_url,
+                    'hover_image' => $w->product->firstImage?->image_url,
                     'stock' => $w->product->stock,
                     'category' => ['name' => $w->product->category->name],
                     'average_rating' => round($w->product->reviews_avg_rating ?? 0, 1),

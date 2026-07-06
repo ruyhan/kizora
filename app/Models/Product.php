@@ -48,6 +48,12 @@ class Product extends Model
         return $this->hasMany(ProductImage::class)->orderBy('sort_order');
     }
 
+    /** First gallery image — shown on product cards when hovering. */
+    public function firstImage()
+    {
+        return $this->hasOne(ProductImage::class)->ofMany('sort_order', 'min');
+    }
+
     public function reviews()
     {
         return $this->hasMany(Review::class)->where('is_approved', true);

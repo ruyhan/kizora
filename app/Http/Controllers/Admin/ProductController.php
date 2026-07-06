@@ -9,6 +9,7 @@ use App\Models\ProductImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -48,7 +49,9 @@ class ProductController extends Controller
                 'id'                  => $p->id,
                 'name'                => $p->name,
                 'slug'                => $p->slug,
+                'sku'                 => $p->sku,
                 'category_id'         => $p->category_id,
+                'tags'                => $p->tags ?? [],
                 'short_description'   => $p->short_description,
                 'description'         => $p->description,
                 'usps'                => $p->usps ?? [],
@@ -83,6 +86,9 @@ class ProductController extends Controller
         $data = $request->validate([
             'category_id'       => 'required|exists:categories,id',
             'name'              => 'required|string|max:255',
+            'sku'               => 'nullable|string|max:100|unique:products,sku',
+            'tags'              => 'nullable|array',
+            'tags.*'            => 'string|max:50',
             'short_description' => 'nullable|string|max:500',
             'description'       => 'nullable|string',
             'usps'              => 'nullable|array',
@@ -130,7 +136,9 @@ class ProductController extends Controller
             'product' => [
                 'id'                  => $product->id,
                 'name'                => $product->name,
+                'sku'                 => $product->sku,
                 'category_id'         => $product->category_id,
+                'tags'                => $product->tags ?? [],
                 'short_description'   => $product->short_description,
                 'description'         => $product->description,
                 'usps'                => $product->usps ?? [],
@@ -158,6 +166,9 @@ class ProductController extends Controller
         $data = $request->validate([
             'category_id'           => 'required|exists:categories,id',
             'name'                  => 'required|string|max:255',
+            'sku'                   => ['nullable', 'string', 'max:100', Rule::unique('products', 'sku')->ignore($product->id)],
+            'tags'                  => 'nullable|array',
+            'tags.*'                => 'string|max:50',
             'short_description'     => 'nullable|string|max:500',
             'description'           => 'nullable|string',
             'usps'                  => 'nullable|array',
@@ -171,7 +182,7 @@ class ProductController extends Controller
             'variations.*.options.*.value' => 'nullable|string|max:120',
             'variations.*.options.*.image' => 'nullable|string|max:1000',
             'price'                 => 'required|numeric|min:0',
-            'discount_price'        => 'nullable|numeric|min:0',
+            'discount_price'        => 'nullable|numeric|min:0|lt:price',
             'stock'                 => 'required|integer|min:0',
             'is_featured'           => 'boolean',
             'show_on_hero'          => 'boolean',
@@ -183,6 +194,8 @@ class ProductController extends Controller
             'gallery_paths.*'       => 'string|max:255',
             'delete_gallery_ids'    => 'nullable|array',
             'delete_gallery_ids.*'  => 'integer',
+            'gallery_order'         => 'nullable|array',
+            'gallery_order.*'       => 'integer',
         ]);
 
         if ($request->hasFile('featured_image')) {
@@ -203,7 +216,15 @@ class ProductController extends Controller
                 $img->delete();
             }
         }
-        unset($data['gallery_images'], $data['gallery_paths'], $data['delete_gallery_ids'], $data['featured_image_path']);
+        // Persist the drag & drop sequence of the saved gallery images
+        if (! empty($data['gallery_order'])) {
+            foreach (array_values($data['gallery_order']) as $i => $imageId) {
+                ProductImage::where('product_id', $product->id)
+                    ->where('id', $imageId)
+                    ->update(['sort_order' => $i]);
+            }
+        }
+        unset($data['gallery_images'], $data['gallery_paths'], $data['delete_gallery_ids'], $data['gallery_order'], $data['featured_image_path']);
 
         $product->update($data);
 

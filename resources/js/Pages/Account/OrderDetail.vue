@@ -105,6 +105,13 @@
                 <span class="text-muted">· {{ order.payment_status }}</span>
               </p>
             </div>
+            <div v-if="order.courier_name || order.tracking_number" class="flex gap-2.5 items-start">
+              <TruckIcon class="w-4 h-4 text-muted mt-0.5 shrink-0" />
+              <div>
+                <p v-if="order.courier_name" class="text-sm text-charcoal">{{ order.courier_name }}</p>
+                <p v-if="order.tracking_number" class="text-xs text-muted font-mono mt-0.5">Tracking: {{ order.tracking_number }}</p>
+              </div>
+            </div>
           </div>
         </div>
 

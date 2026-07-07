@@ -20,8 +20,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Favicon (from Brand & Contact settings, falls back to bundled) -->
-    @php($kzFavicon = data_get(app(\App\Support\PageContent::class)->get('settings'), 'favicon'))
+    <!-- Site settings (favicon + tracking scripts are read from here) -->
+    @php($kzSettings = app(\App\Support\PageContent::class)->get('settings'))
+    @php($kzFavicon = data_get($kzSettings, 'favicon'))
     @if($kzFavicon)
         <link rel="icon" href="{{ $kzFavicon }}">
         <link rel="apple-touch-icon" href="{{ $kzFavicon }}">
@@ -37,11 +38,17 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ url('/') }}">
 
+    {{-- Tracking scripts (Admin → Settings): GA4 / GTM / Meta Pixel etc. --}}
+    {!! data_get($kzSettings, 'head_scripts') !!}
+
     @routes
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @inertiaHead
 </head>
 <body class="font-body antialiased bg-white text-charcoal">
     @inertia
+
+    {{-- Tracking scripts placed before </body> (Admin → Settings) --}}
+    {!! data_get($kzSettings, 'body_scripts') !!}
 </body>
 </html>

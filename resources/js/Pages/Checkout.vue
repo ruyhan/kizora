@@ -15,6 +15,19 @@
                 <span class="w-8 h-8 rounded-full bg-primary text-white text-sm flex items-center justify-center font-bold">1</span>
                 Delivery Information
               </h2>
+              <!-- Saved addresses — one tap fills the whole form -->
+              <div v-if="savedAddresses?.length" class="mb-5">
+                <p class="text-sm font-medium text-charcoal mb-2">Deliver to a saved address</p>
+                <div class="flex flex-wrap gap-2">
+                  <button v-for="a in savedAddresses" :key="a.id" type="button" @click="useSavedAddress(a)"
+                    :class="usedAddressId === a.id ? 'border-primary bg-purple-50 ring-1 ring-primary/30' : 'border-purple-100 bg-white hover:border-primary/40'"
+                    class="text-left rounded-xl border px-3.5 py-2.5 transition-all max-w-full">
+                    <p class="text-xs font-bold text-charcoal">{{ a.label }}<span v-if="a.is_default" class="text-primary font-semibold"> · Default</span></p>
+                    <p class="text-[11px] text-muted truncate max-w-[260px]">{{ a.name }} · {{ a.address_line }}</p>
+                  </button>
+                </div>
+              </div>
+
               <div class="grid md:grid-cols-2 gap-4">
                 <div>
                   <label class="text-sm font-medium text-charcoal mb-1.5 block">Full Name *</label>
@@ -47,6 +60,10 @@
                   <textarea v-model="form.address" rows="3" class="input-field" :class="{'border-error': errors.address}"
                     placeholder="House, road, flat, landmark…"></textarea>
                   <p v-if="errors.address" class="text-error text-xs mt-1">{{ errors.address }}</p>
+                  <label v-if="user" class="flex items-center gap-2 mt-2 text-sm text-charcoal cursor-pointer">
+                    <input v-model="form.save_address" type="checkbox" class="rounded text-primary">
+                    Save this address to my address book
+                  </label>
                 </div>
                 <div class="md:col-span-2">
                   <label class="text-sm font-medium text-charcoal mb-1.5 block">Order Notes (optional)</label>
@@ -202,6 +219,7 @@ const props = defineProps({
   user:            Object,
   deliveryCities:  { type: Array, default: () => [] },
   deliveryAreas:   { type: Array, default: () => [] },
+  savedAddresses:  { type: Array, default: () => [] },
   // Object { bkash: { logo_url: '...' }, nagad: {...}, sslcommerz: {...} }
   enabledGateways: { type: Object, default: () => ({}) },
 })
@@ -242,7 +260,18 @@ const form = ref({
   delivery_area_id: savedAreaAvailable ? savedAreaId : null,
   payment_method:   'cod',
   notes:            '',
+  save_address:     false,
 })
+
+// Fill the form from a saved address (address book)
+const usedAddressId = ref(null)
+const useSavedAddress = (a) => {
+  usedAddressId.value = a.id
+  form.value.name    = a.name || form.value.name
+  form.value.phone   = a.phone || form.value.phone
+  form.value.address = a.address_line
+  form.value.save_address = false // already saved
+}
 
 // True when an area is selected but its city is not active for delivery
 const cityUnavailable = computed(() => {

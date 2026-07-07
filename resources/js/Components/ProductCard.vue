@@ -90,8 +90,8 @@
       <!-- Price + Cart Action — single row (price left, button right) -->
       <div class="mt-auto pt-2 sm:pt-3 border-t border-purple-50 flex items-center justify-between gap-2">
 
-        <!-- Price (discount badge already shown on the image) -->
-        <Price :price="product.price" :final="product.final_price" :off="0" size="sm" class="min-w-0" />
+        <!-- Price (discount badge already shown on the image; follows selected options' ± price) -->
+        <Price :price="Number(product.price) + cardPriceDelta" :final="Math.max(0, Number(product.final_price) + cardPriceDelta)" :off="0" size="sm" class="min-w-0" />
 
         <!-- ── Cart Action — fixed height h-9/h-10 prevents layout shift ── -->
         <Transition name="cart-action" mode="out-in">
@@ -139,7 +139,7 @@ import { useToast } from 'vue-toastification'
 import { useCartStore } from '@/stores/cart'
 import Price from '@/Components/ui/Price.vue'
 import Rating from '@/Components/ui/Rating.vue'
-import { variationGroups, buildSelectedVariations, variationSignature } from '@/utils/variations'
+import { variationGroups, buildSelectedVariations, variationSignature, selectionPriceDelta } from '@/utils/variations'
 import {
   HeartIcon, ShoppingBagIcon, MinusIcon, PlusIcon, CheckCircleIcon, EyeIcon,
 } from '@heroicons/vue/24/outline'
@@ -171,6 +171,7 @@ const optionGroups = computed(() =>
 const selectedMap = ref({})                       // { groupIndex: option }
 const selectOption = (gi, o) => { selectedMap.value = { ...selectedMap.value, [gi]: o } }
 const selectedVariations = computed(() => buildSelectedVariations(props.product, selectedMap.value))
+const cardPriceDelta = computed(() => selectionPriceDelta(selectedMap.value))
 
 // Selecting a colour (or any option carrying an image) swaps the card image.
 const displayImage = computed(() =>

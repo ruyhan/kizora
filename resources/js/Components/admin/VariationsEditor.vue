@@ -37,6 +37,19 @@
               </template>
               <input v-else :value="o.value" @input="setOption(gi, oi, 'value', $event.target.value)" type="text"
                 class="input-field text-sm" placeholder="Option value — e.g. S, M, L, Cotton">
+              <!-- optional per-option price adjustment + stock -->
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <input :value="o.price" @input="setOption(gi, oi, 'price', $event.target.value)" type="number" step="0.01"
+                    class="input-field text-sm" placeholder="± Price (৳)">
+                  <p class="text-[10px] text-muted mt-0.5">Added to product price. Empty = no change.</p>
+                </div>
+                <div>
+                  <input :value="o.stock" @input="setOption(gi, oi, 'stock', $event.target.value)" type="number" min="0"
+                    class="input-field text-sm" placeholder="Stock (optional)">
+                  <p class="text-[10px] text-muted mt-0.5">Empty = shares product stock.</p>
+                </div>
+              </div>
               <!-- optional per-option image -->
               <div class="flex items-center gap-3">
                 <div class="w-12 h-12 rounded-lg border border-purple-100 bg-purple-50/40 overflow-hidden flex items-center justify-center shrink-0">
@@ -84,7 +97,9 @@ const emit = defineEmits(['update:enabled', 'update:items'])
 
 const picker = ref({ open: false, apply: null })
 
-const newOption = (type) => (type === 'color' ? { value: '#111827', label: '', image: '' } : { value: '', image: '' })
+const newOption = (type) => (type === 'color'
+  ? { value: '#111827', label: '', image: '', price: '', stock: '' }
+  : { value: '', image: '', price: '', stock: '' })
 const newGroup = () => ({ name: '', type: 'color', options: [newOption('color')] })
 
 const setEnabled = (v) => {

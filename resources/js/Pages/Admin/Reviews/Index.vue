@@ -71,7 +71,10 @@
                     <StarSolid v-for="n in 5" :key="n" class="w-4 h-4" :class="n <= r.rating ? 'text-amber-400' : 'text-gray-200'" />
                   </span>
                 </td>
-                <td class="px-4 py-3 text-charcoal max-w-[280px]"><p class="line-clamp-2">{{ r.comment }}</p></td>
+                <td class="px-4 py-3 text-charcoal max-w-[280px]">
+                  <p class="line-clamp-2">{{ r.comment }}</p>
+                  <p v-if="r.admin_reply" class="mt-1 text-[11px] text-primary font-medium">↩ Replied: <span class="text-muted font-normal">{{ r.admin_reply }}</span></p>
+                </td>
                 <td class="px-4 py-3 whitespace-nowrap">
                   <span :class="r.is_approved ? 'badge-success' : 'badge-gray'" class="badge text-[11px]">
                     {{ r.is_approved ? 'Published' : 'Hidden' }}
@@ -85,6 +88,7 @@
                       <EyeSlashIcon v-if="r.is_approved" class="w-4 h-4" />
                       <CheckCircleIcon v-else class="w-4 h-4" />
                     </button>
+                    <button type="button" @click="openReply(r)" class="icon-btn" :class="r.admin_reply ? 'text-primary' : 'text-muted'" title="Reply publicly"><ChatBubbleLeftIcon class="w-4 h-4" /></button>
                     <button type="button" @click="openEdit(r)" class="icon-btn text-primary" title="Edit"><PencilSquareIcon class="w-4 h-4" /></button>
                     <button type="button" @click="destroy(r)" class="icon-btn text-error" title="Delete"><TrashIcon class="w-4 h-4" /></button>
                   </div>
@@ -142,6 +146,35 @@
       </Transition>
     </Teleport>
 
+    <!-- Reply modal -->
+    <Teleport to="body">
+      <Transition name="kz-fade">
+        <div v-if="replyModal.open" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div class="absolute inset-0 bg-ink/50 backdrop-blur-sm" @click="replyModal.open = false"></div>
+          <div class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-border overflow-hidden">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-border">
+              <h3 class="font-display font-semibold text-charcoal">Reply to review</h3>
+              <button @click="replyModal.open = false" class="text-muted hover:text-ink"><XMarkIcon class="w-5 h-5" /></button>
+            </div>
+            <div class="p-5 space-y-3">
+              <div class="rounded-xl bg-purple-50/60 border border-purple-100 p-3">
+                <p class="text-xs text-muted line-clamp-3">"{{ replyModal.comment }}"</p>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-charcoal mb-1.5 block">Your public reply</label>
+                <textarea v-model="replyModal.text" rows="4" maxlength="1000" class="input-field" placeholder="e.g. Thank you for the feedback! …"></textarea>
+                <p class="text-xs text-muted mt-1">Shown under the review on the product page. Clear the text and save to remove the reply.</p>
+              </div>
+            </div>
+            <div class="px-5 py-4 border-t border-border flex justify-end gap-2">
+              <button @click="replyModal.open = false" class="btn-secondary text-sm px-4">Cancel</button>
+              <button @click="saveReply" :disabled="replySaving" class="btn-primary text-sm px-5 disabled:opacity-60">{{ replySaving ? 'Saving…' : 'Save reply' }}</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
     <BulkDeleteBar v-if="canManage" :count="selected.length" :busy="bulkDeleting" @confirm="bulkDelete" @clear="selected = []" />
   </AdminLayout>
 </template>
@@ -155,7 +188,7 @@ import BulkDeleteBar from '@/Components/admin/BulkDeleteBar.vue'
 import DateRangeFilter from '@/Components/admin/DateRangeFilter.vue'
 import { useToast } from 'vue-toastification'
 import { usePermissions } from '@/composables/usePermissions'
-import { PencilSquareIcon, TrashIcon, XMarkIcon, EyeSlashIcon, CheckCircleIcon } from '@heroicons/vue/24/outline'
+import { PencilSquareIcon, TrashIcon, XMarkIcon, EyeSlashIcon, CheckCircleIcon, ChatBubbleLeftIcon } from '@heroicons/vue/24/outline'
 import { StarIcon as StarSolid } from '@heroicons/vue/24/solid'
 
 const props = defineProps({ reviews: Object, filters: Object, stats: Object })
@@ -221,6 +254,23 @@ const save = () => {
     onSuccess: () => { modal.open = false },
     onError: () => toast.error('Could not save review.'),
     onFinish: () => { saving.value = false },
+  })
+}
+
+// Public reply modal
+const replyModal = reactive({ open: false, id: null, comment: '', text: '' })
+const replySaving = ref(false)
+const openReply = (r) => {
+  replyModal.open = true; replyModal.id = r.id
+  replyModal.comment = r.comment; replyModal.text = r.admin_reply || ''
+}
+const saveReply = () => {
+  replySaving.value = true
+  router.patch(route('admin.reviews.reply', replyModal.id), { admin_reply: replyModal.text }, {
+    preserveScroll: true,
+    onSuccess: () => { replyModal.open = false },
+    onError: () => toast.error('Could not save reply.'),
+    onFinish: () => { replySaving.value = false },
   })
 }
 </script>

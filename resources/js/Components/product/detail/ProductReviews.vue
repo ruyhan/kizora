@@ -36,6 +36,11 @@
             class="text-primary text-xs font-medium hover:underline self-start mt-1.5">
             {{ expanded.includes(review.id) ? 'Show less' : 'Read more' }}
           </button>
+          <!-- Shop owner reply -->
+          <div v-if="review.admin_reply" class="mt-3 rounded-xl bg-purple-50/70 border border-purple-100 p-3">
+            <p class="text-[11px] font-semibold text-ink mb-1">Reply from the shop<span v-if="review.admin_reply_at" class="text-muted font-normal"> · {{ review.admin_reply_at }}</span></p>
+            <p class="text-muted text-sm leading-relaxed">{{ review.admin_reply }}</p>
+          </div>
         </div>
       </SwiperSlide>
     </Swiper>

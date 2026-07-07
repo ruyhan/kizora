@@ -31,6 +31,7 @@ export const adminNavSections = [
     label: 'Sales',
     items: [
       { label: 'Orders',   route: 'admin.orders.index',      match: 'admin.orders*',           icon: ClipboardDocumentListIcon, permission: 'orders.view' },
+      { label: 'Abandoned Carts', route: 'admin.carts.index', match: 'admin.carts*',           icon: ShoppingCartIcon, permission: 'orders.view' },
       { label: 'Customers', route: 'admin.customers.index',  match: 'admin.customers*',         icon: UserGroupIcon, permission: 'customers.view' },
       { label: 'Coupons',  route: 'admin.coupons.index',     match: 'admin.coupons*',           icon: TicketIcon, permission: 'marketing.view' },
       { label: 'Messages', route: 'admin.messages.contacts', match: 'admin.messages.contacts*', icon: EnvelopeIcon, permission: 'customers.view' },

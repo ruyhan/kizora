@@ -1,6 +1,13 @@
 <template>
   <AppLayout>
-    <Head :title="product.name" />
+    <Head :title="product.meta_title || product.name">
+      <meta v-if="product.meta_description || product.short_description" name="description"
+        :content="product.meta_description || product.short_description" head-key="description">
+      <meta property="og:title" :content="product.meta_title || product.name" head-key="og:title">
+      <meta v-if="product.meta_description || product.short_description" property="og:description"
+        :content="product.meta_description || product.short_description" head-key="og:description">
+      <meta property="og:image" :content="product.featured_image_url" head-key="og:image">
+    </Head>
 
     <div class="site-container py-8 sm:py-12">
 

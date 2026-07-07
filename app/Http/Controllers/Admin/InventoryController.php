@@ -14,11 +14,17 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class InventoryController extends Controller
 {
-    public const LOW_STOCK = 10;
+    public const LOW_STOCK = 10; // fallback when the setting is absent
+
+    /** Configurable threshold — Admin → Settings → "Low-stock alert threshold". */
+    private function lowStock(): int
+    {
+        return max(1, (int) data_get(app(\App\Support\PageContent::class)->get('settings'), 'low_stock_threshold', self::LOW_STOCK));
+    }
 
     private function statusOf(int $stock): string
     {
-        return $stock <= 0 ? 'out' : ($stock <= self::LOW_STOCK ? 'low' : 'in');
+        return $stock <= 0 ? 'out' : ($stock <= $this->lowStock() ? 'low' : 'in');
     }
 
     public function index(Request $request): Response
@@ -33,8 +39,8 @@ class InventoryController extends Controller
         if ($request->filled('status')) {
             match ($request->status) {
                 'out' => $query->where('stock', '<=', 0),
-                'low' => $query->whereBetween('stock', [1, self::LOW_STOCK]),
-                'in'  => $query->where('stock', '>', self::LOW_STOCK),
+                'low' => $query->whereBetween('stock', [1, $this->lowStock()]),
+                'in'  => $query->where('stock', '>', $this->lowStock()),
                 default => null,
             };
         }
@@ -59,12 +65,12 @@ class InventoryController extends Controller
         return Inertia::render('Admin/Inventory/Index', [
             'products' => $products,
             'filters' => array_merge($request->only(['search', 'status', 'sort']), $dr->filters()),
-            'lowThreshold' => self::LOW_STOCK,
+            'lowThreshold' => $this->lowStock(),
             'summary' => [
                 'total_products' => Product::count(),
                 'total_units'    => (int) Product::sum('stock'),
-                'in_stock'       => Product::where('stock', '>', self::LOW_STOCK)->count(),
-                'low_stock'      => Product::whereBetween('stock', [1, self::LOW_STOCK])->count(),
+                'in_stock'       => Product::where('stock', '>', $this->lowStock())->count(),
+                'low_stock'      => Product::whereBetween('stock', [1, $this->lowStock()])->count(),
                 'out_of_stock'   => Product::where('stock', '<=', 0)->count(),
             ],
         ]);
@@ -138,7 +144,7 @@ class InventoryController extends Controller
             'leastSold'   => (clone $sold())->orderBy('qty')->limit(8)->get(),
             'fastMoving'  => $sold(now()->subDays(30))->orderByDesc('qty')->limit(8)->get(),
             'slowMoving'  => $sold(now()->subDays(30))->orderBy('qty')->limit(8)->get(),
-            'lowStock'    => Product::whereBetween('stock', [1, self::LOW_STOCK])->orderBy('stock')->limit(12)->get(['id', 'name', 'sku', 'stock']),
+            'lowStock'    => Product::whereBetween('stock', [1, $this->lowStock()])->orderBy('stock')->limit(12)->get(['id', 'name', 'sku', 'stock']),
             'outOfStock'  => Product::where('stock', '<=', 0)->limit(12)->get(['id', 'name', 'sku', 'stock']),
         ]);
     }

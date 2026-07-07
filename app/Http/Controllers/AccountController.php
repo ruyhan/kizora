@@ -56,6 +56,10 @@ class AccountController extends Controller
             // Users can choose ANY city/area (active or not)
             'deliveryCities' => DeliveryCity::orderBy('name')->get(['id', 'name', 'is_active']),
             'deliveryAreas'  => DeliveryArea::orderBy('name')->get(['id', 'delivery_city_id', 'name', 'postal_code']),
+            // Saved address book (multiple delivery addresses)
+            'addresses'      => $user->addresses()->orderByDesc('is_default')->latest()->get([
+                'id', 'label', 'name', 'phone', 'address_line', 'city', 'postal_code', 'is_default',
+            ]),
         ]);
     }
 

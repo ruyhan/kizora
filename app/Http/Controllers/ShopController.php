@@ -20,7 +20,7 @@ class ShopController extends Controller
     public function index(Request $request): Response
     {
         $query = Product::query()
-            ->select(['id', 'name', 'slug', 'sku', 'price', 'discount_price', 'featured_image', 'short_description', 'stock', 'is_featured', 'category_id', 'has_variations', 'variations', 'usps'])
+            ->select(['id', 'name', 'slug', 'sku', 'price', 'discount_price', 'sale_starts_at', 'sale_ends_at', 'featured_image', 'short_description', 'stock', 'is_featured', 'category_id', 'has_variations', 'variations', 'usps'])
             ->with('category:id,name,slug')
             ->with('firstImage')
             ->withAvg('reviews', 'rating')
@@ -54,9 +54,9 @@ class ShopController extends Controller
             $query->where('stock', '>', 0);
         }
 
-        // On sale
+        // On sale (schedule-aware)
         if ($request->boolean('sale')) {
-            $query->whereNotNull('discount_price');
+            $query->onSale();
         }
 
         // Tag facets (color / material) — OR within selected tags
@@ -136,6 +136,44 @@ class ShopController extends Controller
                 ]
             ),
         ]);
+    }
+
+    /** Offers page — every product whose sale price applies right now. */
+    public function offers(): Response
+    {
+        $products = Product::query()
+            ->select(['id', 'name', 'slug', 'sku', 'price', 'discount_price', 'sale_starts_at', 'sale_ends_at', 'featured_image', 'short_description', 'stock', 'is_featured', 'category_id', 'has_variations', 'variations', 'usps'])
+            ->with('category:id,name,slug')
+            ->with('firstImage')
+            ->withAvg('reviews', 'rating')
+            ->withCount('reviews')
+            ->where('is_active', true)
+            ->onSale()
+            ->orderByRaw('(price - discount_price) / price desc') // biggest % savings first
+            ->paginate(12)
+            ->through(fn ($p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'slug' => $p->slug,
+                'sku' => $p->sku,
+                'price' => $p->price,
+                'discount_price' => $p->discount_price,
+                'final_price' => $p->final_price,
+                'discount_percentage' => $p->discount_percentage,
+                'featured_image_url' => $p->featured_image_url,
+                'hover_image' => $p->firstImage?->image_url,
+                'short_description' => $p->short_description,
+                'sale_ends_at' => $p->sale_ends_at?->format('d M Y'),
+                'usps'           => $p->usps ?? [],
+                'category'       => ['name' => $p->category->name, 'slug' => $p->category->slug],
+                'stock'          => $p->stock,
+                'average_rating' => round($p->reviews_avg_rating ?? 0, 1),
+                'review_count'   => $p->reviews_count ?? 0,
+                'has_variations' => $p->has_variations,
+                'variations'     => $p->variations ?? [],
+            ]);
+
+        return Inertia::render('Offers', ['products' => $products]);
     }
 
     public function search(Request $request): \Illuminate\Http\JsonResponse
@@ -263,6 +301,8 @@ class ShopController extends Controller
                 'sku' => $product->sku,
                 'stock' => $product->stock,
                 'tags' => $product->tags,
+                'meta_title' => $product->meta_title,
+                'meta_description' => $product->meta_description,
                 'average_rating' => $product->average_rating,
                 'user_has_reviewed' => $userHasReviewed,
                 'images' => $product->images->map(fn($i) => ['image_url' => $i->image_url]),
@@ -273,6 +313,8 @@ class ShopController extends Controller
                     'comment' => $r->comment,
                     'created_at' => $r->created_at->diffForHumans(),
                     'user' => ['name' => $r->user->name],
+                    'admin_reply' => $r->admin_reply,
+                    'admin_reply_at' => $r->admin_reply_at?->diffForHumans(),
                 ]),
             ],
             'related'      => $related,

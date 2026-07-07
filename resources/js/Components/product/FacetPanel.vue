@@ -33,12 +33,12 @@
       <div class="flex items-center gap-2">
         <div class="relative flex-1">
           <span class="facet-prefix">৳</span>
-          <input v-model="model.min_price" type="number" inputmode="numeric" :placeholder="String(priceBounds.min)" class="facet-input pl-6" />
+          <input v-model="model.min_price" type="number" inputmode="numeric" :placeholder="String(priceBounds.min)" class="facet-input" />
         </div>
         <span class="text-muted shrink-0">–</span>
         <div class="relative flex-1">
           <span class="facet-prefix">৳</span>
-          <input v-model="model.max_price" type="number" inputmode="numeric" :placeholder="String(priceBounds.max)" class="facet-input pl-6" />
+          <input v-model="model.max_price" type="number" inputmode="numeric" :placeholder="String(priceBounds.max)" class="facet-input" />
         </div>
       </div>
       <button @click="$emit('change')" class="mt-2.5 w-full h-9 rounded-lg bg-purple-50 text-ink text-sm font-semibold hover:bg-purple-100 transition-colors">Apply price</button>
@@ -100,7 +100,9 @@ const rowCls = (active) => active ? 'bg-ink text-white' : 'text-charcoal hover:b
 .facet-row { @apply w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg text-sm font-medium transition-colors; }
 .facet-count { @apply text-xs tabular-nums shrink-0; }
 .facet-divider { @apply h-px bg-border; }
-.facet-input { @apply w-full h-9 px-2.5 rounded-lg border border-border bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-ink/10; }
+.facet-input { @apply w-full h-9 pr-2.5 rounded-lg border border-border bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-ink/10; }
+/* own rule — a plain declaration inside the @apply rule above gets dropped at build time */
+.facet-input { padding-left: 2rem; }
 .facet-prefix { @apply absolute left-2.5 top-1/2 -translate-y-1/2 text-muted text-sm pointer-events-none; }
 .facet-toggle { @apply flex items-center gap-2.5 cursor-pointer text-sm text-charcoal hover:text-ink transition-colors; }
 .kz-check { @apply w-4 h-4 rounded border-border text-ink; accent-color: #17181B; }

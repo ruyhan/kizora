@@ -41,6 +41,7 @@ class ReviewController extends Controller
             'rating'      => $r->rating,
             'comment'     => $r->comment,
             'is_approved' => $r->is_approved,
+            'admin_reply' => $r->admin_reply,
             'created_at'  => $r->created_at->format('d M Y'),
         ]);
 
@@ -67,6 +68,20 @@ class ReviewController extends Controller
         AuditLog::record('updated', 'Reviews', "Edited review #{$review->id}");
 
         return back()->with('success', 'Review updated.');
+    }
+
+    /** Public shop-owner reply shown under the review on the product page. */
+    public function reply(Request $request, Review $review)
+    {
+        $data = $request->validate(['admin_reply' => 'nullable|string|max:1000']);
+
+        $review->update([
+            'admin_reply'    => $data['admin_reply'] ?: null,
+            'admin_reply_at' => $data['admin_reply'] ? now() : null,
+        ]);
+        AuditLog::record('updated', 'Reviews', ($data['admin_reply'] ? 'Replied to' : 'Removed reply from') . " review #{$review->id}");
+
+        return back()->with('success', $data['admin_reply'] ? 'Reply published.' : 'Reply removed.');
     }
 
     public function toggle(Review $review)

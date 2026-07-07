@@ -18,7 +18,7 @@
               <img :src="image || product.featured_image_url" class="w-16 h-16 rounded-2xl object-cover bg-[#F4F4F5] shrink-0" alt="">
               <div class="min-w-0">
                 <p class="font-semibold text-charcoal text-sm truncate">{{ product.name }}</p>
-                <Price :price="product.price" :final="product.final_price" :off="product.discount_percentage" size="md" class="mt-0.5" />
+                <Price :price="unitRegular" :final="unitFinal" :off="product.discount_percentage" size="md" class="mt-0.5" />
               </div>
             </div>
 
@@ -29,13 +29,13 @@
               <div class="flex items-center border-2 border-purple-200 rounded-full overflow-hidden">
                 <button @click="setQty(qty - 1)" :disabled="qty <= 1" aria-label="Decrease" class="px-4 py-2.5 text-ink hover:bg-purple-50 active:bg-purple-100 font-bold leading-none disabled:opacity-30">−</button>
                 <span class="px-3 py-2.5 font-semibold text-charcoal min-w-10 text-center tabular-nums">{{ qty }}</span>
-                <button @click="setQty(qty + 1)" :disabled="qty >= product.stock" aria-label="Increase" class="px-4 py-2.5 text-ink hover:bg-purple-50 active:bg-purple-100 font-bold leading-none disabled:opacity-30">+</button>
+                <button @click="setQty(qty + 1)" :disabled="qty >= effectiveStock" aria-label="Increase" class="px-4 py-2.5 text-ink hover:bg-purple-50 active:bg-purple-100 font-bold leading-none disabled:opacity-30">+</button>
               </div>
             </div>
           </div>
 
           <div class="px-5 pt-4 shrink-0">
-            <Button size="lg" block :loading="adding" :disabled="product.stock === 0" @click="addFromSheet">
+            <Button size="lg" block :loading="adding" :disabled="effectiveStock === 0" @click="addFromSheet">
               <template v-if="added"><CheckCircleIcon class="w-5 h-5" /> Added!</template>
               <template v-else>Add to cart — ৳{{ total }}</template>
             </Button>
@@ -60,13 +60,13 @@
           <div v-if="!needsChoice" class="flex items-center border border-border rounded-xl overflow-hidden shrink-0">
             <button @click="setQty(qty - 1)" :disabled="qty <= 1" aria-label="Decrease" class="px-3 py-2 text-ink active:bg-[#F1F1F2] disabled:opacity-30">−</button>
             <span class="px-1.5 text-sm font-semibold tabular-nums min-w-6 text-center">{{ qty }}</span>
-            <button @click="setQty(qty + 1)" :disabled="qty >= product.stock" aria-label="Increase" class="px-3 py-2 text-ink active:bg-[#F1F1F2] disabled:opacity-30">+</button>
+            <button @click="setQty(qty + 1)" :disabled="qty >= effectiveStock" aria-label="Increase" class="px-3 py-2 text-ink active:bg-[#F1F1F2] disabled:opacity-30">+</button>
           </div>
         </div>
 
         <!-- RIGHT: action -->
-        <Button size="md" :loading="adding" :disabled="product.stock === 0" @click="onPrimary" class="shrink-0 px-5">
-          <template v-if="product.stock === 0">Out of stock</template>
+        <Button size="md" :loading="adding" :disabled="effectiveStock === 0" @click="onPrimary" class="shrink-0 px-5">
+          <template v-if="effectiveStock === 0">Out of stock</template>
           <template v-else-if="needsChoice"><AdjustmentsHorizontalIcon class="w-4 h-4" /> Choose</template>
           <template v-else-if="added"><CheckCircleIcon class="w-4 h-4" /> Added!</template>
           <template v-else>Add to cart</template>
@@ -82,7 +82,7 @@ import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import Button from '@/Components/ui/Button.vue'
 import Price from '@/Components/ui/Price.vue'
 import ProductVariations from '@/Components/product/detail/ProductVariations.vue'
-import { variationGroups } from '@/utils/variations'
+import { variationGroups, selectionPriceDelta, selectionStock } from '@/utils/variations'
 import { XMarkIcon, CheckCircleIcon, AdjustmentsHorizontalIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
@@ -104,12 +104,19 @@ const needsChoice = computed(() => hasVariations.value && !allSelected.value)
 const chosen = computed(() => hasVariations.value && selectedCount.value > 0)
 const selectedSummary = computed(() => groups.value.map((g, gi) => props.selectedMap[gi]?.value).filter(Boolean).join(' · '))
 const image = computed(() => Object.values(props.selectedMap).find((o) => o?.image)?.image || null)
-const total = computed(() => (props.product.final_price * props.qty).toLocaleString())
 
-const setQty = (v) => emit('update:qty', Math.min(Math.max(1, v), props.product.stock || 1))
+// Variation-aware price + stock (options may carry a ± price and their own stock)
+const priceDelta     = computed(() => selectionPriceDelta(props.selectedMap))
+const unitFinal      = computed(() => Math.max(0, Number(props.product.final_price) + priceDelta.value))
+const unitRegular    = computed(() => Math.max(0, Number(props.product.price) + priceDelta.value))
+const effectiveStock = computed(() => selectionStock(props.product, props.selectedMap))
+
+const total = computed(() => (unitFinal.value * props.qty).toLocaleString())
+
+const setQty = (v) => emit('update:qty', Math.min(Math.max(1, v), effectiveStock.value || 1))
 
 const onPrimary = () => {
-  if (props.product.stock === 0) return
+  if (effectiveStock.value === 0) return
   if (needsChoice.value) { sheet.value = true; return }
   emit('add')
 }

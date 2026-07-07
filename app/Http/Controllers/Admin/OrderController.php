@@ -96,6 +96,8 @@ class OrderController extends Controller
             'total' => $order->total,
             'payment_method' => $order->payment_method,
             'payment_status' => $order->payment_status,
+            'courier_name' => $order->courier_name,
+            'tracking_number' => $order->tracking_number,
             'notes' => $order->notes,
             'created_at' => $order->created_at->format('d M Y, h:i A'),
             'items' => $order->items->map(fn ($i) => [
@@ -188,6 +190,8 @@ class OrderController extends Controller
             'notes' => 'nullable|string|max:1000',
             'payment_method' => 'nullable|string|max:30',
             'payment_status' => 'nullable|in:pending,paid,failed,refunded,cancelled',
+            'courier_name' => 'nullable|string|max:100',
+            'tracking_number' => 'nullable|string|max:100',
             'items' => 'nullable|array|min:1',
             'items.*.id' => 'nullable|integer',
             'items.*.product_id' => 'required_with:items|exists:products,id',
@@ -250,13 +254,18 @@ class OrderController extends Controller
                 }
             }
 
-            // ── Payment (orders.edit) ──
+            // ── Payment + courier (orders.edit) ──
             if ($user->hasPermission('orders.edit')) {
                 if (! empty($data['payment_method'])) {
                     $update['payment_method'] = $data['payment_method'];
                 }
                 if (! empty($data['payment_status'])) {
                     $update['payment_status'] = $data['payment_status'];
+                }
+                foreach (['courier_name', 'tracking_number'] as $col) {
+                    if (array_key_exists($col, $data)) {
+                        $update[$col] = $data[$col];
+                    }
                 }
             }
 

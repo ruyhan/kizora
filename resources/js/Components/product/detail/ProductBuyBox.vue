@@ -12,7 +12,7 @@
       <span class="text-xs text-primary group-hover:underline">See reviews</span>
     </button>
 
-    <Price :price="product.price" :final="product.final_price" :off="product.discount_percentage" size="lg" class="mb-4" />
+    <Price :price="unitRegular" :final="unitFinal" :off="product.discount_percentage" size="lg" class="mb-4" />
 
     <p class="text-muted leading-relaxed mb-4">{{ product.short_description }}</p>
 
@@ -43,12 +43,12 @@
       </Link>
     </div>
 
-    <!-- Stock + SKU -->
+    <!-- Stock + SKU (stock reflects the selected variation when it has its own counter) -->
     <div class="flex items-center gap-4 text-sm mb-5">
-      <span class="inline-flex items-center gap-1.5 font-medium" :class="product.stock > 0 ? 'text-success' : 'text-error'">
-        <CheckCircleIcon v-if="product.stock > 0" class="w-4 h-4" />
+      <span class="inline-flex items-center gap-1.5 font-medium" :class="effectiveStock > 0 ? 'text-success' : 'text-error'">
+        <CheckCircleIcon v-if="effectiveStock > 0" class="w-4 h-4" />
         <ExclamationTriangleIcon v-else class="w-4 h-4" />
-        {{ product.stock > 0 ? `In stock (${product.stock})` : 'Out of stock' }}
+        {{ effectiveStock > 0 ? `In stock (${effectiveStock})` : (product.stock > 0 ? 'Out of stock for this option' : 'Out of stock') }}
       </span>
       <span v-if="product.sku" class="text-muted">SKU: {{ product.sku }}</span>
     </div>
@@ -59,12 +59,12 @@
         <button @click="setQty(qty - 1)" :disabled="qty <= 1" aria-label="Decrease quantity"
           class="px-3.5 py-3 text-ink hover:bg-purple-50 active:bg-purple-100 transition-colors font-bold text-lg leading-none disabled:opacity-30">−</button>
         <span class="px-2 sm:px-4 py-3 font-semibold text-charcoal min-w-10 text-center tabular-nums">{{ qty }}</span>
-        <button @click="setQty(qty + 1)" :disabled="qty >= product.stock" aria-label="Increase quantity"
+        <button @click="setQty(qty + 1)" :disabled="qty >= effectiveStock" aria-label="Increase quantity"
           class="px-3.5 py-3 text-ink hover:bg-purple-50 active:bg-purple-100 transition-colors font-bold text-lg leading-none disabled:opacity-30">+</button>
       </div>
-      <Button size="lg" block :loading="adding" :disabled="product.stock === 0" @click="$emit('add')" class="flex-1 min-w-0">
+      <Button size="lg" block :loading="adding" :disabled="effectiveStock === 0" @click="$emit('add')" class="flex-1 min-w-0">
         <template v-if="added"><CheckCircleIcon class="w-5 h-5" /> Added!</template>
-        <template v-else-if="product.stock === 0">Out of Stock</template>
+        <template v-else-if="effectiveStock === 0">Out of Stock</template>
         <template v-else><span class="truncate">Add to Cart — ৳{{ total }}</span></template>
       </Button>
     </div>
@@ -103,7 +103,7 @@ import Price from '@/Components/ui/Price.vue'
 import Button from '@/Components/ui/Button.vue'
 import ProductHighlights from '@/Components/product/detail/ProductHighlights.vue'
 import ProductVariations from '@/Components/product/detail/ProductVariations.vue'
-import { variationGroups as variationGroupsOf } from '@/utils/variations'
+import { variationGroups as variationGroupsOf, selectionPriceDelta, selectionStock } from '@/utils/variations'
 import {
   CheckCircleIcon, ExclamationTriangleIcon, MapPinIcon, HeartIcon, ShareIcon,
   TruckIcon, ShieldCheckIcon, ArrowPathIcon, CreditCardIcon, SparklesIcon,
@@ -120,7 +120,7 @@ const props = defineProps({
   inWishlist:  { type: Boolean, default: false },
   selected:    { type: Object, default: () => ({}) }, // { groupIndex: option } — owned by the page
 })
-defineEmits(['add', 'toggle-wishlist', 'update:qty', 'go-reviews', 'update:selected'])
+const emit = defineEmits(['add', 'toggle-wishlist', 'update:qty', 'go-reviews', 'update:selected'])
 
 const auth  = usePage().props.auth
 const toast = useToast()
@@ -130,10 +130,17 @@ const showHighlights = computed(() => ps.value.show_highlights !== false)
 const hasVariations = computed(() => variationGroupsOf(props.product).length > 0)
 
 const reviewCount = computed(() => props.product.review_count ?? props.product.reviews?.length ?? 0)
-const total = computed(() => (props.product.final_price * props.qty).toLocaleString())
+
+// Variation-aware price + stock (options may carry a ± price and their own stock)
+const priceDelta     = computed(() => selectionPriceDelta(props.selected))
+const unitFinal      = computed(() => Math.max(0, Number(props.product.final_price) + priceDelta.value))
+const unitRegular    = computed(() => Math.max(0, Number(props.product.price) + priceDelta.value))
+const effectiveStock = computed(() => selectionStock(props.product, props.selected))
+
+const total = computed(() => (unitFinal.value * props.qty).toLocaleString())
 
 const setQty = (v) => {
-  const n = Math.min(Math.max(1, v), props.product.stock || 1)
+  const n = Math.min(Math.max(1, v), effectiveStock.value || 1)
   emit('update:qty', n)
 }
 

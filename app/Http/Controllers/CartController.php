@@ -32,7 +32,7 @@ class CartController extends Controller
 
         $subtotal = 0;
         $formatted = $items->map(function ($item) use (&$subtotal) {
-            $price = $item->product->final_price;
+            $price = $item->product->priceForVariations($item->variations);
             $total = $price * $item->quantity;
             $subtotal += $total;
             return [
@@ -44,7 +44,7 @@ class CartController extends Controller
                 'price' => $price,
                 'quantity' => $item->quantity,
                 'total' => $total,
-                'stock' => $item->product->stock,
+                'stock' => $item->product->availableStockFor($item->variations),
                 'category' => $item->product->category->name,
                 'variations' => $item->variations ?? [],
             ];
@@ -86,11 +86,12 @@ class CartController extends Controller
 
         $product = Product::findOrFail($request->product_id);
 
-        if ($product->stock < $request->quantity) {
+        $variations = $request->input('variations') ?: null;
+
+        if ($product->availableStockFor($variations) < $request->quantity) {
             return back()->with('error', 'Insufficient stock available.');
         }
 
-        $variations = $request->input('variations') ?: null;
         $identifier = $this->getCartIdentifier($request);
 
         // Same product + identical variation selection collapses into one line;
@@ -100,7 +101,7 @@ class CartController extends Controller
 
         if ($cartItem) {
             $newQty = $cartItem->quantity + $request->quantity;
-            if ($newQty > $product->stock) {
+            if ($newQty > $product->availableStockFor($variations)) {
                 return back()->with('error', 'Cannot add more than available stock.');
             }
             $cartItem->update(['quantity' => $newQty]);

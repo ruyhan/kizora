@@ -52,8 +52,8 @@ Route::get('/faq', [HomeController::class, 'faq'])->name('faq');
 Route::get('/privacy-policy', [HomeController::class, 'privacy'])->name('privacy');
 Route::get('/terms-conditions', [HomeController::class, 'terms'])->name('terms');
 
-// Offers page (redirects to shop — keeps Navbar route('offers') from throwing a Ziggy error)
-Route::get('/offers', fn () => redirect()->route('shop.index'))->name('offers');
+// Offers page — all products currently on sale
+Route::get('/offers', [ShopController::class, 'offers'])->name('offers');
 
 // Shop routes
 Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
@@ -136,6 +136,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
     Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
     Route::delete('/wishlist/{wishlist}', [WishlistController::class, 'remove'])->name('wishlist.remove');
+
+    // Address book
+    Route::post('/account/addresses', [\App\Http\Controllers\AddressController::class, 'store'])->name('account.addresses.store');
+    Route::put('/account/addresses/{address}', [\App\Http\Controllers\AddressController::class, 'update'])->name('account.addresses.update');
+    Route::delete('/account/addresses/{address}', [\App\Http\Controllers\AddressController::class, 'destroy'])->name('account.addresses.destroy');
 });
 
 // Admin routes — every route is permission-gated (Super Admin bypasses).
@@ -143,7 +148,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/', [DashboardController::class, 'index'])->middleware('permission:dashboard.view')->name('dashboard');
     Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('permission:dashboard.view')->name('dashboard.alt');
 
+    // Live counters for the sidebar alert badges (each count is permission-gated inside)
+    Route::get('/alerts', [\App\Http\Controllers\Admin\AlertController::class, 'counts'])->name('alerts');
+
     // Products
+    Route::get('products/export', [AdminProductController::class, 'export'])->middleware('permission:products.view')->name('products.export');
+    Route::post('products/import', [AdminProductController::class, 'import'])->middleware('permission:products.create')->name('products.import');
+    Route::post('products/bulk-update', [AdminProductController::class, 'bulkUpdate'])->middleware('permission:products.edit')->name('products.bulk-update');
+    Route::post('products/{product}/duplicate', [AdminProductController::class, 'duplicate'])->middleware('permission:products.create')->name('products.duplicate');
     Route::get('products/{product}/gallery', [AdminProductController::class, 'galleryData'])->middleware('permission:products.view')->name('products.gallery');
     Route::get('products', [AdminProductController::class, 'index'])->middleware('permission:products.view')->name('products.index');
     Route::get('products/create', [AdminProductController::class, 'create'])->middleware('permission:products.create')->name('products.create');
@@ -162,6 +174,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('/orders/{order}', [AdminOrderController::class, 'update'])->middleware('permission:orders.edit')->name('orders.update');
     Route::delete('/orders/{order}', [AdminOrderController::class, 'destroy'])->middleware('permission:orders.delete')->name('orders.destroy');
     Route::post('/orders/bulk-delete', [AdminOrderController::class, 'bulkDestroy'])->middleware('permission:orders.delete')->name('orders.bulk-destroy');
+
+    // Abandoned carts (carts idle 1h+ that never became orders)
+    Route::get('/carts', [\App\Http\Controllers\Admin\AbandonedCartController::class, 'index'])->middleware('permission:orders.view')->name('carts.index');
 
     // Categories
     Route::get('categories', [AdminCategoryController::class, 'index'])->middleware('permission:categories.view')->name('categories.index');
@@ -257,6 +272,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Product Reviews (manage / moderate)
     Route::get('reviews',                  [\App\Http\Controllers\Admin\ReviewController::class, 'index'])->middleware('permission:products.view')->name('reviews.index');
     Route::put('reviews/{review}',         [\App\Http\Controllers\Admin\ReviewController::class, 'update'])->middleware('permission:products.edit')->name('reviews.update');
+    Route::patch('reviews/{review}/reply', [\App\Http\Controllers\Admin\ReviewController::class, 'reply'])->middleware('permission:products.edit')->name('reviews.reply');
     Route::patch('reviews/{review}/toggle', [\App\Http\Controllers\Admin\ReviewController::class, 'toggle'])->middleware('permission:products.edit')->name('reviews.toggle');
     Route::post('reviews/bulk-delete',     [\App\Http\Controllers\Admin\ReviewController::class, 'bulkDestroy'])->middleware('permission:products.edit')->name('reviews.bulk-destroy');
     Route::delete('reviews/{review}',      [\App\Http\Controllers\Admin\ReviewController::class, 'destroy'])->middleware('permission:products.edit')->name('reviews.destroy');

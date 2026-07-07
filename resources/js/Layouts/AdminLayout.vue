@@ -26,8 +26,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { usePage, Link } from '@inertiajs/vue3'
+import { useToast } from 'vue-toastification'
+import axios from 'axios'
 import AdminSidebar from '@/Components/AdminSidebar.vue'
 import FlashMessage from '@/Components/FlashMessage.vue'
 import { Bars3Icon } from '@heroicons/vue/24/outline'
@@ -35,4 +37,32 @@ import { Bars3Icon } from '@heroicons/vue/24/outline'
 const sidebarOpen = ref(false)
 const page = usePage()
 const pageTitle = computed(() => page.props.title || 'Admin Panel')
+
+// ── Live alert badges — poll every 60s so new orders/messages appear without a refresh ──
+const toast = useToast()
+let alertTimer = null
+let lastPending = null
+
+const pollAlerts = async () => {
+  try {
+    const { data } = await axios.get(route('admin.alerts'))
+    if ('pending_orders' in data) {
+      if (lastPending !== null && data.pending_orders > lastPending) {
+        toast.info(`🛒 ${data.pending_orders - lastPending} new order(s) received!`)
+      }
+      lastPending = data.pending_orders
+      page.props.newOrdersCount = data.pending_orders
+    }
+    if ('unread_messages' in data) page.props.unreadMessages = data.unread_messages
+    if ('low_stock' in data) page.props.lowStockCount = data.low_stock
+  } catch {
+    /* logged out / offline — silently skip this tick */
+  }
+}
+
+onMounted(() => {
+  lastPending = page.props.newOrdersCount ?? null
+  alertTimer = setInterval(pollAlerts, 60000)
+})
+onBeforeUnmount(() => clearInterval(alertTimer))
 </script>

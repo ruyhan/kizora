@@ -2,11 +2,21 @@
   <AdminLayout>
     <Head title="Products" />
 
-    <div class="flex items-center justify-between mb-5">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
       <h1 class="font-display text-2xl font-bold text-charcoal">Products</h1>
-      <Link :href="route('admin.products.create')" class="btn-primary text-sm px-5 py-2.5">
-        + Add Product
-      </Link>
+      <div class="flex items-center gap-2">
+        <a :href="route('admin.products.export')"
+          class="inline-flex items-center gap-1.5 text-xs font-semibold text-charcoal px-4 py-2.5 bg-white border border-purple-100 rounded-xl hover:bg-purple-50 transition-colors">
+          <ArrowDownTrayIcon class="w-4 h-4" /> Export CSV
+        </a>
+        <button v-if="canCreate" @click="openImport"
+          class="inline-flex items-center gap-1.5 text-xs font-semibold text-charcoal px-4 py-2.5 bg-white border border-purple-100 rounded-xl hover:bg-purple-50 transition-colors">
+          <ArrowUpTrayIcon class="w-4 h-4" /> Import CSV
+        </button>
+        <Link :href="route('admin.products.create')" class="btn-primary text-sm px-5 py-2.5">
+          + Add Product
+        </Link>
+      </div>
     </div>
 
     <!-- Search + filters -->
@@ -17,6 +27,19 @@
       </div>
       <SelectMenu :model-value="f.category" @update:model-value="v => { f.category = v; apply() }" :options="categorySelect" trigger-class="text-sm py-2" class="w-48" />
       <DateRangeFilter route-name="admin.products.index" :filters="filters" :params="f" />
+    </div>
+
+    <!-- Bulk actions (appear when rows are selected) -->
+    <div v-if="selected.length && canEdit" class="flex flex-wrap items-center gap-2 mb-4 p-3 bg-white rounded-2xl border border-purple-100 shadow-sm">
+      <span class="text-xs font-semibold text-muted px-1">{{ selected.length }} selected:</span>
+      <button @click="bulkAction('activate')" class="bulk-btn text-success">Activate</button>
+      <button @click="bulkAction('deactivate')" class="bulk-btn text-error">Deactivate</button>
+      <button @click="bulkAction('feature')" class="bulk-btn text-primary">Feature</button>
+      <button @click="bulkAction('unfeature')" class="bulk-btn text-charcoal">Unfeature</button>
+      <div class="flex items-center gap-1.5">
+        <SelectMenu v-model="bulkCategory" :options="categoryOptions" placeholder="Move to category…" trigger-class="text-xs py-1.5" class="w-44" />
+        <button @click="bulkAction('set_category')" :disabled="!bulkCategory" class="bulk-btn text-primary disabled:opacity-40">Move</button>
+      </div>
     </div>
 
     <div class="bg-white rounded-2xl shadow-sm border border-purple-50 overflow-hidden">
@@ -71,6 +94,10 @@
                   <button @click="openEdit(product)"
                     class="text-xs text-primary px-3 py-1.5 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
                     Edit
+                  </button>
+                  <button v-if="canCreate" @click="duplicateProduct(product)"
+                    class="text-xs text-charcoal px-3 py-1.5 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                    Duplicate
                   </button>
                   <button @click="deleteProduct(product)"
                     class="text-xs text-error px-3 py-1.5 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
@@ -285,6 +312,27 @@
                   <input v-model="editForm.sku" type="text" class="input-field" placeholder="e.g. KZ-BP-004">
                   <p v-if="editErrors.sku" class="text-error text-xs mt-1">{{ editErrors.sku }}</p>
                 </div>
+                <div>
+                  <label class="text-sm font-medium text-charcoal mb-1.5 block">Sale starts</label>
+                  <input v-model="editForm.sale_starts_at" type="date" class="input-field">
+                </div>
+                <div>
+                  <label class="text-sm font-medium text-charcoal mb-1.5 block">Sale ends</label>
+                  <input v-model="editForm.sale_ends_at" type="date" class="input-field">
+                  <p v-if="editErrors.sale_ends_at" class="text-error text-xs mt-1">{{ editErrors.sale_ends_at }}</p>
+                </div>
+              </div>
+
+              <!-- SEO -->
+              <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label class="text-sm font-medium text-charcoal mb-1.5 block">Meta title (SEO)</label>
+                  <input v-model="editForm.meta_title" type="text" maxlength="255" class="input-field" placeholder="Empty = product name">
+                </div>
+                <div>
+                  <label class="text-sm font-medium text-charcoal mb-1.5 block">Meta description (SEO)</label>
+                  <input v-model="editForm.meta_description" type="text" maxlength="500" class="input-field" placeholder="Empty = short description">
+                </div>
               </div>
 
               <!-- Variations -->
@@ -326,6 +374,54 @@
     </Teleport>
 
     <BulkDeleteBar :count="selected.length" :busy="bulkDeleting" @confirm="bulkDelete" @clear="selected = []" />
+
+    <!-- ── CSV Import Modal ── -->
+    <Teleport to="body">
+      <Transition name="modal">
+        <div v-if="importOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="importBusy ? null : (importOpen = false)"></div>
+          <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="font-semibold text-charcoal text-lg">Import products from CSV</h2>
+              <button @click="importOpen = false" :disabled="importBusy" class="w-9 h-9 rounded-full hover:bg-purple-50 flex items-center justify-center text-muted hover:text-charcoal">
+                <XMarkIcon class="w-5 h-5" />
+              </button>
+            </div>
+
+            <p class="text-xs text-muted mb-4">
+              Rows are matched by <b>SKU</b>: existing SKUs are updated, unknown ones are created (name, category &amp; price required).
+              Columns: <code class="text-[11px]">sku, name, category, price, discount_price, sale_starts_at, sale_ends_at, stock, is_active, is_featured, tags, short_description</code>.
+              Use <b>Export CSV</b> to get a template with your current products.
+            </p>
+
+            <input ref="importInput" type="file" accept=".csv,text/csv" @change="onImportFile"
+              class="block w-full text-sm text-muted file:mr-3 file:px-4 file:py-2 file:rounded-lg file:border-0 file:bg-purple-50 file:text-primary file:text-xs file:font-semibold hover:file:bg-purple-100 mb-4">
+
+            <!-- Preview result -->
+            <div v-if="importPreview" class="rounded-xl border p-3 mb-4 text-sm"
+              :class="importPreview.error_count ? 'border-amber-200 bg-amber-50' : 'border-green-200 bg-green-50'">
+              <p class="font-semibold text-charcoal mb-1">
+                Preview: {{ importPreview.updated }} will be updated · {{ importPreview.created }} will be created
+                <span v-if="importPreview.error_count" class="text-error">· {{ importPreview.error_count }} row(s) skipped</span>
+              </p>
+              <ul v-if="importPreview.errors?.length" class="text-xs text-error/90 list-disc ml-4 space-y-0.5 max-h-28 overflow-y-auto">
+                <li v-for="(e, i) in importPreview.errors" :key="i">{{ e }}</li>
+              </ul>
+            </div>
+
+            <div class="flex gap-3">
+              <button @click="runImport(true)" :disabled="!importFile || importBusy" class="btn-secondary flex-1 py-2.5 text-sm disabled:opacity-50">
+                {{ importBusy && importDry ? 'Checking…' : 'Preview' }}
+              </button>
+              <button @click="runImport(false)" :disabled="!importFile || importBusy || !importPreview" class="btn-primary flex-1 py-2.5 text-sm disabled:opacity-50">
+                {{ importBusy && !importDry ? 'Importing…' : 'Import now' }}
+              </button>
+            </div>
+            <p class="text-[11px] text-muted mt-2">Run Preview first — nothing is saved until you press "Import now".</p>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </AdminLayout>
 </template>
 
@@ -342,7 +438,7 @@ import { useToast } from 'vue-toastification'
 import { usePermissions } from '@/composables/usePermissions'
 import { useDragReorder } from '@/composables/useDragReorder'
 import axios from 'axios'
-import { XMarkIcon, TrashIcon, ArrowUturnLeftIcon, PhotoIcon, PlusIcon, EyeIcon, MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
+import { XMarkIcon, TrashIcon, ArrowUturnLeftIcon, PhotoIcon, PlusIcon, EyeIcon, MagnifyingGlassIcon, ArrowDownTrayIcon, ArrowUpTrayIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
   products: Object,
@@ -367,6 +463,8 @@ const applyDebounced = () => { clearTimeout(_t); _t = setTimeout(apply, 350) }
 const toast = useToast()
 const { can } = usePermissions()
 const canDelete = can('products.delete')
+const canCreate = can('products.create')
+const canEdit   = can('products.edit')
 const selected = ref([])
 const bulkDeleting = ref(false)
 const allOn = computed(() => props.products.data?.length > 0 && selected.value.length === props.products.data.length)
@@ -379,6 +477,60 @@ const bulkDelete = () => {
     onError: () => toast.error('Bulk delete failed.'),
     onFinish: () => { bulkDeleting.value = false },
   })
+}
+
+// ── Bulk actions (beyond delete) ──
+const bulkCategory = ref('')
+const bulkAction = (action) => {
+  const payload = { ids: selected.value, action }
+  if (action === 'set_category') {
+    if (!bulkCategory.value) return
+    payload.category_id = bulkCategory.value
+  }
+  router.post(route('admin.products.bulk-update'), payload, {
+    preserveScroll: true,
+    onSuccess: () => { selected.value = []; bulkCategory.value = ''; router.reload({ only: ['products'] }) },
+    onError: () => toast.error('Bulk update failed.'),
+  })
+}
+
+// ── Duplicate ──
+const duplicateProduct = (product) => {
+  router.post(route('admin.products.duplicate', product.id), {}, { preserveScroll: true })
+}
+
+// ── CSV import ──
+const importOpen    = ref(false)
+const importFile    = ref(null)
+const importPreview = ref(null)
+const importBusy    = ref(false)
+const importDry     = ref(true)
+const importInput   = ref(null)
+
+const openImport = () => { importOpen.value = true; importPreview.value = null; importFile.value = null }
+const onImportFile = (e) => { importFile.value = e.target.files?.[0] || null; importPreview.value = null }
+
+const runImport = async (dryRun) => {
+  if (!importFile.value || importBusy.value) return
+  importBusy.value = true
+  importDry.value = dryRun
+  try {
+    const fd = new FormData()
+    fd.append('file', importFile.value)
+    fd.append('dry_run', dryRun ? 1 : 0)
+    const { data } = await axios.post(route('admin.products.import'), fd)
+    if (dryRun) {
+      importPreview.value = data
+    } else {
+      toast.success(`Imported — ${data.updated} updated, ${data.created} created` + (data.error_count ? `, ${data.error_count} skipped.` : '.'))
+      importOpen.value = false
+      router.reload({ only: ['products'] })
+    }
+  } catch (err) {
+    toast.error(err.response?.data?.message || 'Import failed — check the file format.')
+  } finally {
+    importBusy.value = false
+  }
 }
 
 // ── Delete ──
@@ -417,7 +569,8 @@ const newDrag   = useDragReorder(editGalleryMedia)
 const editForm = ref({
   id: null, name: '', sku: '', tagsInput: '', category_id: '', short_description: '',
   description: '', usps: [], has_variations: false, variations: [],
-  price: '', discount_price: '',
+  price: '', discount_price: '', sale_starts_at: '', sale_ends_at: '',
+  meta_title: '', meta_description: '',
   stock: 0, is_active: true, is_featured: false, show_on_hero: false,
 })
 
@@ -442,6 +595,10 @@ const openEdit = (product) => {
     variations:        JSON.parse(JSON.stringify(product.variations || [])),
     price:             product.price,
     discount_price:    product.discount_price || '',
+    sale_starts_at:    product.sale_starts_at || '',
+    sale_ends_at:      product.sale_ends_at || '',
+    meta_title:        product.meta_title || '',
+    meta_description:  product.meta_description || '',
     stock:             product.stock,
     is_active:         product.is_active,
     is_featured:       product.is_featured,
@@ -497,6 +654,10 @@ const submitEdit = () => {
     variations:        editForm.value.variations,
     price:             editForm.value.price,
     discount_price:    editForm.value.discount_price || '',
+    sale_starts_at:    editForm.value.sale_starts_at || '',
+    sale_ends_at:      editForm.value.sale_ends_at || '',
+    meta_title:        editForm.value.meta_title || '',
+    meta_description:  editForm.value.meta_description || '',
     stock:             editForm.value.stock,
     is_active:         editForm.value.is_active   ? 1 : 0,
     is_featured:       editForm.value.is_featured ? 1 : 0,
@@ -524,4 +685,15 @@ const submitEdit = () => {
 .modal-leave-active .relative { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
 .modal-enter-from .relative    { transform: translateX(100%); }
 .modal-leave-to .relative      { transform: translateX(100%); }
+
+.bulk-btn {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  background: rgba(245, 243, 255, 0.6);
+  border: 1px solid #ede9fe;
+  border-radius: 8px;
+  transition: background-color 0.15s ease;
+}
+.bulk-btn:hover:not(:disabled) { background: #ede9fe; }
 </style>

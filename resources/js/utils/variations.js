@@ -40,6 +40,24 @@ export function variationSignature(variations) {
   return JSON.stringify(v.map((x) => [x?.name || '', x?.value || '']))
 }
 
+// Price adjustment (±) carried by the currently selected options.
+export function selectionPriceDelta(selectedMap = {}) {
+  return Object.values(selectedMap).reduce((sum, o) => {
+    if (!o || o.price === '' || o.price == null) return sum
+    const p = Number(o.price)
+    return sum + (Number.isFinite(p) ? p : 0)
+  }, 0)
+}
+
+// Sellable stock for the selection — min of product stock and any per-option stock.
+export function selectionStock(product, selectedMap = {}) {
+  let s = Number(product?.stock ?? 0)
+  for (const o of Object.values(selectedMap)) {
+    if (o && o.stock !== '' && o.stock != null) s = Math.min(s, Number(o.stock) || 0)
+  }
+  return Math.max(0, s)
+}
+
 // Build the flat selection payload (for the cart) from a { groupIndex: option } map.
 export function buildSelectedVariations(product, selectedMap = {}) {
   return variationGroups(product)

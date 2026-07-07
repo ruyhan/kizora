@@ -88,6 +88,34 @@
                 <input v-model="form.sku" type="text" class="input-field" placeholder="e.g. KZ-BP-004">
                 <p v-if="errors.sku" class="text-error text-xs mt-1">{{ errors.sku }}</p>
               </div>
+              <div>
+                <label class="text-sm font-medium text-charcoal mb-1.5 block">Sale starts</label>
+                <input v-model="form.sale_starts_at" type="date" class="input-field">
+                <p class="text-xs text-muted mt-1">Empty = sale price applies right away.</p>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-charcoal mb-1.5 block">Sale ends</label>
+                <input v-model="form.sale_ends_at" type="date" class="input-field">
+                <p v-if="errors.sale_ends_at" class="text-error text-xs mt-1">{{ errors.sale_ends_at }}</p>
+                <p v-else class="text-xs text-muted mt-1">Empty = never ends.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- SEO -->
+          <div class="bg-white rounded-2xl shadow-sm border border-purple-50 p-6">
+            <h3 class="font-display font-semibold text-charcoal text-lg mb-1">SEO</h3>
+            <p class="text-xs text-muted mb-4">How this product appears in Google &amp; social shares. Empty = product name / short description are used.</p>
+            <div class="space-y-4">
+              <div>
+                <label class="text-sm font-medium text-charcoal mb-1.5 block">Meta title</label>
+                <input v-model="form.meta_title" type="text" maxlength="255" class="input-field" placeholder="e.g. Voyager 25L Backpack — Water-resistant Daypack | Kizora">
+              </div>
+              <div>
+                <label class="text-sm font-medium text-charcoal mb-1.5 block">Meta description</label>
+                <textarea v-model="form.meta_description" rows="2" maxlength="500" class="input-field" placeholder="One or two sentences shown under the title in search results."></textarea>
+                <p class="text-xs text-muted mt-1">{{ (form.meta_description || '').length }} characters — ~160 recommended</p>
+              </div>
             </div>
           </div>
 
@@ -256,6 +284,10 @@ const form = ref({
   variations:        JSON.parse(JSON.stringify(props.product?.variations || [])),
   price:             props.product?.price              || '',
   discount_price:    props.product?.discount_price     || '',
+  sale_starts_at:    props.product?.sale_starts_at     || '',
+  sale_ends_at:      props.product?.sale_ends_at       || '',
+  meta_title:        props.product?.meta_title         || '',
+  meta_description:  props.product?.meta_description   || '',
   stock:             props.product?.stock              ?? 0,
   is_active:         props.product?.is_active          ?? true,
   is_featured:       props.product?.is_featured        ?? false,

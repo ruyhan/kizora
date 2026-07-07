@@ -43,7 +43,7 @@ class CheckoutController extends Controller
             return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
         }
 
-        $subtotal = $cartItems->sum(fn($item) => $item->product->final_price * $item->quantity);
+        $subtotal = $cartItems->sum(fn($item) => $item->product->priceForVariations($item->variations) * $item->quantity);
         $user = Auth::user();
 
         // Estimate from the user's saved area; the frontend recalculates live as
@@ -65,15 +65,18 @@ class CheckoutController extends Controller
 
         return Inertia::render('Checkout', [
             'cart' => [
-                'items' => $cartItems->map(fn($item) => [
-                    'id' => $item->id,
-                    'name' => $item->product->name,
-                    'image' => $item->product->featured_image_url,
-                    'price' => $item->product->final_price,
-                    'quantity' => $item->quantity,
-                    'total' => $item->product->final_price * $item->quantity,
-                    'variations' => $item->variations ?? [],
-                ]),
+                'items' => $cartItems->map(function ($item) {
+                    $unit = $item->product->priceForVariations($item->variations);
+                    return [
+                        'id' => $item->id,
+                        'name' => $item->product->name,
+                        'image' => $item->product->featured_image_url,
+                        'price' => $unit,
+                        'quantity' => $item->quantity,
+                        'total' => $unit * $item->quantity,
+                        'variations' => $item->variations ?? [],
+                    ];
+                }),
                 'subtotal' => $subtotal,
                 'delivery_charge' => $deliveryCharge,
                 'discount' => $discount,
@@ -88,6 +91,10 @@ class CheckoutController extends Controller
                 'delivery_area_id' => $user->delivery_area_id,
                 'delivery_address' => $user->delivery_address,
             ] : null,
+            // Saved address book — pick one to fill the form instantly
+            'savedAddresses'   => $user ? $user->addresses()->orderByDesc('is_default')->latest()->get([
+                'id', 'label', 'name', 'phone', 'address_line', 'city', 'postal_code', 'is_default',
+            ]) : [],
             // Checkout shows only enabled (active) cities + their areas
             'deliveryCities'   => DeliveryCity::active()->orderBy('name')->get(['id', 'name', 'is_active']),
             'deliveryAreas'    => DeliveryArea::whereHas('city', fn($q) => $q->where('is_active', true))
@@ -108,6 +115,7 @@ class CheckoutController extends Controller
             'delivery_area_id' => ['required', Rule::exists('delivery_areas', 'id')],
             'payment_method'   => 'required|in:' . implode(',', $allowedMethods),
             'notes'            => 'nullable|string|max:500',
+            'save_address'     => 'nullable|boolean',
         ], [
             'delivery_area_id.required' => 'Please select your delivery city and area.',
         ]);
@@ -135,14 +143,14 @@ class CheckoutController extends Controller
             return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
         }
 
-        // Prevent overselling — re-check stock at order time.
+        // Prevent overselling — re-check stock at order time (incl. per-option stock).
         foreach ($cartItems as $item) {
-            if ($item->quantity > $item->product->stock) {
+            if ($item->quantity > $item->product->availableStockFor($item->variations)) {
                 return redirect()->route('cart.index')->with('error', "Insufficient stock for {$item->product->name}.");
             }
         }
 
-        $subtotal = $cartItems->sum(fn($item) => $item->product->final_price * $item->quantity);
+        $subtotal = $cartItems->sum(fn($item) => $item->product->priceForVariations($item->variations) * $item->quantity);
         // Exact charge based on the chosen delivery location + subtotal (free delivery overrides).
         $deliveryCharge = $this->delivery->chargeFor($area, $subtotal);
         $discount = 0;
@@ -182,17 +190,19 @@ class CheckoutController extends Controller
             ]);
 
             foreach ($cartItems as $item) {
+                $unitPrice = $item->product->priceForVariations($item->variations);
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $item->product_id,
                     'product_name' => $item->product->name,
                     'product_image' => $item->product->featured_image_url,
-                    'price' => $item->product->final_price,
+                    'price' => $unitPrice,
                     'quantity' => $item->quantity,
-                    'total' => $item->product->final_price * $item->quantity,
+                    'total' => $unitPrice * $item->quantity,
                     'variations' => $item->variations ?? null,
                 ]);
                 $item->product->decrement('stock', $item->quantity); // sync inventory
+                $item->product->decrementVariationStock($item->variations, $item->quantity);
             }
 
             \App\Models\Invoice::forOrder($order); // generate invoice for the order
@@ -206,6 +216,25 @@ class CheckoutController extends Controller
 
             session(['last_order_id' => $order->id, 'last_order_number' => $order->order_number]);
         });
+
+        // Optionally save the delivery details to the user's address book
+        if (Auth::check() && $request->boolean('save_address')) {
+            $exists = Auth::user()->addresses()
+                ->where('address_line', $request->address)
+                ->where('phone', $request->phone)
+                ->exists();
+            if (! $exists) {
+                Auth::user()->addresses()->create([
+                    'label'        => 'Address ' . (Auth::user()->addresses()->count() + 1),
+                    'name'         => $request->name,
+                    'phone'        => $request->phone,
+                    'address_line' => $request->address,
+                    'city'         => $area->city->name,
+                    'postal_code'  => $area->postal_code,
+                    'is_default'   => ! Auth::user()->addresses()->exists(),
+                ]);
+            }
+        }
 
         $order = Order::where('order_number', session('last_order_number'))->first();
 

@@ -68,6 +68,11 @@ class HandleInertiaRequests extends Middleware
             'unreadMessages'    => (Auth::check() && Auth::user()->isAdmin()) ? ContactMessage::where('is_read', false)->count() : 0,
             'newChatbotOrders'  => (Auth::check() && Auth::user()->isAdmin()) ? Order::chatbot()->where('status', 'pending')->count() : 0,
             'newReviewsCount'   => (Auth::check() && Auth::user()->isAdmin()) ? Review::whereNull('seen_at')->count() : 0,
+            'lowStockCount'     => (Auth::check() && Auth::user()->isAdmin())
+                ? \App\Models\Product::where('is_active', true)
+                    ->where('stock', '<=', max(1, (int) data_get(app(PageContent::class)->get('settings'), 'low_stock_threshold', 10)))
+                    ->count()
+                : 0,
             'recaptcha' => app(RecaptchaService::class)->publicConfig(),
             // Editable content (JSON CMS) shared site-wide
             'site' => app(PageContent::class)->get('settings'),

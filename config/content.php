@@ -57,6 +57,11 @@ return [
             ],
             ['key' => 'currency_symbol', 'label' => 'Currency symbol', 'type' => 'text', 'default' => '৳'],
 
+            ['key' => 'low_stock_threshold', 'label' => 'Low-stock alert threshold', 'type' => 'number', 'default' => 10, 'help' => 'Products at or below this stock level are flagged as "low stock" in Inventory and the sidebar alert badge.'],
+
+            ['key' => 'head_scripts', 'label' => 'Tracking scripts — inside <head>', 'type' => 'textarea', 'default' => '', 'help' => 'Paste Google Analytics 4 / Tag Manager / Meta Pixel snippets here (full <script> tags). Printed as-is into every page\'s <head>.'],
+            ['key' => 'body_scripts', 'label' => 'Tracking scripts — end of <body>', 'type' => 'textarea', 'default' => '', 'help' => 'For snippets that ask to be placed before </body> (e.g. GTM noscript, chat widgets).'],
+
             ['key' => 'maintenance_mode', 'label' => 'Maintenance mode', 'type' => 'toggle', 'default' => false, 'help' => 'When ON, visitors see a maintenance page (HTTP 503). You and other admins can still sign in, use the admin panel, and browse the live site — so you can update things safely.'],
             ['key' => 'maintenance_title', 'label' => 'Maintenance — heading', 'type' => 'text', 'default' => 'We’ll be right back', 'show_if' => ['key' => 'maintenance_mode', 'value' => true]],
             ['key' => 'maintenance_message', 'label' => 'Maintenance — message', 'type' => 'textarea', 'default' => 'We’re making things better. Our store is briefly down for scheduled maintenance and will be back online shortly. Thanks for your patience.', 'show_if' => ['key' => 'maintenance_mode', 'value' => true]],

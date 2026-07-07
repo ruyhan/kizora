@@ -28,7 +28,7 @@ class PosController extends Controller
     {
         return Inertia::render('Admin/Pos/Create', [
             'products' => Product::where('is_active', true)
-                ->select('id', 'name', 'sku', 'price', 'discount_price', 'featured_image', 'stock', 'category_id')
+                ->select('id', 'name', 'sku', 'price', 'discount_price', 'sale_starts_at', 'sale_ends_at', 'featured_image', 'stock', 'category_id')
                 ->with('category:id,name')
                 ->orderBy('name')->get()
                 ->map(fn (Product $p) => [

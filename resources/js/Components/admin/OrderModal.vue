@@ -156,6 +156,11 @@
                     <p class="text-sm text-charcoal uppercase font-medium">{{ order.payment_method }}</p>
                     <span :class="paymentBadge(order.payment_status)" class="badge text-xs mt-1">{{ order.payment_status }}</span>
                   </div>
+                  <div v-if="order.courier_name || order.tracking_number">
+                    <p class="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Courier</p>
+                    <p class="text-sm text-charcoal font-medium">{{ order.courier_name || '—' }}</p>
+                    <p v-if="order.tracking_number" class="text-muted text-sm font-mono mt-0.5">{{ order.tracking_number }}</p>
+                  </div>
                   <div v-if="order.notes">
                     <p class="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Notes</p>
                     <p class="text-muted text-sm leading-relaxed">{{ order.notes }}</p>
@@ -183,6 +188,10 @@
                     <select v-model="editForm.payment_status" class="input-field text-sm py-2">
                       <option v-for="s in ['pending','paid','failed','refunded','cancelled']" :key="s" :value="s">{{ s }}</option>
                     </select>
+                    <p class="text-xs font-semibold text-muted uppercase tracking-wider pt-1.5">Courier</p>
+                    <input v-model="editForm.courier_name" placeholder="Courier — e.g. Pathao, Steadfast, RedX" class="input-field text-sm py-2">
+                    <input v-model="editForm.tracking_number" placeholder="Tracking / consignment number" class="input-field text-sm py-2">
+                    <p class="text-[11px] text-muted">Shown to the customer on Track Order and in their account.</p>
                   </div>
                 </template>
               </div>
@@ -286,6 +295,7 @@ const startEdit = () => {
     name: order.value.customer.name || '', phone: order.value.customer.phone || '', email: order.value.customer.email || '',
     address: order.value.delivery_address || '', inside_dhaka: !!order.value.inside_dhaka, notes: order.value.notes || '',
     payment_method: order.value.payment_method || 'cod', payment_status: order.value.payment_status || 'pending',
+    courier_name: order.value.courier_name || '', tracking_number: order.value.tracking_number || '',
     items: order.value.items.map((i) => ({ id: i.id, product_id: i.product_id, name: i.product_name, price: Number(i.price), quantity: i.quantity, image: i.product_image })),
   }
   editing.value = true
@@ -313,6 +323,7 @@ const saveEdit = () => {
     name: editForm.value.name, phone: editForm.value.phone, email: editForm.value.email,
     address: editForm.value.address, inside_dhaka: editForm.value.inside_dhaka, notes: editForm.value.notes,
     payment_method: editForm.value.payment_method, payment_status: editForm.value.payment_status,
+    courier_name: editForm.value.courier_name || '', tracking_number: editForm.value.tracking_number || '',
     items: editForm.value.items.map((i) => ({ id: i.id, product_id: i.product_id, quantity: i.quantity })),
   }, {
     preserveScroll: true,

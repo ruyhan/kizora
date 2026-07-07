@@ -99,7 +99,7 @@ const isActive = (item) => {
   return ms.some(m => route().current(m, m === 'admin.content.edit' ? item.matchParams : undefined))
 }
 
-// Notification badges (new orders, unread messages, new chatbot orders).
+// Notification badges (new orders, unread messages, chatbot orders, reviews, low stock).
 const badgeFor = (item) => {
   const p = usePage().props
   return {
@@ -107,6 +107,7 @@ const badgeFor = (item) => {
     'admin.messages.contacts': p.unreadMessages,
     'admin.chatbot.orders': p.newChatbotOrders,
     'admin.reviews.index': p.newReviewsCount,
+    'admin.inventory.index': p.lowStockCount,
   }[item.route] || 0
 }
 </script>

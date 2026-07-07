@@ -104,6 +104,14 @@
                 <dt class="text-muted">Payment status</dt>
                 <dd><span :class="payBadge" class="px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize">{{ order.payment_status }}</span></dd>
               </div>
+              <div v-if="order.courier_name" class="flex items-center justify-between">
+                <dt class="text-muted">Courier</dt>
+                <dd class="text-charcoal font-medium">{{ order.courier_name }}</dd>
+              </div>
+              <div v-if="order.tracking_number" class="flex items-center justify-between">
+                <dt class="text-muted">Tracking no.</dt>
+                <dd class="text-charcoal font-mono text-xs bg-purple-50 px-2 py-1 rounded-lg">{{ order.tracking_number }}</dd>
+              </div>
               <div v-if="order.delivery_city || order.delivery_area" class="flex items-start justify-between gap-3">
                 <dt class="text-muted shrink-0">Delivery to</dt>
                 <dd class="text-charcoal text-right">{{ [order.delivery_area, order.delivery_city].filter(Boolean).join(', ') }}</dd>

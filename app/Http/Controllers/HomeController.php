@@ -20,7 +20,7 @@ class HomeController extends Controller
     private function base()
     {
         return Product::query()
-            ->select(['id', 'name', 'slug', 'sku', 'price', 'discount_price', 'featured_image', 'short_description', 'stock', 'is_featured', 'category_id', 'has_variations', 'variations', 'usps'])
+            ->select(['id', 'name', 'slug', 'sku', 'price', 'discount_price', 'sale_starts_at', 'sale_ends_at', 'featured_image', 'short_description', 'stock', 'is_featured', 'category_id', 'has_variations', 'variations', 'usps'])
             ->with('category:id,name,slug')
             ->with('firstImage')
             ->withAvg('reviews', 'rating')
@@ -51,7 +51,7 @@ class HomeController extends Controller
             'newArrivals'      => Inertia::defer(fn () => $this->cache->remember('home:new', fn () => $this->base()
                 ->latest()->take(10)->get()->map(fn ($p) => $this->formatProduct($p))->all())),
             'onSale'           => Inertia::defer(fn () => $this->cache->remember('home:sale', fn () => $this->base()
-                ->whereNotNull('discount_price')->latest()->take(10)->get()->map(fn ($p) => $this->formatProduct($p))->all())),
+                ->onSale()->latest()->take(10)->get()->map(fn ($p) => $this->formatProduct($p))->all())),
             'popularProducts'  => Inertia::defer(fn () => $this->cache->remember('home:popular', fn () => $this->base()
                 ->inRandomOrder()->take(10)->get()->map(fn ($p) => $this->formatProduct($p))->all())),
         ]);

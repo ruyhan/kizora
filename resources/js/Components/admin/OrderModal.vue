@@ -174,9 +174,13 @@
                     <input v-model="editForm.phone" placeholder="Phone" class="input-field text-sm py-2">
                     <input v-model="editForm.email" placeholder="Email" class="input-field text-sm py-2">
                     <textarea v-model="editForm.address" rows="2" placeholder="Delivery address" class="input-field text-sm py-2"></textarea>
-                    <div class="inline-flex p-1 rounded-xl bg-[#F1F1F2] w-full">
-                      <button type="button" @click="editForm.inside_dhaka = true" :class="editForm.inside_dhaka ? 'bg-white shadow-sm text-ink' : 'text-muted'" class="flex-1 px-2 py-1.5 rounded-lg text-xs font-semibold">Inside Dhaka</button>
-                      <button type="button" @click="editForm.inside_dhaka = false" :class="!editForm.inside_dhaka ? 'bg-white shadow-sm text-ink' : 'text-muted'" class="flex-1 px-2 py-1.5 rounded-lg text-xs font-semibold">Outside Dhaka</button>
+                    <div>
+                      <label class="text-[11px] font-semibold text-muted uppercase tracking-wider">Delivery city</label>
+                      <input v-model="editForm.delivery_city" list="order-city-list" placeholder="Delivery city" class="input-field text-sm py-2 mt-1">
+                      <datalist id="order-city-list">
+                        <option v-for="c in cities" :key="c.id" :value="c.name">৳{{ Number(c.delivery_charge ?? 0).toLocaleString() }}</option>
+                      </datalist>
+                      <p class="text-[11px] text-muted mt-1">Delivery charge is taken from this city; totals recalculate on save.</p>
                     </div>
                     <textarea v-model="editForm.notes" rows="2" placeholder="Notes" class="input-field text-sm py-2"></textarea>
                   </div>
@@ -214,6 +218,9 @@ import { XMarkIcon, PencilSquareIcon, MagnifyingGlassIcon, TrashIcon } from '@he
 import { statusBadge, paymentBadge } from '@/composables/useOrderStatus'
 import { usePermissions } from '@/composables/usePermissions'
 
+const props = defineProps({
+  cities: { type: Array, default: () => [] }, // active delivery cities (id, name, delivery_charge)
+})
 const emit = defineEmits(['updated'])
 const { can } = usePermissions()
 const toast = useToast()
@@ -293,7 +300,7 @@ const startEdit = () => {
   editError.value = ''
   editForm.value = {
     name: order.value.customer.name || '', phone: order.value.customer.phone || '', email: order.value.customer.email || '',
-    address: order.value.delivery_address || '', inside_dhaka: !!order.value.inside_dhaka, notes: order.value.notes || '',
+    address: order.value.delivery_address || '', delivery_city: order.value.delivery_city || '', notes: order.value.notes || '',
     payment_method: order.value.payment_method || 'cod', payment_status: order.value.payment_status || 'pending',
     courier_name: order.value.courier_name || '', tracking_number: order.value.tracking_number || '',
     items: order.value.items.map((i) => ({ id: i.id, product_id: i.product_id, name: i.product_name, price: Number(i.price), quantity: i.quantity, image: i.product_image })),
@@ -321,7 +328,7 @@ const saveEdit = () => {
   editError.value = ''
   router.put(route('admin.orders.update', order.value.id), {
     name: editForm.value.name, phone: editForm.value.phone, email: editForm.value.email,
-    address: editForm.value.address, inside_dhaka: editForm.value.inside_dhaka, notes: editForm.value.notes,
+    address: editForm.value.address, delivery_city: editForm.value.delivery_city, notes: editForm.value.notes,
     payment_method: editForm.value.payment_method, payment_status: editForm.value.payment_status,
     courier_name: editForm.value.courier_name || '', tracking_number: editForm.value.tracking_number || '',
     items: editForm.value.items.map((i) => ({ id: i.id, product_id: i.product_id, quantity: i.quantity })),

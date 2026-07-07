@@ -14,7 +14,7 @@ export const useCartStore = defineStore('cart', () => {
   const loaded         = ref(false)
   const fetching       = ref(false)
   // Admin-controlled delivery config (kept in sync from the server)
-  const delivery       = ref({ free_enabled: false, type: 'all', minimum: 0, inside: 80, outside: 150 })
+  const delivery       = ref({ free_enabled: false, type: 'all', minimum: 0, estimate: 0 })
 
   // Single in-flight fetch promise — prevents duplicate concurrent fetches
   let _fetchPromise = null
@@ -30,10 +30,10 @@ export const useCartStore = defineStore('cart', () => {
   function _recalculate() {
     subtotal.value        = items.value.reduce((s, i) => s + i.price * i.quantity, 0)
     count.value           = items.value.reduce((s, i) => s + i.quantity, 0)
-    // Free (all / minimum-met) → 0; otherwise the Inside-Dhaka estimate (exact at checkout)
+    // Free (all / minimum-met) → 0; otherwise the lowest city charge as an estimate (exact at checkout)
     const c = delivery.value
     const free = c.free_enabled && (c.type === 'all' || subtotal.value >= (Number(c.minimum) || 0))
-    delivery_charge.value = free ? 0 : Number(c.inside) || 0
+    delivery_charge.value = free ? 0 : Number(c.estimate) || 0
     total.value           = subtotal.value + delivery_charge.value - discount.value
   }
 

@@ -49,7 +49,7 @@ class CheckoutController extends Controller
         // Estimate from the user's saved area; the frontend recalculates live as
         // the city changes, and store() resolves the exact charge by location.
         $savedArea = $user?->delivery_area_id ? DeliveryArea::with('city')->find($user->delivery_area_id) : null;
-        $deliveryCharge = $this->delivery->chargeFor($savedArea, $subtotal);
+        $deliveryCharge = $this->delivery->chargeFor($savedArea, $subtotal) ?? $this->delivery->estimate($subtotal);
         $discount = 0;
 
         $couponCode = session('applied_coupon');
@@ -96,7 +96,7 @@ class CheckoutController extends Controller
                 'id', 'label', 'name', 'phone', 'address_line', 'city', 'postal_code', 'is_default',
             ]) : [],
             // Checkout shows only enabled (active) cities + their areas
-            'deliveryCities'   => DeliveryCity::active()->orderBy('name')->get(['id', 'name', 'is_active']),
+            'deliveryCities'   => DeliveryCity::active()->orderBy('name')->get(['id', 'name', 'is_active', 'delivery_charge']),
             'deliveryAreas'    => DeliveryArea::whereHas('city', fn($q) => $q->where('is_active', true))
                 ->orderBy('name')->get(['id', 'delivery_city_id', 'name', 'postal_code']),
             'enabledGateways'  => $this->gatewaySettings->enabledGatewaysWithMeta(),
@@ -152,7 +152,11 @@ class CheckoutController extends Controller
 
         $subtotal = $cartItems->sum(fn($item) => $item->product->priceForVariations($item->variations) * $item->quantity);
         // Exact charge based on the chosen delivery location + subtotal (free delivery overrides).
+        // null = the selected city has no charge configured → block checkout with the admin message.
         $deliveryCharge = $this->delivery->chargeFor($area, $subtotal);
+        if ($deliveryCharge === null) {
+            return back()->withErrors(['delivery_area_id' => $this->delivery->noChargeMessage()]);
+        }
         $discount = 0;
 
         $couponCode = session('applied_coupon');

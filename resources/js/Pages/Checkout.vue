@@ -143,10 +143,12 @@
                 </div>
                 <div class="flex justify-between text-sm">
                   <span class="text-muted">
-                    Delivery<span v-if="!freeApplied && insideDhaka !== null" class="text-xs"> ({{ insideDhaka ? 'Inside Dhaka' : 'Outside Dhaka' }})</span>
+                    Delivery<span v-if="!freeApplied && selectedCity" class="text-xs"> ({{ selectedCity.name }})</span>
                   </span>
                   <span :class="deliveryCharge === 0 ? 'text-success font-semibold' : ''">
-                    {{ deliveryCharge === 0 ? 'FREE' : '৳' + formatPrice(deliveryCharge) }}
+                    <template v-if="noChargeForCity">—</template>
+                    <template v-else-if="deliveryCharge === null">Select city</template>
+                    <template v-else>{{ deliveryCharge === 0 ? 'FREE' : '৳' + formatPrice(deliveryCharge) }}</template>
                   </span>
                 </div>
                 <p v-if="freeApplied" class="text-xs text-success font-medium flex items-center gap-1">
@@ -172,9 +174,13 @@
               <p v-if="cityUnavailable" class="text-error text-xs mb-3 text-center">
                 Product is not available in your city yet. Please select another delivery city.
               </p>
+              <!-- City has no delivery charge configured -->
+              <p v-else-if="noChargeForCity" class="text-error text-xs mb-3 text-center">
+                {{ del.noChargeMessage }}
+              </p>
 
               <!-- Submit -->
-              <button type="submit" :disabled="submitting || cityUnavailable"
+              <button type="submit" :disabled="submitting || cityUnavailable || noChargeForCity"
                 class="btn-primary w-full py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed">
                 <span v-if="submitting" class="flex items-center justify-center gap-2">
                   <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -284,17 +290,25 @@ const cityUnavailable = computed(() => {
 
 const formatPrice = (p) => Number(p || 0).toLocaleString()
 
-// ── Delivery charge (location-aware + free-delivery rules, admin-controlled) ──
+// ── Delivery charge (per-city + free-delivery rules, admin-controlled) ──
 const del = useDelivery()
 const selectedCity = computed(() => {
   const area = props.deliveryAreas.find(a => a.id === form.value.delivery_area_id)
   return area ? props.deliveryCities.find(c => c.id === area.delivery_city_id) : null
 })
-// null = no location chosen yet; true/false = inside/outside Dhaka
-const insideDhaka = computed(() => selectedCity.value ? /^dhaka$/i.test((selectedCity.value.name || '').trim()) : null)
-const deliveryCharge = computed(() => del.charge(props.cart.subtotal, insideDhaka.value))
+// null = no city chosen yet OR the chosen city has no charge (blocks checkout)
+const deliveryCharge = computed(() =>
+  del.charge(props.cart.subtotal, selectedCity.value ? selectedCity.value.delivery_charge : null)
+)
 const freeApplied = computed(() => del.qualifiesFree(props.cart.subtotal))
-const orderTotal = computed(() => Number(props.cart.subtotal || 0) + deliveryCharge.value - Number(props.cart.discount || 0))
+// A city is picked but has no charge configured (and free delivery isn't covering it).
+const noChargeForCity = computed(() =>
+  !!selectedCity.value && !freeApplied.value &&
+  (selectedCity.value.delivery_charge === null || selectedCity.value.delivery_charge === undefined)
+)
+const orderTotal = computed(() =>
+  Number(props.cart.subtotal || 0) + Number(deliveryCharge.value || 0) - Number(props.cart.discount || 0)
+)
 
 const submitOrder = async () => {
   submitting.value = true

@@ -119,10 +119,7 @@ class ChatbotAiService
 
         $categories = Category::where('is_active', true)->pluck('name')->take(20)->implode(', ');
 
-        $d = $this->delivery->publicConfig();
-        $deliveryLine = $d['free_enabled']
-            ? ($d['type'] === 'all' ? 'Free delivery on all orders.' : "Free delivery on orders above ৳{$d['minimum']}.")
-            : "Delivery: ৳{$d['inside']} inside Dhaka, ৳{$d['outside']} outside Dhaka.";
+        $deliveryLine = $this->delivery->chargeSummary();
 
         $faq = collect($this->content->get('faq')['items'] ?? [])
             ->take(6)->map(fn ($f) => "Q: {$f['question']} A: {$f['answer']}")->implode("\n");
@@ -195,10 +192,7 @@ PROMPT;
         $m = strtolower($message);
 
         if (str_contains($m, 'deliver') || str_contains($m, 'shipping')) {
-            $d = $this->delivery->publicConfig();
-            return $d['free_enabled']
-                ? ($d['type'] === 'all' ? 'We offer free delivery on all orders! 🚚' : "Enjoy free delivery on orders above ৳{$d['minimum']}.")
-                : "Delivery is ৳{$d['inside']} inside Dhaka and ৳{$d['outside']} outside Dhaka.";
+            return $this->delivery->chargeSummary();
         }
         if (str_contains($m, 'return') || str_contains($m, 'refund') || str_contains($m, 'warranty')) {
             return 'We offer easy returns within 7 days and a 1-year warranty on every Kizora product.';

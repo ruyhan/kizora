@@ -85,8 +85,8 @@ return [
                     ['key' => 'free_delivery_enabled', 'value' => true],
                     ['key' => 'free_delivery_type', 'value' => 'minimum'],
                 ]],
-            ['key' => 'inside_dhaka_delivery_charge', 'label' => 'Inside Dhaka delivery charge (৳)', 'type' => 'number', 'default' => 80],
-            ['key' => 'outside_dhaka_delivery_charge', 'label' => 'Outside Dhaka delivery charge (৳)', 'type' => 'number', 'default' => 150],
+            ['key' => 'delivery_charges', 'label' => 'Delivery charges (per city)', 'type' => 'delivery_charges', 'help' => 'Set a delivery charge for each city. Click "Add Delivery Charge", pick one or more cities, and enter the charge — checkout uses the charge of the customer\'s selected city.'],
+            ['key' => 'no_charge_message', 'label' => 'Message when a city has no delivery charge', 'type' => 'textarea', 'default' => 'Delivery is not available for the selected city yet. Please choose another city or contact us.', 'help' => 'Shown at checkout when the customer picks a city that has no delivery charge set.'],
         ],
     ],
 

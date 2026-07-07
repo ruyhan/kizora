@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\DeliveryCity;
 use App\Support\PageContent;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -35,12 +36,20 @@ class ContentController extends Controller
                 ->all();
         }
 
+        // Provide the delivery cities (with their charges) when the group has a
+        // `delivery_charges` field — the embedded manager reads/writes these.
+        $deliveryCities = [];
+        if (collect($fields)->contains(fn ($f) => ($f['type'] ?? '') === 'delivery_charges')) {
+            $deliveryCities = DeliveryCity::orderBy('name')->get(['id', 'name', 'delivery_charge', 'is_active']);
+        }
+
         return Inertia::render('Admin/Content/Editor', [
             'group'           => $group,
             'label'           => data_get($this->content->schema(), "{$group}.label", $group),
             'fields'          => $fields,
             'values'          => $this->content->get($group),
             'categoryOptions' => $categoryOptions,
+            'deliveryCities'  => $deliveryCities,
         ]);
     }
 

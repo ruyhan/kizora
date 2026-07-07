@@ -76,7 +76,7 @@
       </div>
     </div>
 
-    <OrderModal ref="orderModal" @updated="onUpdated" />
+    <OrderModal ref="orderModal" :cities="cities" @updated="onUpdated" />
     <BulkDeleteBar :count="selected.length" :busy="bulkDeleting" @confirm="bulkDelete" @clear="selected = []" />
   </AdminLayout>
 </template>
@@ -97,6 +97,7 @@ const props = defineProps({
   orders: Object,
   filters: Object,
   counts: { type: Object, default: () => ({}) },
+  cities: { type: Array, default: () => [] },
 })
 
 const toast = useToast()

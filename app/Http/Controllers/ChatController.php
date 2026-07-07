@@ -141,8 +141,11 @@ class ChatController extends Controller
         }
 
         $subtotal = collect($data['items'])->sum(fn ($l) => (float) $products[$l['product_id']]->final_price * $l['quantity']);
-        // Exact charge from the chosen active city/area (same rule as checkout).
+        // Block the order if the chosen city has no delivery charge configured.
         $deliveryCharge = $this->delivery->chargeFor($area, $subtotal);
+        if ($deliveryCharge === null) {
+            return response()->json(['error' => $this->delivery->noChargeMessage()], 422);
+        }
         $total = $subtotal + $deliveryCharge;
         $conversation = $this->conversation($request);
 

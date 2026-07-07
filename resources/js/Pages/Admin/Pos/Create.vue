@@ -171,8 +171,10 @@ const selectedCity = computed(() => {
   const a = props.deliveryAreas.find((x) => x.id === form.delivery_area_id)
   return a ? props.deliveryCities.find((c) => c.id === a.delivery_city_id) : null
 })
-const insideDhaka = computed(() => selectedCity.value ? /^dhaka$/i.test((selectedCity.value.name || '').trim()) : null)
-const deliveryCharge = computed(() => form.delivery_area_id ? del.charge(subtotal.value, insideDhaka.value) : (del.qualifiesFree(subtotal.value) ? 0 : 0))
+// Per-city charge; an unset city charge resolves to 0 for POS (staff can adjust).
+const deliveryCharge = computed(() =>
+  form.delivery_area_id ? (del.charge(subtotal.value, selectedCity.value ? selectedCity.value.delivery_charge : null) ?? 0) : 0
+)
 const grandTotal = computed(() => Math.max(0, subtotal.value + deliveryCharge.value - (Number(form.discount) || 0)))
 
 const paymentLabel = (m) => ({ cash: 'Cash', card: 'Card', mobile_banking: 'Mobile Banking', bank_transfer: 'Bank Transfer', other: 'Other' }[m] || m)

@@ -5,12 +5,18 @@ import { usePage } from '@inertiajs/vue3'
  * Admin-controlled delivery config + charge calculation, shared across the
  * storefront so cart, checkout and promo messaging stay in sync.
  *
- * config: { free_enabled, type: 'all'|'minimum', minimum, inside, outside }
+ * The actual charge is per-city (delivery_cities.delivery_charge); this
+ * composable only applies the free-delivery rules on top of a city's charge.
+ * config: { free_enabled, type: 'all'|'minimum', minimum, no_charge_message }
  */
 export function useDelivery() {
   const config = computed(() => usePage().props.delivery || {
-    free_enabled: false, type: 'all', minimum: 0, inside: 80, outside: 150,
+    free_enabled: false, type: 'all', minimum: 0, no_charge_message: '',
   })
+
+  const noChargeMessage = computed(() =>
+    config.value.no_charge_message || 'Delivery is not available for the selected city yet. Please choose another city or contact us.'
+  )
 
   const isFreeForAll = computed(() => config.value.free_enabled && config.value.type === 'all')
   const freeMinimum = computed(() =>
@@ -38,18 +44,17 @@ export function useDelivery() {
   }
 
   /**
-   * Delivery charge for a subtotal + location.
-   * insideDhaka: true | false | null (unknown → Inside-Dhaka estimate)
+   * Delivery charge for a subtotal + the selected city's charge.
+   *  - free delivery applies              → 0
+   *  - cityCharge null/undefined/'' (none) → null  (unknown / not deliverable)
+   *  - otherwise                          → the city's charge
    */
-  const charge = (subtotal, insideDhaka = null) => {
-    const c = config.value
+  const charge = (subtotal, cityCharge = null) => {
     if (qualifiesFree(subtotal)) return 0
-    const inside = Number(c.inside) || 0
-    const outside = Number(c.outside) || 0
-    if (insideDhaka === null || insideDhaka === undefined) return inside
-    return insideDhaka ? inside : outside
+    if (cityCharge === null || cityCharge === undefined || cityCharge === '') return null
+    return Number(cityCharge) || 0
   }
 
   // reactive() so nested computed refs auto-unwrap when accessed as `del.message` in templates.
-  return reactive({ config, isFreeForAll, freeMinimum, message, qualifiesFree, amountToFree, charge })
+  return reactive({ config, isFreeForAll, freeMinimum, message, noChargeMessage, qualifiesFree, amountToFree, charge })
 }

@@ -67,6 +67,8 @@ class OrderController extends Controller
             'orders' => $orders,
             'filters' => array_merge($request->only(['status', 'search']), $dr->filters()),
             'counts' => $counts,
+            // Active cities for the order-edit delivery city picker
+            'cities' => \App\Models\DeliveryCity::active()->orderBy('name')->get(['id', 'name', 'delivery_charge']),
         ]);
     }
 
@@ -186,7 +188,7 @@ class OrderController extends Controller
             'phone' => 'nullable|string|max:30',
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string|max:500',
-            'inside_dhaka' => 'nullable|boolean',
+            'delivery_city' => 'nullable|string|max:100',
             'notes' => 'nullable|string|max:1000',
             'payment_method' => 'nullable|string|max:30',
             'payment_status' => 'nullable|in:pending,paid,failed,refunded,cancelled',
@@ -248,8 +250,8 @@ class OrderController extends Controller
                         $update[$col] = $data[$in];
                     }
                 }
-                if (array_key_exists('inside_dhaka', $data) && $data['inside_dhaka'] !== null) {
-                    $update['delivery_city'] = $data['inside_dhaka'] ? 'Dhaka' : 'Outside Dhaka';
+                if (array_key_exists('delivery_city', $data) && $data['delivery_city'] !== null && $data['delivery_city'] !== '') {
+                    $update['delivery_city'] = $data['delivery_city'];
                     $update['delivery_area'] = null;
                 }
             }
@@ -270,8 +272,10 @@ class OrderController extends Controller
             }
 
             // ── Recalculate delivery + totals (respects free-delivery rules dynamically) ──
-            $insideDhaka = strcasecmp((string) ($update['delivery_city'] ?? $order->delivery_city), 'Dhaka') === 0;
-            $deliveryCharge = $this->delivery->chargeForInside($insideDhaka, $subtotal);
+            // Resolve the charge from the order's (possibly just-changed) delivery city;
+            // if that city isn't in the charges table, keep the order's existing charge.
+            $cityName = $update['delivery_city'] ?? $order->delivery_city;
+            $deliveryCharge = $this->delivery->chargeForCityName($cityName, $subtotal) ?? (float) $order->delivery_charge;
             $discount = min((float) $order->discount, $subtotal);
 
             $update += [

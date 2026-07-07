@@ -6,9 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class DeliveryCity extends Model
 {
-    protected $fillable = ['name', 'is_active'];
+    protected $fillable = ['name', 'is_active', 'delivery_charge'];
 
-    protected $casts = ['is_active' => 'boolean'];
+    protected $casts = [
+        'is_active'       => 'boolean',
+        'delivery_charge' => 'decimal:2',
+    ];
 
     public function areas()
     {

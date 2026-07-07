@@ -39,7 +39,7 @@ class PosController extends Controller
             'customers' => User::whereHas('role', fn ($q) => $q->where('is_staff', false))
                 ->orWhereNull('role_id')
                 ->select('id', 'name', 'phone', 'email', 'delivery_address')->orderBy('name')->get(),
-            'deliveryCities' => DeliveryCity::active()->orderBy('name')->get(['id', 'name']),
+            'deliveryCities' => DeliveryCity::active()->orderBy('name')->get(['id', 'name', 'delivery_charge']),
             'deliveryAreas'  => DeliveryArea::whereHas('city', fn ($q) => $q->where('is_active', true))
                 ->orderBy('name')->get(['id', 'delivery_city_id', 'name', 'postal_code']),
             'paymentMethods' => self::PAYMENT_METHODS,
@@ -76,7 +76,8 @@ class PosController extends Controller
 
         $subtotal = collect($data['items'])->sum(fn ($l) => (float) $products[$l['product_id']]->final_price * $l['quantity']);
         $area = DeliveryArea::with('city')->find($data['delivery_area_id']);
-        $deliveryCharge = $this->delivery->chargeFor($area, $subtotal);
+        // POS is staff-driven: an unset city charge falls back to 0 (admin can adjust) rather than blocking.
+        $deliveryCharge = $this->delivery->chargeFor($area, $subtotal) ?? 0.0;
         $discount = min((float) ($data['discount'] ?? 0), $subtotal);
         $total = $subtotal + $deliveryCharge - $discount;
 

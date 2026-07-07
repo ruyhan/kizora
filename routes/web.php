@@ -349,6 +349,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/delivery-areas',                  [AdminDeliveryAreaController::class, 'index'])->middleware('permission:settings.view')->name('delivery-areas.index');
     Route::patch('/delivery-areas/{deliveryArea}', [AdminDeliveryAreaController::class, 'update'])->middleware('permission:settings.edit')->name('delivery-areas.update');
 
+    // Delivery Charges — per-city, managed inside the Delivery Settings page (Settings)
+    Route::post('/delivery-charges',             [\App\Http\Controllers\Admin\DeliveryChargeController::class, 'store'])->middleware('permission:settings.edit')->name('delivery-charges.store');
+    Route::post('/delivery-charges/bulk-delete', [\App\Http\Controllers\Admin\DeliveryChargeController::class, 'bulkDestroy'])->middleware('permission:settings.edit')->name('delivery-charges.bulk-delete');
+
     // Payment Gateways (Settings)
     Route::get('/payments',                   [PaymentGatewayController::class, 'index'])->middleware('permission:settings.view')->name('payments.index');
     Route::post('/payments/{gateway}/update', [PaymentGatewayController::class, 'update'])->middleware('permission:settings.edit')->name('payments.update');

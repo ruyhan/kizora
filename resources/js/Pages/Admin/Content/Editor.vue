@@ -119,6 +119,9 @@
             {{ (form.content[field.key] || []).length ? `${form.content[field.key].length} selected` : 'None selected → showing all' }}
           </p>
         </div>
+
+        <!-- delivery charges (per-city manager; each change persists immediately via its own endpoints) -->
+        <DeliveryChargesField v-else-if="field.type === 'delivery_charges'" :cities="deliveryCities" />
       </div>
 
       <!-- sticky save bar -->
@@ -140,6 +143,7 @@ import Button from '@/Components/ui/Button.vue'
 import MediaPicker from '@/Components/MediaPicker.vue'
 import SettingsTabs from '@/Components/admin/SettingsTabs.vue'
 import ColorField from '@/Components/ui/ColorField.vue'
+import DeliveryChargesField from '@/Components/admin/DeliveryChargesField.vue'
 import { ArrowLeftIcon, ChevronUpIcon, ChevronDownIcon, TrashIcon, PlusIcon, PhotoIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
@@ -148,6 +152,7 @@ const props = defineProps({
   fields: { type: Array, default: () => [] },
   values: { type: Object, default: () => ({}) },
   categoryOptions: { type: Array, default: () => [] },
+  deliveryCities:  { type: Array, default: () => [] },
 })
 
 const form = useForm({ content: JSON.parse(JSON.stringify(props.values)) })

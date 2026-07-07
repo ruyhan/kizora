@@ -50,8 +50,8 @@ class CartController extends Controller
             ];
         });
 
-        // Location is unknown on the cart page → estimate (free / minimum-met / Inside-Dhaka).
-        $deliveryCharge = $this->delivery->chargeFor(null, $subtotal);
+        // Location is unknown on the cart page → estimate (free / minimum-met / lowest city charge).
+        $deliveryCharge = $this->delivery->estimate($subtotal);
         $total = $subtotal + $deliveryCharge;
 
         return [

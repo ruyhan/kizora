@@ -5,7 +5,7 @@
     "site_name": "Kizora",
     "tagline": "Carry your world.",
     "email": "hello@kizoralifestyle.com",
-    "phone_1": "+880 1730-728954",
+    "phone_1": "+880 1709260349",
     "phone_2": null,
     "address": null,
     "opening_hours": null,
@@ -21,6 +21,9 @@
         }
     ],
     "currency_symbol": "৳",
+    "low_stock_threshold": 10,
+    "head_scripts": null,
+    "body_scripts": null,
     "maintenance_mode": false,
     "maintenance_title": "We’ll be right back",
     "maintenance_message": "We’re making things better. Our store is briefly down for scheduled maintenance and will be back online shortly. Thanks for your patience."

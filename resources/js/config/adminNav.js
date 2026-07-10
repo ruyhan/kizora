@@ -6,6 +6,7 @@ import {
   UsersIcon, UserGroupIcon, ShieldCheckIcon, ClipboardDocumentCheckIcon, ChartBarIcon,
   CubeIcon, BuildingStorefrontIcon, ShoppingCartIcon, StarIcon,
   ChatBubbleLeftRightIcon, SparklesIcon, PresentationChartLineIcon, BanknotesIcon,
+  NewspaperIcon, RectangleStackIcon,
 } from '@heroicons/vue/24/outline'
 
 export const adminNavSections = [
@@ -70,6 +71,8 @@ export const adminNavSections = [
     label: 'Content',
     items: [
       { label: 'Pages & Content', route: 'admin.content.index', match: 'admin.content.index', icon: DocumentTextIcon, permission: 'cms.view' },
+      { label: 'Blog Posts', route: 'admin.blog.index', match: ['admin.blog.index', 'admin.blog.create', 'admin.blog.edit'], icon: NewspaperIcon, permission: 'blog.view' },
+      { label: 'Blog Categories', route: 'admin.blog-categories.index', match: 'admin.blog-categories*', icon: RectangleStackIcon, permission: 'blog.view' },
     ],
   },
   {

@@ -251,6 +251,17 @@
                 </div>
               </div>
 
+              <!-- Slug -->
+              <div>
+                <label class="text-sm font-medium text-charcoal mb-1.5 block">Slug (URL)</label>
+                <div class="flex items-center gap-2">
+                  <span class="text-muted text-sm shrink-0">/shop/</span>
+                  <input v-model="editForm.slug" type="text" class="input-field" placeholder="auto-generated-from-name">
+                </div>
+                <p v-if="editErrors.slug" class="text-error text-xs mt-1">{{ editErrors.slug }}</p>
+                <p v-else class="text-xs text-muted mt-1">Editable. Leave blank to regenerate from the name. Must be unique.</p>
+              </div>
+
               <!-- Short Description -->
               <div>
                 <label class="text-sm font-medium text-charcoal mb-1.5 block">Short Description</label>
@@ -351,8 +362,8 @@
                 <label class="flex items-center gap-2.5 cursor-pointer">
                   <input v-model="editForm.show_on_hero" type="checkbox" class="rounded text-primary w-4 h-4">
                   <div>
-                    <p class="text-sm font-medium text-charcoal leading-tight">Show on Hero</p>
-                    <p class="text-xs text-muted">Homepage banner (max 3)</p>
+                    <p class="text-sm font-medium text-charcoal leading-tight">New Arrival</p>
+                    <p class="text-xs text-muted">Homepage New Arrival section</p>
                   </div>
                 </label>
               </div>
@@ -566,8 +577,13 @@ const galleryDisplayCount = computed(() =>
 const savedDrag = useDragReorder(editGallery)
 const newDrag   = useDragReorder(editGalleryMedia)
 
+// Slug helpers — keep an untouched slug verbatim; only normalize a changed one.
+const slugify = (s) => (s || '').toString().toLowerCase().trim()
+  .replace(/[^a-z0-9\s-]/g, '').replace(/[\s_]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
+const editOriginalSlug = ref('')
+
 const editForm = ref({
-  id: null, name: '', sku: '', tagsInput: '', category_id: '', short_description: '',
+  id: null, name: '', slug: '', sku: '', tagsInput: '', category_id: '', short_description: '',
   description: '', usps: [], has_variations: false, variations: [],
   price: '', discount_price: '', sale_starts_at: '', sale_ends_at: '',
   meta_title: '', meta_description: '',
@@ -576,6 +592,7 @@ const editForm = ref({
 
 const openEdit = (product) => {
   editErrors.value      = {}
+  editOriginalSlug.value = product.slug || ''
   editFeaturedPath.value = null
   editFeaturedUrl.value  = product.featured_image_url || null
   editGallery.value      = []
@@ -585,6 +602,7 @@ const openEdit = (product) => {
   editForm.value = {
     id:                product.id,
     name:              product.name,
+    slug:              product.slug || '',
     sku:               product.sku || '',
     tagsInput:         (product.tags || []).join(', '),
     category_id:       product.category_id,
@@ -644,6 +662,9 @@ const submitEdit = () => {
   const payload = {
     _method: 'PUT',
     name:              editForm.value.name,
+    slug:              (editForm.value.slug === editOriginalSlug.value && editOriginalSlug.value)
+                         ? editOriginalSlug.value
+                         : slugify(editForm.value.slug || editForm.value.name),
     sku:               editForm.value.sku || '',
     tags:              editForm.value.tagsInput.split(',').map(t => t.trim()).filter(Boolean),
     category_id:       editForm.value.category_id,

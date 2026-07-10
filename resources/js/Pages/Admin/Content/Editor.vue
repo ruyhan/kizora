@@ -79,6 +79,11 @@
                 <select v-else-if="sub.type === 'select'" v-model="item[sub.key]" class="input-field text-sm">
                   <option v-for="opt in sub.options" :key="optVal(opt)" :value="optVal(opt)">{{ optLabel(opt) }}</option>
                 </select>
+                <select v-else-if="sub.type === 'category'" v-model="item[sub.key]" class="input-field text-sm">
+                  <option value="">All categories</option>
+                  <option v-for="opt in categorySelectOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                </select>
+                <input v-else-if="sub.type === 'number'" v-model.number="item[sub.key]" type="number" class="input-field text-sm">
                 <div v-else-if="sub.type === 'image'" class="flex items-center gap-3">
                   <div class="w-16 h-16 rounded-lg border border-purple-100 bg-purple-50/40 flex items-center justify-center overflow-hidden shrink-0">
                     <img v-if="item[sub.key]" :src="item[sub.key]" class="w-full h-full object-cover" alt="">
@@ -101,7 +106,7 @@
             </div>
           </div>
           <button type="button" @click="addItem(field)" class="inline-flex items-center gap-1.5 text-sm font-semibold text-ink hover:text-accent transition-colors">
-            <PlusIcon class="w-4 h-4" /> Add {{ field.label.replace(/s$/, '') }}
+            <PlusIcon class="w-4 h-4" /> {{ field.add_label || `Add ${field.label.replace(/s$/, '')}` }}
           </button>
         </div>
 
@@ -152,6 +157,7 @@ const props = defineProps({
   fields: { type: Array, default: () => [] },
   values: { type: Object, default: () => ({}) },
   categoryOptions: { type: Array, default: () => [] },
+  categorySelectOptions: { type: Array, default: () => [] },
   deliveryCities:  { type: Array, default: () => [] },
 })
 
@@ -179,7 +185,10 @@ const toggleCat = (key, val) => {
   if (i === -1) arr.push(val); else arr.splice(i, 1)
 }
 
-const blankItem = (field) => Object.fromEntries((field.item || []).map((s) => [s.key, '']))
+const blankItem = (field) => Object.fromEntries((field.item || []).map((s) => [
+  s.key,
+  s.default !== undefined ? s.default : (s.type === 'toggle' ? false : ''),
+]))
 const addItem = (field) => { if (!Array.isArray(form.content[field.key])) form.content[field.key] = []; form.content[field.key].push(blankItem(field)) }
 const removeItem = (key, i) => form.content[key].splice(i, 1)
 const move = (key, i, dir) => {

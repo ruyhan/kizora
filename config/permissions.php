@@ -117,6 +117,12 @@ return [
         'media.upload' => 'Upload Media',
         'media.delete' => 'Delete Media',
     ],
+    'Blog' => [
+        'blog.view'   => 'View Blog',
+        'blog.create' => 'Create Blog Posts',
+        'blog.edit'   => 'Edit Blog Posts',
+        'blog.delete' => 'Delete Blog Posts',
+    ],
     'Marketing' => [
         'marketing.view'   => 'View Campaigns',
         'marketing.create' => 'Create Campaigns',

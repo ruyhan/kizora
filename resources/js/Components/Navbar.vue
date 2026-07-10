@@ -248,6 +248,7 @@ const DEFAULT_NAV = [
   { label: 'Home', url: '/', mega: false },
   { label: 'Shop', url: '/shop', mega: true },
   { label: 'About', url: '/about', mega: false },
+  { label: 'Blog', url: '/blog', mega: false },
   { label: 'Contact', url: '/contact', mega: false },
 ]
 

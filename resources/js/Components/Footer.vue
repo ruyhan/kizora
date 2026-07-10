@@ -144,6 +144,7 @@ const footerLinks = computed(() => footer.value.links?.length ? footer.value.lin
   { label: 'Home', url: '/' },
   { label: 'Shop', url: '/shop' },
   { label: 'About Us', url: '/about' },
+  { label: 'Blog', url: '/blog' },
   { label: 'Contact', url: '/contact' },
   { label: 'Track Order', url: '/track-order' },
 ])

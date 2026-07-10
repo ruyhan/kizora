@@ -10,11 +10,11 @@
             "image": "/storage/media/eMJDpFqr8DHE2ewKTBtx71db0NMjVltgFkyPEjK7.webp",
             "overlay_type": "gradient",
             "overlay_color2": "rgba(255, 77, 77, 0)",
-            "overlay_opacity": "100",
+            "overlay_opacity": 100,
             "overlay_color": "#000000",
-            "overlay_angle": "90",
-            "overlay_stop1": "25",
-            "overlay_stop2": "75"
+            "overlay_angle": 90,
+            "overlay_stop1": 25,
+            "overlay_stop2": 75
         },
         {
             "eyebrow": "Work & study",
@@ -26,10 +26,10 @@
             "image": "/storage/media/cMMktMkNAi2q30Xfnqgcrhv5mj1GVmPgFOpdIJcG.webp",
             "overlay_color": "#13004d",
             "overlay_color2": "rgba(23, 24, 27, 0)",
-            "overlay_opacity": "100",
-            "overlay_angle": "90",
-            "overlay_stop1": "25",
-            "overlay_stop2": "75",
+            "overlay_opacity": 100,
+            "overlay_angle": 90,
+            "overlay_stop1": 25,
+            "overlay_stop2": 75,
             "overlay_type": "gradient"
         },
         {
@@ -63,12 +63,50 @@
             "icon": "card"
         }
     ],
-    "new_title": "New arrivals",
-    "new_subtitle": "Fresh drops across bags & drinkware.",
-    "best_title": "Bestsellers",
-    "best_subtitle": "The carry our customers reach for again and again.",
-    "sale_title": "On sale",
-    "sale_subtitle": "Limited-time prices on customer favourites.",
-    "more_title": "More to explore",
-    "more_subtitle": "Fresh picks across the collection."
+    "sections": [
+        {
+            "title": "New arrivals",
+            "subtitle": "Fresh drops across bags & drinkware.",
+            "badge": "New",
+            "category": null,
+            "sort": "new_arrival",
+            "limit": 10,
+            "layout": "rail",
+            "active": true
+        },
+        {
+            "title": "Bestsellers",
+            "subtitle": "The carry our customers reach for again and again.",
+            "badge": null,
+            "category": null,
+            "sort": "random",
+            "limit": 8,
+            "layout": "grid",
+            "active": true
+        },
+        {
+            "title": "On sale",
+            "subtitle": "Limited-time prices on customer favourites.",
+            "badge": "Save",
+            "category": null,
+            "sort": "on_sale",
+            "limit": 10,
+            "layout": "rail",
+            "active": true
+        },
+        {
+            "title": "More to explore",
+            "subtitle": "Fresh picks across the collection.",
+            "badge": null,
+            "category": null,
+            "sort": "random",
+            "limit": 10,
+            "layout": "rail",
+            "active": true
+        }
+    ],
+    "blog_enabled": true,
+    "blog_title": "From the blog",
+    "blog_subtitle": "Guides, tips and stories from the Kizora team.",
+    "blog_limit": 8
 }

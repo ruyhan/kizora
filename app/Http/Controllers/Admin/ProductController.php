@@ -29,6 +29,18 @@ class ProductController extends Controller
         return $ordered->values();
     }
 
+    /** Build a URL-safe, unique product slug (optionally ignoring one product's own row). */
+    private function uniqueSlug(string $base, ?int $ignoreId = null): string
+    {
+        $slug = Str::slug($base) ?: 'product';
+        $original = $slug;
+        $i = 2;
+        while (Product::where('slug', $slug)->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))->exists()) {
+            $slug = $original . '-' . $i++;
+        }
+        return $slug;
+    }
+
     public function index(Request $request): Response
     {
         $dr = \App\Support\DateRange::fromRequest($request, 'all');
@@ -90,6 +102,7 @@ class ProductController extends Controller
         $data = $request->validate([
             'category_id'       => 'required|exists:categories,id',
             'name'              => 'required|string|max:255',
+            'slug'              => 'nullable|string|max:255|alpha_dash|unique:products,slug',
             'sku'               => 'nullable|string|max:100|unique:products,sku',
             'tags'              => 'nullable|array',
             'tags.*'            => 'string|max:50',
@@ -130,7 +143,7 @@ class ProductController extends Controller
             $data['featured_image'] = $request->featured_image_path;
         }
 
-        $data['slug'] = Str::slug($request->name) . '-' . Str::random(4);
+        $data['slug'] = $this->uniqueSlug($data['slug'] ?? '' ?: $request->name);
         unset($data['gallery_images'], $data['gallery_paths'], $data['featured_image_path']);
 
         $product = Product::create($data);
@@ -146,6 +159,7 @@ class ProductController extends Controller
             'product' => [
                 'id'                  => $product->id,
                 'name'                => $product->name,
+                'slug'                => $product->slug,
                 'sku'                 => $product->sku,
                 'category_id'         => $product->category_id,
                 'tags'                => $product->tags ?? [],
@@ -180,6 +194,7 @@ class ProductController extends Controller
         $data = $request->validate([
             'category_id'           => 'required|exists:categories,id',
             'name'                  => 'required|string|max:255',
+            'slug'                  => ['nullable', 'string', 'max:255', 'alpha_dash', Rule::unique('products', 'slug')->ignore($product->id)],
             'sku'                   => ['nullable', 'string', 'max:100', Rule::unique('products', 'sku')->ignore($product->id)],
             'tags'                  => 'nullable|array',
             'tags.*'                => 'string|max:50',
@@ -243,6 +258,17 @@ class ProductController extends Controller
                     ->where('id', $imageId)
                     ->update(['sort_order' => $i]);
             }
+        }
+        // Keep the slug editable & unique, but never rewrite it on an unrelated edit:
+        //  - field not submitted        → keep the existing slug
+        //  - submitted, same as current → keep it verbatim (preserves legacy casing)
+        //  - submitted blank            → regenerate from the name
+        //  - submitted & changed        → normalize + de-duplicate
+        $submitted = $request->has('slug') ? trim((string) $request->input('slug')) : null;
+        if ($submitted === null || $submitted === $product->slug) {
+            $data['slug'] = $product->slug;
+        } else {
+            $data['slug'] = $this->uniqueSlug($submitted !== '' ? $submitted : $request->name, $product->id);
         }
         unset($data['gallery_images'], $data['gallery_paths'], $data['delete_gallery_ids'], $data['gallery_order'], $data['featured_image_path']);
 
@@ -337,7 +363,7 @@ class ProductController extends Controller
     {
         $copy = $product->replicate(['sku']);
         $copy->name         = $product->name . ' (Copy)';
-        $copy->slug         = Str::slug($copy->name) . '-' . Str::random(4);
+        $copy->slug         = $this->uniqueSlug($copy->name);
         $copy->sku          = null;
         $copy->is_active    = false;
         $copy->show_on_hero = false;
@@ -499,7 +525,7 @@ class ProductController extends Controller
                         continue;
                     }
                     if (! $dryRun) {
-                        $attrs['slug']  = Str::slug($attrs['name']) . '-' . Str::random(4);
+                        $attrs['slug']  = $this->uniqueSlug($attrs['name']);
                         $attrs['sku']   = $row['sku'] ?: null;
                         $attrs['stock'] = $attrs['stock'] ?? 0;
                         Product::create($attrs);

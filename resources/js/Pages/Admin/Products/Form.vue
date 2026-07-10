@@ -17,8 +17,18 @@
             <div class="space-y-4">
               <div>
                 <label class="text-sm font-medium text-charcoal mb-1.5 block">Product Name *</label>
-                <input v-model="form.name" type="text" class="input-field" required>
+                <input v-model="form.name" @input="onNameInput" type="text" class="input-field" required>
                 <p v-if="errors.name" class="text-error text-xs mt-1">{{ errors.name }}</p>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-charcoal mb-1.5 block">Slug (URL)</label>
+                <div class="flex items-center gap-2">
+                  <span class="text-muted text-sm shrink-0">/shop/</span>
+                  <input v-model="form.slug" @input="slugTouched = true" type="text" class="input-field"
+                    placeholder="auto-generated-from-name">
+                </div>
+                <p v-if="errors.slug" class="text-error text-xs mt-1">{{ errors.slug }}</p>
+                <p v-else class="text-xs text-muted mt-1">Editable. Leave blank to auto-generate from the product name. Must be unique.</p>
               </div>
               <div>
                 <label class="text-sm font-medium text-charcoal mb-1.5 block">Category *</label>
@@ -234,8 +244,8 @@
               <label class="flex items-center gap-3 cursor-pointer p-3 rounded-xl hover:bg-purple-50 transition-colors border border-purple-100">
                 <input v-model="form.show_on_hero" type="checkbox" class="rounded text-primary">
                 <div>
-                  <p class="font-medium text-charcoal text-sm">Show on Hero</p>
-                  <p class="text-muted text-xs">Display in homepage hero banner</p>
+                  <p class="font-medium text-charcoal text-sm">New Arrival</p>
+                  <p class="text-muted text-xs">Show in the homepage New Arrival section</p>
                 </div>
               </label>
             </div>
@@ -272,9 +282,18 @@ const categoryOptions = computed(() => (props.categories || []).map(c => ({ valu
 const errors     = ref({})
 const processing = ref(false)
 
+// Slug is auto-kept-in-sync with the name until the admin edits it by hand
+// (or when editing an existing product, which already has a saved slug).
+const slugify = (s) => (s || '').toString().toLowerCase().trim()
+  .replace(/[^a-z0-9\s-]/g, '').replace(/[\s_]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
+const slugTouched = ref(!!props.product)
+const originalSlug = props.product?.slug || ''
+const onNameInput = () => { if (!slugTouched.value) form.value.slug = slugify(form.value.name) }
+
 const form = ref({
   category_id:       props.product?.category_id       || '',
   name:              props.product?.name               || '',
+  slug:              props.product?.slug               || '',
   sku:               props.product?.sku                || '',
   tagsInput:         (props.product?.tags || []).join(', '),
   short_description: props.product?.short_description  || '',
@@ -339,6 +358,10 @@ const submit = () => {
   errors.value = {}
 
   const payload = { ...form.value }
+  // Keep an untouched slug verbatim; only normalize when the admin changed it.
+  payload.slug = (payload.slug === originalSlug && originalSlug)
+    ? originalSlug
+    : slugify(payload.slug || payload.name)
   payload.tags = payload.tagsInput.split(',').map(t => t.trim()).filter(Boolean)
   delete payload.tagsInput
   if (featuredPath.value) payload.featured_image_path = featuredPath.value

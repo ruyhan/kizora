@@ -55,6 +55,13 @@ Route::get('/terms-conditions', [HomeController::class, 'terms'])->name('terms')
 // Offers page — all products currently on sale
 Route::get('/offers', [ShopController::class, 'offers'])->name('offers');
 
+// Blog (public) — SEO-friendly URLs. Category/tag routes come before the
+// catch-all {post} slug so they never get swallowed by it.
+Route::get('/blog', [\App\Http\Controllers\BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/category/{category:slug}', [\App\Http\Controllers\BlogController::class, 'category'])->name('blog.category');
+Route::get('/blog/tag/{tag:slug}', [\App\Http\Controllers\BlogController::class, 'tag'])->name('blog.tag');
+Route::get('/blog/{post:slug}', [\App\Http\Controllers\BlogController::class, 'show'])->name('blog.show');
+
 // Shop routes
 Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/shop/{slug}', [ShopController::class, 'show'])->name('shop.show');
@@ -184,6 +191,21 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::match(['put', 'patch'], 'categories/{category}', [AdminCategoryController::class, 'update'])->middleware('permission:categories.edit')->name('categories.update');
     Route::post('categories/bulk-delete', [AdminCategoryController::class, 'bulkDestroy'])->middleware('permission:categories.delete')->name('categories.bulk-destroy');
     Route::delete('categories/{category}', [AdminCategoryController::class, 'destroy'])->middleware('permission:categories.delete')->name('categories.destroy');
+
+    // Blog — Posts
+    Route::get('blog', [\App\Http\Controllers\Admin\BlogPostController::class, 'index'])->middleware('permission:blog.view')->name('blog.index');
+    Route::get('blog/create', [\App\Http\Controllers\Admin\BlogPostController::class, 'create'])->middleware('permission:blog.create')->name('blog.create');
+    Route::post('blog', [\App\Http\Controllers\Admin\BlogPostController::class, 'store'])->middleware('permission:blog.create')->name('blog.store');
+    Route::get('blog/{post}/edit', [\App\Http\Controllers\Admin\BlogPostController::class, 'edit'])->middleware('permission:blog.edit')->name('blog.edit');
+    Route::match(['put', 'patch'], 'blog/{post}', [\App\Http\Controllers\Admin\BlogPostController::class, 'update'])->middleware('permission:blog.edit')->name('blog.update');
+    Route::post('blog/bulk-delete', [\App\Http\Controllers\Admin\BlogPostController::class, 'bulkDestroy'])->middleware('permission:blog.delete')->name('blog.bulk-destroy');
+    Route::delete('blog/{post}', [\App\Http\Controllers\Admin\BlogPostController::class, 'destroy'])->middleware('permission:blog.delete')->name('blog.destroy');
+
+    // Blog — Categories
+    Route::get('blog-categories', [\App\Http\Controllers\Admin\BlogCategoryController::class, 'index'])->middleware('permission:blog.view')->name('blog-categories.index');
+    Route::post('blog-categories', [\App\Http\Controllers\Admin\BlogCategoryController::class, 'store'])->middleware('permission:blog.create')->name('blog-categories.store');
+    Route::match(['put', 'patch'], 'blog-categories/{category}', [\App\Http\Controllers\Admin\BlogCategoryController::class, 'update'])->middleware('permission:blog.edit')->name('blog-categories.update');
+    Route::delete('blog-categories/{category}', [\App\Http\Controllers\Admin\BlogCategoryController::class, 'destroy'])->middleware('permission:blog.delete')->name('blog-categories.destroy');
 
     // Coupons (Marketing)
     Route::get('coupons', [AdminCouponController::class, 'index'])->middleware('permission:marketing.view')->name('coupons.index');

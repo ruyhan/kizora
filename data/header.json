@@ -16,6 +16,11 @@
             "mega": false
         },
         {
+            "label": "Blog",
+            "url": "/blog",
+            "mega": false
+        },
+        {
             "label": "Contact",
             "url": "/contact",
             "mega": false

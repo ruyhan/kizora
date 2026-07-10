@@ -87,7 +87,7 @@ class ShopController extends Controller
             default => $query->latest(),
         };
 
-        $products = $query->paginate(12)->through(fn($p) => [
+        $products = $query->paginate(12)->withQueryString()->through(fn($p) => [
             'id' => $p->id,
             'name' => $p->name,
             'slug' => $p->slug,

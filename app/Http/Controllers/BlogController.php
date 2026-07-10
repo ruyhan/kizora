@@ -74,18 +74,21 @@ class BlogController extends Controller
 
         $post->load(['category:id,name,slug', 'author:id,name', 'tags:id,name,slug']);
 
-        // Related posts — same category first, then recent, excluding this one.
+        // Related posts — same category first, then topped up with other recent posts
+        // (excluding this one and any already included), for the slider below.
         $related = BlogPost::published()
             ->where('id', '!=', $post->id)
             ->when($post->blog_category_id, fn ($q) => $q->where('blog_category_id', $post->blog_category_id))
             ->with('category:id,name,slug')
-            ->latest('published_at')->take(3)->get();
+            ->latest('published_at')->take(12)->get();
 
-        if ($related->count() < 3) {
-            $related = BlogPost::published()
+        if ($related->count() < 12) {
+            $more = BlogPost::published()
                 ->where('id', '!=', $post->id)
+                ->whereNotIn('id', $related->pluck('id'))
                 ->with('category:id,name,slug')
-                ->latest('published_at')->take(3)->get();
+                ->latest('published_at')->take(12 - $related->count())->get();
+            $related = $related->concat($more);
         }
 
         return Inertia::render('Blog/Show', [

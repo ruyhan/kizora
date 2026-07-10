@@ -80,16 +80,36 @@
             "badge": null,
             "category": null,
             "sort": "random",
+            "limit": 4,
+            "layout": "grid",
+            "active": true
+        },
+        {
+            "title": "Mug",
+            "subtitle": "Mugs, tumblers and vacuum cups for coffee, tea and every drink in between.",
+            "badge": null,
+            "category": "mug",
+            "sort": "latest",
+            "limit": 10,
+            "layout": "rail",
+            "active": true
+        },
+        {
+            "title": "Bags",
+            "subtitle": "Backpacks, school bags and trolleys built to carry your world.",
+            "badge": null,
+            "category": "bags",
+            "sort": "random",
             "limit": 8,
             "layout": "grid",
             "active": true
         },
         {
-            "title": "On sale",
-            "subtitle": "Limited-time prices on customer favourites.",
-            "badge": "Save",
-            "category": null,
-            "sort": "on_sale",
+            "title": "Water Bottles",
+            "subtitle": "Bottles and flasks that keep every sip just right.",
+            "badge": null,
+            "category": "water-bottles",
+            "sort": "random",
             "limit": 10,
             "layout": "rail",
             "active": true

@@ -17,6 +17,6 @@ class ProductImage extends Model
 
     public function getImageUrlAttribute(): string
     {
-        return asset('storage/' . $this->image);
+        return (string) \App\Support\Media::url($this->image);
     }
 }

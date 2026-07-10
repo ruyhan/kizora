@@ -167,9 +167,7 @@ class Product extends Model
 
     public function getFeaturedImageUrlAttribute(): string
     {
-        return $this->featured_image
-            ? asset('storage/' . $this->featured_image)
-            : asset('images/product-placeholder.svg');
+        return \App\Support\Media::url($this->featured_image, '/images/product-placeholder.svg');
     }
 
     public function getAverageRatingAttribute(): float

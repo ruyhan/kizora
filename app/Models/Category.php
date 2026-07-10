@@ -78,9 +78,7 @@ class Category extends Model
 
     public function getImageUrlAttribute(): string
     {
-        return $this->image
-            ? asset('storage/' . $this->image)
-            : asset('images/categories/default.jpg');
+        return \App\Support\Media::url($this->image, '/images/categories/default.jpg');
     }
 
     /**
@@ -103,7 +101,7 @@ class Category extends Model
                 'slug'           => $c->slug,
                 'description'    => $c->description,
                 'icon'          => $c->icon,
-                'image_url'      => $c->image ? asset('storage/' . $c->image) : null,
+                'image_url'      => \App\Support\Media::url($c->image),
                 'products_count' => Product::where('is_active', true)->whereIn('category_id', $c->descendantIds())->count(),
             ])->all();
     }

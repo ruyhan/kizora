@@ -59,7 +59,7 @@ class CategoryController extends Controller
             'description'         => $c->description,
             'icon'                => $c->icon,
             'image'               => $c->image,
-            'image_url'           => $c->image ? Storage::url($c->image) : null,
+            'image_url'           => \App\Support\Media::url($c->image),
             'is_active'           => $c->is_active,
             'sort_order'          => $c->sort_order,
             'is_featured'         => $c->is_featured,

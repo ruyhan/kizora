@@ -1,5 +1,5 @@
 <template>
-  <footer class="relative z-[1] bg-charcoal text-white pb-20 md:pb-0">
+  <footer class="relative z-[1] bg-charcoal text-white pb-[calc(5rem+env(safe-area-inset-bottom,0px))] md:pb-0">
     <div class="gradient-purple h-1"></div>
 
     <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16">

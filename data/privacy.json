@@ -1,22 +1,54 @@
 {
     "title": "Privacy Policy",
-    "last_updated": "June 2026",
+    "last_updated": "11.07.2026",
     "sections": [
         {
-            "heading": "1. Information We Collect",
-            "body": "When you use the Kizora website, we collect information including your name, email address, phone number, and delivery address when you place an order or create an account."
+            "heading": null,
+            "body": "At Kizora, we value your trust and are committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your personal information when you visit or make a purchase from www.kizoralifestyle.com (the “Website”).\nBy accessing or using our Website, you agree to the terms described in this Privacy Policy. If you do not agree, please do not use the Website."
         },
         {
-            "heading": "2. How We Use Your Information",
-            "body": "We use your information to process orders, provide customer support, send order updates, and improve our services. We do not sell your personal information to third parties."
+            "heading": "1. Scope and Purpose",
+            "body": "This Privacy Policy applies to all users of our Website, including customers, visitors, and registered account holders. We collect and use your personal information to:\n●\tProcess orders and deliver products.\n●\tCommunicate order updates, offers, and service information.\n●\tImprove user experience and website functionality.\n●\tComply with legal obligations under the Consumer Rights Protection Act, 2009, and Digital Security Act, 2018 of Bangladesh."
         },
         {
-            "heading": "3. Data Security",
-            "body": "We implement appropriate security measures to protect your personal information. All sensitive data is encrypted and stored securely."
+            "heading": "2. Information We Collect",
+            "body": "A. Information You Provide Directly\n\nWhen you interact with Kizora, we may collect:\n\n●\tPersonal Information: Full name, phone number, email address, shipping/billing address.\n●\tAccount Information: Username, password, and preferences.\n●\tPayment Information: Mobile financial service (MFS) details, debit/credit card data (processed securely via third-party payment gateways).\n●\tCommunications: Messages or feedback submitted through our contact forms or customer service channels.\n\nB. Information Collected Automatically\n\nWhen you browse our website, we may collect:\n\n●\tDevice information: IP address, browser type, operating system.\n●\tUsage data: Pages visited, time spent, and referring URLs.\n●\tCookies and tracking technologies: Used to personalize your experience and remember your preferences (see Section 6).\n\nC. Information from Third Parties\n\nWe may receive limited information from:\n\n●\tPayment service providers (to confirm transactions).\n●\tDelivery partners (for order tracking and confirmation).\n●\tMarketing or analytics tools (to improve our advertising and service performance)."
         },
         {
-            "heading": "4. Contact Us",
-            "body": "If you have any questions about our Privacy Policy, please contact us at hello@kizora.com.bd."
+            "heading": "3. How We Use Your Information",
+            "body": "Your information is used for the following purposes:\n\n●\tOrder Processing: To confirm, fulfill, and deliver your purchases.\n●\tCustomer Support: To respond to your inquiries and resolve issues.\n●\tMarketing Communication: To send you promotions, newsletters, or updates (you can opt out anytime).\n●\tWebsite Improvement: To enhance usability, speed, and security.\n●\tLegal Compliance: To comply with laws, respond to lawful requests, or prevent fraud.\n\nWe never sell, rent, or share your personal information with unauthorized third parties."
+        },
+        {
+            "heading": "4. Sharing and Disclosure",
+            "body": "We may share your data only with trusted entities necessary to provide our services:\n\n●\tDelivery Partners: For order delivery and tracking.\n●\tPayment Processors: To securely process online transactions.\n●\tIT and Support Providers: For website hosting, maintenance, and analytics.\n●\tLaw Enforcement: When required by law or court order under Bangladeshi regulations.\n\nAll partners are contractually obligated to maintain data confidentiality and use information only for the agreed purposes."
+        },
+        {
+            "heading": "5. Data Retention",
+            "body": "We retain your personal data only as long as necessary to fulfill the purposes outlined in this policy or as required by Bangladeshi law.\n\nAfter that, information is securely deleted or anonymized.\n\nIf you wish to close your account or request deletion of your data, please contact our support team (see Section 10)."
+        },
+        {
+            "heading": "6. Cookies and Tracking Technologies",
+            "body": "Cookies are small files stored on your device to enhance browsing experience.\n\nWe use cookies for:\n\n●\tRemembering user login details.\n●\tAnalyzing website traffic and performance.\n●\tPersonalizing content and offers.\n\nYou can control or delete cookies through your browser settings, but some website features may not function properly if you disable them."
+        },
+        {
+            "heading": "7. Data Security",
+            "body": "We implement appropriate technical and organizational measures to protect your data from unauthorized access, loss, misuse, or disclosure, including:\n\n●\tSSL (Secure Socket Layer) encryption.\n●\tSecure payment gateways (SSLCommerz, bKash, Nagad, Rocket, etc.).\n●\tRegular system audits and restricted access to sensitive data.\n\nHowever, please note that no method of electronic transmission is 100% secure, and we cannot guarantee absolute protection."
+        },
+        {
+            "heading": "8. Your Rights",
+            "body": "Under Bangladeshi law, you have the following rights:\n\n●\tAccess: You can request a copy of your personal data held by us.\n●\tCorrection: You can request updates or corrections to inaccurate data.\n●\tDeletion: You can request deletion of your data (subject to legal or transactional requirements).\n●\tOpt-out: You can unsubscribe from promotional communications at any time.\n\nTo exercise these rights, please contact our Data Protection Officer (see Section 10)."
+        },
+        {
+            "heading": "9. Children’s Privacy",
+            "body": "Our website is not intended for individuals under 18 years of age.\n\nWe do not knowingly collect personal data from minors. If we become aware that a child has provided information, we will delete it immediately."
+        },
+        {
+            "heading": "10. Changes to This Policy",
+            "body": "Kizora reserves the right to update or modify this Privacy Policy at any time.\n\nChanges will be effective immediately upon posting on our website. We encourage you to review this page periodically for updates."
+        },
+        {
+            "heading": "Legal Compliance Reference",
+            "body": "This Privacy Policy is prepared in accordance with:\n\n●\tThe Digital Security Act, 2018 (Bangladesh)\n●\tThe Consumer Rights Protection Act, 2009 (Bangladesh)\n●\tICT Act, 2006\n●\tApplicable provisions under the Bangladesh e-Commerce Guidelines, 2021"
         }
     ]
 }

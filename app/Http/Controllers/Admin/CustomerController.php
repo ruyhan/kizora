@@ -164,6 +164,41 @@ class CustomerController extends Controller
         return back()->with('success', 'Customer updated.');
     }
 
+    /** Delete a single consumer account (staff/admin accounts are never deletable here). */
+    public function destroy(User $customer)
+    {
+        abort_unless($customer->isConsumer(), 404);
+
+        $name = $customer->name;
+        // Orders keep their history (user_id is set to null); carts, wishlists,
+        // reviews and addresses are removed by their cascade constraints.
+        $customer->delete();
+        AuditLog::record('deleted', 'Customers', "Deleted customer {$name}");
+
+        return back()->with('success', 'Customer deleted.');
+    }
+
+    /** Delete several consumer accounts at once. */
+    public function bulkDestroy(Request $request)
+    {
+        $data = $request->validate([
+            'ids'   => 'required|array|min:1',
+            'ids.*' => 'integer',
+        ]);
+
+        // Only ever delete consumer accounts — silently skip any staff/admin ids.
+        $customers = $this->consumerQuery()->whereIn('id', $data['ids'])->get();
+        $count = 0;
+        foreach ($customers as $customer) {
+            $customer->delete();
+            $count++;
+        }
+
+        AuditLog::record('deleted', 'Customers', "Bulk-deleted {$count} customer(s)");
+
+        return back()->with('success', "{$count} customer(s) deleted.");
+    }
+
     /** Set a new password for a consumer account. */
     public function resetPassword(Request $request, User $customer)
     {

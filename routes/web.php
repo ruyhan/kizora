@@ -237,6 +237,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/customers/{customer}/orders-data', [AdminCustomerController::class, 'ordersData'])->middleware('permission:customers.view_orders')->name('customers.orders-data');
     Route::patch('/customers/{customer}', [AdminCustomerController::class, 'update'])->middleware('permission:customers.edit')->name('customers.update');
     Route::patch('/customers/{customer}/reset-password', [AdminCustomerController::class, 'resetPassword'])->middleware('permission:customers.edit')->name('customers.reset-password');
+    Route::post('/customers/bulk-delete', [AdminCustomerController::class, 'bulkDestroy'])->middleware('permission:customers.delete')->name('customers.bulk-destroy');
+    Route::delete('/customers/{customer}', [AdminCustomerController::class, 'destroy'])->middleware('permission:customers.delete')->name('customers.destroy');
 
     // Roles & Permissions
     Route::get('/roles', [AdminRoleController::class, 'index'])->middleware('permission:roles.view')->name('roles.index');

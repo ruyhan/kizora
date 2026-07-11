@@ -21,11 +21,20 @@
       <SelectMenu :model-value="f.sort" @update:model-value="v => { f.sort = v; apply() }" :options="sortOptions" trigger-class="text-sm py-2" class="w-40" />
     </div>
 
+    <!-- Bulk actions bar -->
+    <div v-if="canDelete && selected.length" class="flex items-center justify-between bg-ink text-white rounded-xl px-4 py-2.5 mb-3 text-sm">
+      <span>{{ selected.length }} customer(s) selected</span>
+      <button @click="bulkDelete" class="inline-flex items-center gap-1.5 font-medium hover:text-rose-300 transition-colors">
+        <TrashIcon class="w-4 h-4" /> Delete selected
+      </button>
+    </div>
+
     <div class="bg-white rounded-2xl shadow-sm border border-purple-50 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full">
           <thead class="bg-purple-50/50">
             <tr>
+              <th v-if="canDelete" class="th w-8"><input type="checkbox" :checked="allChecked" @change="toggleAll" class="rounded border-purple-200" style="accent-color:#17181B"></th>
               <th class="th">Customer</th>
               <th class="th">Joined</th>
               <th class="th text-center">Orders</th>
@@ -37,6 +46,7 @@
           </thead>
           <tbody class="divide-y divide-purple-50">
             <tr v-for="c in customers.data" :key="c.id" class="hover:bg-purple-50/20">
+              <td v-if="canDelete" class="px-4 py-3"><input type="checkbox" :value="c.id" v-model="selected" class="rounded border-purple-200" style="accent-color:#17181B"></td>
               <td class="px-4 py-3">
                 <div class="flex items-center gap-3">
                   <Avatar :name="c.name" :src="c.avatar" />
@@ -67,10 +77,14 @@
                     class="inline-flex items-center gap-1 text-xs text-charcoal px-2.5 py-1.5 border border-purple-100 rounded-lg hover:bg-purple-50 transition-colors">
                     <KeyIcon class="w-3.5 h-3.5" /> Reset
                   </button>
+                  <button v-if="canDelete" @click="destroy(c)" title="Delete customer"
+                    class="inline-flex items-center gap-1 text-xs text-error px-2.5 py-1.5 border border-rose-100 rounded-lg hover:bg-rose-50 transition-colors">
+                    <TrashIcon class="w-3.5 h-3.5" /> Delete
+                  </button>
                 </div>
               </td>
             </tr>
-            <tr v-if="!customers.data.length"><td colspan="7" class="px-5 py-12 text-center text-muted text-sm">No customers found.</td></tr>
+            <tr v-if="!customers.data.length"><td :colspan="canDelete ? 8 : 7" class="px-5 py-12 text-center text-muted text-sm">No customers found.</td></tr>
           </tbody>
         </table>
       </div>
@@ -198,7 +212,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { Head, router } from '@inertiajs/vue3'
 import { useToast } from 'vue-toastification'
 import axios from 'axios'
@@ -210,7 +224,7 @@ import Pagination from '@/Components/ui/Pagination.vue'
 import OrderModal from '@/Components/admin/OrderModal.vue'
 import { usePermissions } from '@/composables/usePermissions'
 import { statusBadge, paymentBadge } from '@/composables/useOrderStatus'
-import { MagnifyingGlassIcon, ClipboardDocumentListIcon, PencilSquareIcon, XMarkIcon, KeyIcon } from '@heroicons/vue/24/outline'
+import { MagnifyingGlassIcon, ClipboardDocumentListIcon, PencilSquareIcon, XMarkIcon, KeyIcon, TrashIcon } from '@heroicons/vue/24/outline'
 
 const statusOptions = [
   { value: '', label: 'All status' },
@@ -232,6 +246,30 @@ const editStatusOptions = [
 const props = defineProps({ customers: Object, filters: Object, totals: Object })
 const { can } = usePermissions()
 const toast = useToast()
+
+// ── Selection + delete ──
+const canDelete = computed(() => can('customers.delete'))
+const selected = ref([])
+const allChecked = computed(() => props.customers.data.length > 0 && selected.value.length === props.customers.data.length)
+const toggleAll = (e) => { selected.value = e.target.checked ? props.customers.data.map(c => c.id) : [] }
+
+const destroy = (c) => {
+  if (!confirm(`Delete customer "${c.name}"? Their account, cart, wishlist and reviews will be removed. Past orders are kept (as guest orders). This cannot be undone.`)) return
+  router.delete(route('admin.customers.destroy', c.id), {
+    preserveScroll: true,
+    onSuccess: () => { selected.value = []; toast.success('Customer deleted.'); router.reload({ only: ['customers', 'totals'] }) },
+    onError: () => toast.error('Could not delete customer.'),
+  })
+}
+const bulkDelete = () => {
+  if (!selected.value.length) return
+  if (!confirm(`Delete ${selected.value.length} customer(s)? Their accounts, carts, wishlists and reviews will be removed. Past orders are kept. This cannot be undone.`)) return
+  router.post(route('admin.customers.bulk-destroy'), { ids: selected.value }, {
+    preserveScroll: true,
+    onSuccess: () => { selected.value = []; toast.success('Customers deleted.'); router.reload({ only: ['customers', 'totals'] }) },
+    onError: () => toast.error('Could not delete customers.'),
+  })
+}
 
 const statusClass = (s) => ({ active: 'badge-success', inactive: 'badge-gray', suspended: 'badge-error' }[s] || 'badge-gray')
 const statusLabel = (s) => ({ active: 'Active', inactive: 'Inactive', suspended: 'Blocked' }[s] || s)

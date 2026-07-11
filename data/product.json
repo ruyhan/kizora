@@ -1,4 +1,22 @@
 {
+    "description_title": "Description",
+    "reviews_title": "Customer reviews",
+    "write_review_label": "Write a review",
+    "related_title": "You may also like",
+    "assurances": [
+        {
+            "label": "Cash on Delivery",
+            "icon": "cash"
+        },
+        {
+            "label": "Dedicated Support",
+            "icon": "chat"
+        },
+        {
+            "label": "Authentic Products",
+            "icon": "star"
+        }
+    ],
     "show_highlights": true,
     "show_description": true,
     "show_reviews": true,

@@ -106,10 +106,9 @@ import ProductVariations from '@/Components/product/detail/ProductVariations.vue
 import { variationGroups as variationGroupsOf, selectionPriceDelta, selectionStock } from '@/utils/variations'
 import {
   CheckCircleIcon, ExclamationTriangleIcon, MapPinIcon, HeartIcon, ShareIcon,
-  TruckIcon, ShieldCheckIcon, ArrowPathIcon, CreditCardIcon, SparklesIcon,
-  BoltIcon, StarIcon, ClockIcon, GiftIcon, LockClosedIcon,
 } from '@heroicons/vue/24/outline'
 import { HeartIcon as HeartIconSolid } from '@heroicons/vue/24/solid'
+import { resolveBadgeIcon } from '@/composables/useBadgeIcons'
 
 const props = defineProps({
   product:     { type: Object, required: true },
@@ -144,11 +143,6 @@ const setQty = (v) => {
   emit('update:qty', n)
 }
 
-const ASSURANCE_ICONS = {
-  truck: TruckIcon, shield: ShieldCheckIcon, returns: ArrowPathIcon, card: CreditCardIcon,
-  spark: SparklesIcon, bolt: BoltIcon, star: StarIcon, heart: HeartIcon,
-  check: CheckCircleIcon, clock: ClockIcon, gift: GiftIcon, lock: LockClosedIcon,
-}
 const DEFAULT_ASSURANCES = [
   { label: 'Fast delivery', icon: 'truck' },
   { label: '1-year warranty', icon: 'shield' },
@@ -156,7 +150,7 @@ const DEFAULT_ASSURANCES = [
 ]
 const assurances = computed(() =>
   (ps.value.assurances?.length ? ps.value.assurances : DEFAULT_ASSURANCES)
-    .map((a) => ({ label: a.label, icon: ASSURANCE_ICONS[a.icon] || TruckIcon }))
+    .map((a) => ({ label: a.label, icon: resolveBadgeIcon(a.icon) }))
 )
 
 const share = async () => {

@@ -12,6 +12,40 @@
 | A `list` field has an `item` array of sub-fields (repeatable rows).
 */
 
+// Shared icon choices for Trust badges (home) + Assurance badges (product).
+// Keys MUST match resources/js/composables/useBadgeIcons.js.
+$badgeIconOptions = [
+    ['value' => 'truck', 'label' => 'Delivery / shipping'],
+    ['value' => 'rocket', 'label' => 'Express / fast shipping'],
+    ['value' => 'bolt', 'label' => 'Fast / instant'],
+    ['value' => 'clock', 'label' => '24/7 / hours'],
+    ['value' => 'globe', 'label' => 'Nationwide / worldwide'],
+    ['value' => 'map', 'label' => 'Store pickup / location'],
+    ['value' => 'shield', 'label' => 'Warranty / protection'],
+    ['value' => 'lock', 'label' => 'Secure checkout'],
+    ['value' => 'check', 'label' => 'Genuine / verified'],
+    ['value' => 'checkcircle', 'label' => 'Check circle'],
+    ['value' => 'returns', 'label' => 'Easy returns / exchange'],
+    ['value' => 'card', 'label' => 'Card payment'],
+    ['value' => 'cash', 'label' => 'Cash on delivery'],
+    ['value' => 'taka', 'label' => 'Money-back / price (৳)'],
+    ['value' => 'tag', 'label' => 'Best price / discount'],
+    ['value' => 'gift', 'label' => 'Gift / offers'],
+    ['value' => 'fire', 'label' => 'Hot deals / trending'],
+    ['value' => 'star', 'label' => 'Top rated / premium'],
+    ['value' => 'heart', 'label' => 'Loved by customers'],
+    ['value' => 'spark', 'label' => 'Premium quality'],
+    ['value' => 'thumb', 'label' => 'Satisfaction guarantee'],
+    ['value' => 'hand', 'label' => 'Hand-picked / promise'],
+    ['value' => 'support', 'label' => 'Dedicated support'],
+    ['value' => 'phone', 'label' => 'Call us'],
+    ['value' => 'chat', 'label' => 'Live chat support'],
+    ['value' => 'wrench', 'label' => 'Installation / service'],
+    ['value' => 'cube', 'label' => 'Quality packaging'],
+    ['value' => 'key', 'label' => 'Exclusive / access'],
+    ['value' => 'academic', 'label' => 'Expert / guidance'],
+];
+
 return [
 
     'settings' => [
@@ -184,7 +218,7 @@ return [
             ['key' => 'related_title',      'label' => 'Related products — heading', 'type' => 'text', 'default' => 'You may also like'],
             ['key' => 'assurances', 'label' => 'Assurance badges', 'type' => 'list', 'item' => [
                 ['key' => 'label', 'label' => 'Label', 'type' => 'text'],
-                ['key' => 'icon', 'label' => 'Icon', 'type' => 'select', 'options' => ['truck', 'shield', 'returns', 'card', 'spark', 'bolt', 'star', 'heart', 'check', 'clock', 'gift', 'lock']],
+                ['key' => 'icon', 'label' => 'Icon', 'type' => 'select', 'options' => $badgeIconOptions],
             ], 'default' => [
                 ['label' => 'Fast delivery', 'icon' => 'truck'],
                 ['label' => '1-year warranty', 'icon' => 'shield'],
@@ -231,7 +265,7 @@ return [
             ['key' => 'trust', 'label' => 'Trust badges', 'type' => 'list', 'item' => [
                 ['key' => 'title', 'label' => 'Title', 'type' => 'text'],
                 ['key' => 'desc', 'label' => 'Description', 'type' => 'text'],
-                ['key' => 'icon', 'label' => 'Icon', 'type' => 'select', 'options' => ['truck', 'shield', 'returns', 'card', 'spark']],
+                ['key' => 'icon', 'label' => 'Icon', 'type' => 'select', 'options' => $badgeIconOptions],
             ], 'default' => [
                 ['title' => 'Free delivery', 'desc' => 'On orders over ৳3,000', 'icon' => 'truck'],
                 ['title' => '1-year warranty', 'desc' => 'On every product', 'icon' => 'shield'],

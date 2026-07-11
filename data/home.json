@@ -15,7 +15,8 @@
             "overlay_color": "#000000",
             "overlay_angle": 90,
             "overlay_stop1": 25,
-            "overlay_stop2": 75
+            "overlay_stop2": 75,
+            "eyebrow_color": "#ff0000"
         },
         {
             "eyebrow": "Work & study",
@@ -57,7 +58,7 @@
         {
             "title": "Dedicated Support",
             "desc": null,
-            "icon": "spark"
+            "icon": "chat"
         },
         {
             "title": "Cash on Delivery",

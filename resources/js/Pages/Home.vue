@@ -77,7 +77,7 @@ import CategoryTiles from '@/Components/home/CategoryTiles.vue'
 import ProductRail from '@/Components/home/ProductRail.vue'
 import BlogRail from '@/Components/home/BlogRail.vue'
 import RailSkeleton from '@/Components/home/RailSkeleton.vue'
-import { TruckIcon, ShieldCheckIcon, ArrowPathIcon, CreditCardIcon, SparklesIcon } from '@heroicons/vue/24/outline'
+import { resolveBadgeIcon } from '@/composables/useBadgeIcons'
 
 defineProps({
   page:         { type: Object, default: () => ({}) },
@@ -87,6 +87,5 @@ defineProps({
   blogPosts:    { type: Array, default: () => [] },
 })
 
-const icons = { truck: TruckIcon, shield: ShieldCheckIcon, returns: ArrowPathIcon, card: CreditCardIcon, spark: SparklesIcon }
-const trustIcon = (k) => icons[k] ?? SparklesIcon
+const trustIcon = (k) => resolveBadgeIcon(k)
 </script>

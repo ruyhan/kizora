@@ -3,6 +3,7 @@
     "hero_highlight": "Every Customer Matters. Every Smile Matters.",
     "hero_subtitle": "we carefully select quality backpacks, bottles, and everyday essentials you can trust—because every customer deserves products that bring lasting value and everyday smiles",
     "hero_image": null,
+    "story_badge": "Our Story",
     "story_title": "About Us",
     "story": [
         {
@@ -25,12 +26,20 @@
         }
     ],
     "est": "Est. 2026",
+    "location": "Dhaka, Bangladesh",
     "story_image": "/storage/media/cMMktMkNAi2q30Xfnqgcrhv5mj1GVmPgFOpdIJcG.webp",
+    "craft_badge": "Principles",
     "craft_title": "Brand Principles",
     "craft_image": "/storage/media/Gx5Fj2OsJLgXQVEePZo0SuI0q98DILJeTUNNM3w9.png",
     "craft_body": "•       Care Before Commerce\n•       Trust Before Growth\n•       Quality Before Scale\n•       Innovation Before Imitation\n•       Relationships Before Transactions",
+    "mv_eyebrow": "Why we exist",
+    "mv_title": "What drives us",
+    "mission_title": "Our Mission",
     "mission": "To bring authentic, trusted, and thoughtfully designed lifestyle essentials that add convenience with confidence to everyday living.",
+    "vision_title": "Our Vision",
     "vision": "To become the country’s most trusted, caring, and authentic lifestyle brand, offering a limitless collection of everyday essentials that enrich people's lives while setting new standards and creating the future of the lifestyle industry.",
+    "offerings_title": "Our Beliefs",
+    "offerings_subtitle": null,
     "offerings": [
         {
             "title": "Authenticity",
@@ -52,5 +61,9 @@
             "title": "Limitless Living",
             "desc": "We believe lifestyle products should open possibilities, never limit them."
         }
-    ]
+    ],
+    "cta_title": "Find your everyday carry",
+    "cta_subtitle": "Explore the collection and gear up for wherever you're headed.",
+    "cta_primary": "Shop now",
+    "cta_secondary": "Get in touch"
 }

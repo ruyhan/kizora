@@ -26,7 +26,7 @@
       <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid md:grid-cols-2 gap-16 items-center">
           <div>
-            <span class="badge badge-purple mb-4">Our Story</span>
+            <span v-if="page.story_badge" class="badge badge-purple mb-4">{{ page.story_badge }}</span>
             <h2 class="section-title mb-6">{{ page.story_title }}</h2>
             <div class="space-y-4 text-muted text-lg leading-relaxed">
               <p v-for="(p, i) in page.story" :key="i">{{ p.text }}</p>
@@ -39,7 +39,7 @@
                 <ShoppingBagIcon class="w-14 h-14 text-white" />
               </div>
               <p class="font-display text-2xl font-semibold text-charcoal">{{ page.est }}</p>
-              <p class="text-muted mt-1">Dhaka, Bangladesh</p>
+              <p class="text-muted mt-1">{{ page.location }}</p>
             </div>
           </div>
         </div>
@@ -61,7 +61,7 @@
             </div>
           </div>
           <div>
-            <span class="badge badge-purple mb-4">Our Craft</span>
+            <span v-if="page.craft_badge" class="badge badge-purple mb-4">{{ page.craft_badge }}</span>
             <h2 class="section-title mb-6">{{ page.craft_title }}</h2>
             <p class="text-muted text-lg leading-relaxed whitespace-pre-line">{{ page.craft_body }}</p>
           </div>
@@ -73,8 +73,8 @@
     <section class="py-20">
       <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-14">
-          <h2 class="section-title mb-4">What we make</h2>
-          <p class="text-muted text-lg">Everyday-carry essentials for school, work, sport and travel.</p>
+          <h2 class="section-title mb-4">{{ page.offerings_title }}</h2>
+          <p class="text-muted text-lg">{{ page.offerings_subtitle }}</p>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
           <div v-for="(item, i) in page.offerings" :key="i"
@@ -97,22 +97,22 @@
 
       <div class="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-12">
-          <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-accent mb-3">Why we exist</p>
-          <h2 class="font-display text-3xl sm:text-4xl font-bold text-white">What drives us</h2>
+          <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-accent mb-3">{{ page.mv_eyebrow }}</p>
+          <h2 class="font-display text-3xl sm:text-4xl font-bold text-white">{{ page.mv_title }}</h2>
         </div>
         <div class="grid md:grid-cols-2 gap-5 sm:gap-6">
           <div class="rounded-3xl p-8 bg-white/[0.06] border border-white/10 backdrop-blur-sm transition-all duration-300 hover:bg-white/[0.1] hover:-translate-y-1">
             <div class="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center mb-5">
               <BoltIcon class="w-7 h-7 text-white" />
             </div>
-            <h3 class="font-display text-2xl font-bold text-white mb-3">Our Mission</h3>
+            <h3 class="font-display text-2xl font-bold text-white mb-3">{{ page.mission_title }}</h3>
             <p class="text-white/65 leading-relaxed">{{ page.mission }}</p>
           </div>
           <div class="rounded-3xl p-8 bg-white/[0.06] border border-white/10 backdrop-blur-sm transition-all duration-300 hover:bg-white/[0.1] hover:-translate-y-1">
             <div class="w-14 h-14 rounded-2xl bg-amber-400/15 flex items-center justify-center mb-5">
               <EyeIcon class="w-7 h-7 text-amber-300" />
             </div>
-            <h3 class="font-display text-2xl font-bold text-white mb-3">Our Vision</h3>
+            <h3 class="font-display text-2xl font-bold text-white mb-3">{{ page.vision_title }}</h3>
             <p class="text-white/65 leading-relaxed">{{ page.vision }}</p>
           </div>
         </div>
@@ -122,11 +122,11 @@
     <!-- CTA -->
     <section class="py-20 text-center">
       <div class="max-w-2xl mx-auto px-4">
-        <h2 class="section-title mb-4">Find your everyday carry</h2>
-        <p class="text-muted text-lg mb-8">Explore the collection and gear up for wherever you're headed.</p>
+        <h2 class="section-title mb-4">{{ page.cta_title }}</h2>
+        <p class="text-muted text-lg mb-8">{{ page.cta_subtitle }}</p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link :href="route('shop.index')" class="btn-primary">Shop now</Link>
-          <Link :href="route('contact')" class="btn-secondary">Get in touch</Link>
+          <Link :href="route('shop.index')" class="btn-primary">{{ page.cta_primary }}</Link>
+          <Link :href="route('contact')" class="btn-secondary">{{ page.cta_secondary }}</Link>
         </div>
       </div>
     </section>

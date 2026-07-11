@@ -20,9 +20,9 @@
           <span class="pointer-events-none absolute -top-16 -right-10 w-72 h-72 rounded-full opacity-25 blur-3xl" :class="blobClass(b.tone)"></span>
           <span class="pointer-events-none absolute -bottom-20 -left-10 w-72 h-72 rounded-full opacity-20 blur-3xl bg-white"></span>
           <div class="relative z-10 px-7 sm:px-12 lg:px-16 max-w-xl">
-            <p v-if="b.eyebrow" class="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.18em] mb-3" :class="b.tone === 'accent' ? 'text-white/90' : 'text-accent'">{{ b.eyebrow }}</p>
-            <h2 class="font-display font-extrabold leading-[1.02] text-white text-3xl sm:text-5xl lg:text-6xl mb-3">{{ b.title }}</h2>
-            <p v-if="b.subtitle" class="text-white/80 text-sm sm:text-base max-w-md mb-6">{{ b.subtitle }}</p>
+            <p v-if="b.eyebrow" class="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.18em] mb-3" :class="b.tone === 'accent' ? 'text-white/90' : 'text-accent'" :style="colorStyle(b.eyebrow_color)">{{ b.eyebrow }}</p>
+            <h2 class="font-display font-extrabold leading-[1.02] text-white text-3xl sm:text-5xl lg:text-6xl mb-3" :style="colorStyle(b.title_color)">{{ b.title }}</h2>
+            <p v-if="b.subtitle" class="text-white/80 text-sm sm:text-base max-w-md mb-6" :style="colorStyle(b.subtitle_color)">{{ b.subtitle }}</p>
             <Link v-if="b.cta_label" :href="b.cta_link || '/shop'" class="inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-white text-ink font-semibold text-sm hover:-translate-y-px hover:shadow-lg transition-all">
               {{ b.cta_label }} <ArrowRightIcon class="w-4 h-4" />
             </Link>
@@ -47,6 +47,9 @@ const autoplayCfg = reduced || props.banners.length < 2 ? false : { delay: 5500,
 
 const toneClass = (tone) => ({ ink: 'bg-ink', slate: 'bg-[#26272C]', accent: 'bg-accent' }[tone] ?? 'bg-ink')
 const blobClass = (tone) => (tone === 'accent' ? 'bg-white' : 'bg-accent')
+
+// Admin-controlled per-element text colour — overrides the default when set; empty keeps default.
+const colorStyle = (color) => (color ? { color } : null)
 
 // Per-banner image overlay (admin-controlled): solid | gradient | none, with opacity.
 const overlayStyle = (b) => {

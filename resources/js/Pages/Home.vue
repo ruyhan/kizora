@@ -3,10 +3,10 @@
     <Head title="Carry your world" />
 
     <!-- Hero box slider -->
-    <HeroSlider :banners="page.hero || []" />
+    <HeroSlider v-if="page.hero_enabled !== false" :banners="page.hero || []" />
 
     <!-- Slim trust strip -->
-    <div v-if="page.trust?.length" class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+    <div v-if="page.trust_enabled !== false && page.trust?.length" class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
       <div class="grid grid-cols-2 lg:grid-cols-4 rounded-2xl border border-border overflow-hidden">
         <div v-for="(t, i) in page.trust" :key="i"
           class="flex items-center gap-3 px-4 py-4 border-border"
@@ -26,7 +26,8 @@
     </div>
 
     <!-- Category tiles -->
-    <CategoryTiles :categories="categories" />
+    <CategoryTiles v-if="page.category_enabled !== false" :categories="categories"
+      :title="page.category_title" :subtitle="page.category_subtitle" />
 
     <!-- Product sections — admin-managed (Pages & Content → Home page), rendered in admin order.
          Headings paint immediately via sectionHeads; products stream in (deferred). -->

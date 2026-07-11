@@ -1,4 +1,5 @@
 {
+    "hero_enabled": true,
     "hero": [
         {
             "eyebrow": "New in · 2026",
@@ -41,6 +42,7 @@
             "tone": "accent"
         }
     ],
+    "trust_enabled": true,
     "trust": [
         {
             "title": "Fast Delivery",
@@ -63,6 +65,9 @@
             "icon": "card"
         }
     ],
+    "category_enabled": true,
+    "category_title": "Shop by Category",
+    "category_subtitle": "Carry it. Sip it. Play with it. Every day",
     "sections": [
         {
             "title": "New arrivals",

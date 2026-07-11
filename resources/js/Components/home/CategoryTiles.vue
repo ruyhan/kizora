@@ -3,8 +3,8 @@
     <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-end justify-between mb-7">
         <div>
-          <h2 class="section-title">Shop by category</h2>
-          <p class="text-muted mt-1 text-sm sm:text-base">Find the right carry for school, work, sport &amp; travel.</p>
+          <h2 class="section-title">{{ title }}</h2>
+          <p v-if="subtitle" class="text-muted mt-1 text-sm sm:text-base">{{ subtitle }}</p>
         </div>
         <Link :href="route('shop.index')" class="hidden sm:inline-flex text-sm font-semibold text-ink hover:text-accent transition-colors">All products →</Link>
       </div>
@@ -35,5 +35,9 @@ import { Link } from '@inertiajs/vue3'
 import { ArrowRightIcon } from '@heroicons/vue/24/outline'
 import CategoryIcon from '@/Components/icons/CategoryIcon.vue'
 
-defineProps({ categories: { type: Array, default: () => [] } })
+defineProps({
+  categories: { type: Array, default: () => [] },
+  title:      { type: String, default: 'Shop by category' },
+  subtitle:   { type: String, default: '' },
+})
 </script>

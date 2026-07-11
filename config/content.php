@@ -202,6 +202,7 @@ return [
         'desc'  => 'Hero slider, trust badges and product rail headings.',
         'icon'  => 'home',
         'fields' => [
+            ['key' => 'hero_enabled', 'label' => 'Hero slider — show on home page', 'type' => 'toggle', 'default' => true],
             ['key' => 'hero', 'label' => 'Hero banners', 'type' => 'list', 'item' => [
                 ['key' => 'eyebrow', 'label' => 'Eyebrow', 'type' => 'text'],
                 ['key' => 'title', 'label' => 'Title', 'type' => 'text'],
@@ -223,6 +224,7 @@ return [
                 ['eyebrow' => 'Work & study', 'title' => 'Laptop backpacks that keep up', 'subtitle' => 'Padded sleeves, USB ports, water-resistant builds.', 'cta_label' => 'Shop laptop backpacks', 'cta_link' => '/shop?category=laptop-backpacks', 'tone' => 'slate'],
                 ['eyebrow' => 'Limited time', 'title' => 'Up to 30% off drinkware', 'subtitle' => 'Insulated bottles & flasks — hot or cold for hours.', 'cta_label' => 'Shop the sale', 'cta_link' => '/shop?sale=1', 'tone' => 'accent'],
             ]],
+            ['key' => 'trust_enabled', 'label' => 'Trust badges — show on home page', 'type' => 'toggle', 'default' => true],
             ['key' => 'trust', 'label' => 'Trust badges', 'type' => 'list', 'item' => [
                 ['key' => 'title', 'label' => 'Title', 'type' => 'text'],
                 ['key' => 'desc', 'label' => 'Description', 'type' => 'text'],
@@ -233,6 +235,9 @@ return [
                 ['title' => '7-day returns', 'desc' => 'Easy & hassle-free', 'icon' => 'returns'],
                 ['title' => 'Cash on delivery', 'desc' => 'Pay when it arrives', 'icon' => 'card'],
             ]],
+            ['key' => 'category_enabled', 'label' => 'Shop by Category — show on home page', 'type' => 'toggle', 'default' => true],
+            ['key' => 'category_title', 'label' => 'Shop by Category — heading', 'type' => 'text', 'default' => 'Shop by category'],
+            ['key' => 'category_subtitle', 'label' => 'Shop by Category — subtitle', 'type' => 'text', 'default' => 'Find the right carry for school, work, sport & travel.'],
             ['key' => 'sections', 'label' => 'Product sections', 'type' => 'list', 'add_label' => 'Add another section',
                 'help' => 'Each section pulls products live from the catalogue — pick a category (or all), a sorting and how many products to show. Reorder with the arrows; inactive sections are hidden from the home page.',
                 'item' => [

@@ -51,6 +51,9 @@ Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
 Route::get('/faq', [HomeController::class, 'faq'])->name('faq');
 Route::get('/privacy-policy', [HomeController::class, 'privacy'])->name('privacy');
 Route::get('/terms-conditions', [HomeController::class, 'terms'])->name('terms');
+// Short-path aliases so footer/legal links to /privacy and /terms never 404.
+Route::get('/privacy', [HomeController::class, 'privacy'])->name('privacy.short');
+Route::get('/terms', [HomeController::class, 'terms'])->name('terms.short');
 
 // Offers page — all products currently on sale
 Route::get('/offers', [ShopController::class, 'offers'])->name('offers');

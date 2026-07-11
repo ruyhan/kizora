@@ -247,6 +247,11 @@ return [
                 ['key' => 'eyebrow_color', 'label' => 'Eyebrow text color (optional — empty = default)', 'type' => 'color'],
                 ['key' => 'title_color', 'label' => 'Title text color (optional — empty = white)', 'type' => 'color'],
                 ['key' => 'subtitle_color', 'label' => 'Subtitle text color (optional — empty = white)', 'type' => 'color'],
+
+                // Typography — one control with Mobile/Desktop tabs (title & description
+                // font size + weight, and content width). Empty = responsive design default.
+                ['key' => 'typography', 'label' => 'Text sizing (title & description)', 'type' => 'hero_typography'],
+
                 ['key' => 'image', 'label' => 'Background image — desktop (optional)', 'type' => 'image'],
                 ['key' => 'mobile_image', 'label' => 'Background image — mobile (optional, falls back to desktop)', 'type' => 'image'],
                 ['key' => 'overlay_type', 'label' => 'Image overlay style', 'type' => 'select', 'options' => ['solid', 'gradient', 'none']],
@@ -423,8 +428,10 @@ return [
         'fields' => [
             ['key' => 'title', 'label' => 'Title', 'type' => 'text', 'default' => 'Privacy Policy'],
             ['key' => 'last_updated', 'label' => 'Last updated', 'type' => 'text', 'default' => 'June 2026'],
-            ['key' => 'sections', 'label' => 'Sections', 'type' => 'list', 'item' => [
-                ['key' => 'heading', 'label' => 'Heading', 'type' => 'text'],
+            ['key' => 'sections', 'label' => 'Sections', 'type' => 'list',
+                'help' => 'Formatting: leave a blank line between paragraphs, and start a line with ● or - for a bullet point. Leave the heading empty for an intro block with no title.',
+                'item' => [
+                ['key' => 'heading', 'label' => 'Heading (optional)', 'type' => 'text'],
                 ['key' => 'body', 'label' => 'Body', 'type' => 'textarea'],
             ], 'default' => [
                 ['heading' => '1. Information We Collect', 'body' => 'When you use the Kizora website, we collect information including your name, email address, phone number, and delivery address when you place an order or create an account.'],
@@ -442,8 +449,10 @@ return [
         'fields' => [
             ['key' => 'title', 'label' => 'Title', 'type' => 'text', 'default' => 'Terms & Conditions'],
             ['key' => 'last_updated', 'label' => 'Last updated', 'type' => 'text', 'default' => 'June 2026'],
-            ['key' => 'sections', 'label' => 'Sections', 'type' => 'list', 'item' => [
-                ['key' => 'heading', 'label' => 'Heading', 'type' => 'text'],
+            ['key' => 'sections', 'label' => 'Sections', 'type' => 'list',
+                'help' => 'Formatting: leave a blank line between paragraphs, and start a line with ● or - for a bullet point. Leave the heading empty for an intro block with no title.',
+                'item' => [
+                ['key' => 'heading', 'label' => 'Heading (optional)', 'type' => 'text'],
                 ['key' => 'body', 'label' => 'Body', 'type' => 'textarea'],
             ], 'default' => [
                 ['heading' => '1. Acceptance of Terms', 'body' => 'By using the Kizora website and services, you agree to these Terms & Conditions. If you do not agree, please do not use our services.'],

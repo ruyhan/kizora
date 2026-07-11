@@ -1,14 +1,16 @@
 <template>
   <AppLayout>
     <Head title="Terms & Conditions" />
-    <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-      <h1 class="font-display text-4xl font-bold text-charcoal mb-4">{{ title }}</h1>
-      <p class="text-muted mb-10">Last updated: {{ lastUpdated }}</p>
-      <div class="space-y-6 text-muted leading-relaxed">
-        <section v-for="(section, i) in sections" :key="i">
-          <h2 class="font-display text-2xl font-semibold text-charcoal mb-3">{{ section.heading }}</h2>
-          <p>{{ section.body }}</p>
-        </section>
+    <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-16">
+      <div class="max-w-4xl">
+        <h1 class="font-display text-3xl sm:text-4xl font-bold text-charcoal mb-3">{{ title }}</h1>
+        <p class="text-muted text-sm mb-10">Last updated: {{ lastUpdated }}</p>
+        <div class="space-y-9">
+          <section v-for="(section, i) in sections" :key="i">
+            <h2 v-if="section.heading" class="font-display text-xl sm:text-2xl font-semibold text-charcoal mb-3 scroll-mt-24">{{ section.heading }}</h2>
+            <div class="policy-body prose prose-purple max-w-none" v-html="formatPolicyBody(section.body)"></div>
+          </section>
+        </div>
       </div>
     </div>
   </AppLayout>
@@ -18,6 +20,7 @@
 import { computed } from 'vue'
 import { Head } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
+import { formatPolicyBody } from '@/utils/policyContent'
 
 const props = defineProps({ page: Object })
 
@@ -33,3 +36,14 @@ const title       = computed(() => props.page?.title ?? 'Terms & Conditions')
 const lastUpdated = computed(() => props.page?.last_updated ?? 'June 2026')
 const sections    = computed(() => props.page?.sections?.length ? props.page.sections : fallbackSections)
 </script>
+
+<style scoped>
+@reference "../../css/app.css";
+/* Clean, readable long-form legal typography */
+.policy-body :deep(p) { @apply text-muted leading-relaxed my-3; }
+.policy-body :deep(ul) { @apply my-3 space-y-1.5 list-disc pl-5; }
+.policy-body :deep(li) { @apply text-muted leading-relaxed pl-1; }
+.policy-body :deep(li)::marker { color: #9b7cf0; }
+.policy-body :deep(a) { @apply text-primary underline; }
+.policy-body :deep(strong) { @apply text-charcoal font-semibold; }
+</style>

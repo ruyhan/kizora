@@ -18,7 +18,12 @@
             "overlay_stop2": 0,
             "eyebrow_color": "rgba(255, 0, 0, 0)",
             "title_color": "#000001",
-            "subtitle_color": "#000001"
+            "subtitle_color": "#000001",
+            "title_size_desktop": 34,
+            "title_size_mobile": 22,
+            "content_width_mobile": 280,
+            "title_weight_desktop": "700",
+            "content_width_desktop": 470
         },
         {
             "eyebrow": null,
@@ -37,7 +42,13 @@
             "overlay_type": "none",
             "eyebrow_color": "#000000",
             "title_color": "#000000",
-            "subtitle_color": "#000000"
+            "subtitle_color": "#000000",
+            "title_size_desktop": 34,
+            "title_weight_desktop": "700",
+            "desc_weight_desktop": null,
+            "title_size_mobile": 22,
+            "content_width_mobile": 270,
+            "content_width_desktop": 450
         },
         {
             "eyebrow": null,
@@ -50,7 +61,11 @@
             "title_color": "#703d03",
             "subtitle_color": "#703d03",
             "overlay_type": "none",
-            "image": "/storage/media/NltjIDZyDV1VbQMEwfBnTzNCjlzSkEpggN4fiqxZ.webp"
+            "image": "/storage/media/NltjIDZyDV1VbQMEwfBnTzNCjlzSkEpggN4fiqxZ.webp",
+            "title_size_desktop": 34,
+            "title_weight_desktop": "700",
+            "title_size_mobile": 18,
+            "content_width_mobile": 280
         }
     ],
     "trust_enabled": true,

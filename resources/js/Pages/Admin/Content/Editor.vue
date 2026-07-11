@@ -101,6 +101,7 @@
                   <span class="text-sm text-charcoal">{{ sub.label }}</span>
                 </label>
                 <ColorField v-else-if="sub.type === 'color'" v-model="item[sub.key]" />
+                <HeroTypographyField v-else-if="sub.type === 'hero_typography'" :item="item" />
                 <input v-else v-model="item[sub.key]" type="text" class="input-field text-sm">
               </div>
             </div>
@@ -148,6 +149,7 @@ import Button from '@/Components/ui/Button.vue'
 import MediaPicker from '@/Components/MediaPicker.vue'
 import SettingsTabs from '@/Components/admin/SettingsTabs.vue'
 import ColorField from '@/Components/ui/ColorField.vue'
+import HeroTypographyField from '@/Components/admin/HeroTypographyField.vue'
 import DeliveryChargesField from '@/Components/admin/DeliveryChargesField.vue'
 import { ArrowLeftIcon, ChevronUpIcon, ChevronDownIcon, TrashIcon, PlusIcon, PhotoIcon } from '@heroicons/vue/24/outline'
 

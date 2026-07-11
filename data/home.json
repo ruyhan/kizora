@@ -109,7 +109,7 @@
             "title": "Bestsellers",
             "subtitle": "Loved by families, chosen again and again",
             "badge": null,
-            "category": null,
+            "category": "water-bottles",
             "sort": "random",
             "limit": 4,
             "layout": "grid",

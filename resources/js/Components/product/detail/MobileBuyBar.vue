@@ -179,17 +179,12 @@ const measure = () => {
   const fab = document.querySelector('[data-cart-fab]')
   if (!nav || !fab) return // leave the CSS fallback notch in place
 
-  // 1) sit the bar flush on the nav's top edge (works regardless of nav height / safe-area).
-  //    Use the VISUAL viewport height — window.innerHeight is unreliable on iOS Safari
-  //    (it lags the collapsing/expanding address bar) and could fling the bar far up the
-  //    page. A sanity guard keeps a bad reading from ever repositioning the bar; the CSS
-  //    fallback `bottom: calc(4rem + safe-area)` then stays in effect.
-  const vh = window.visualViewport?.height ?? window.innerHeight
-  const navTop = nav.getBoundingClientRect().top
-  const bottom = vh - navTop
-  if (bottom > 0 && bottom < vh * 0.5) {
-    el.style.bottom = `${bottom}px`
-  }
+  // 1) Sit the bar flush on the nav's top edge using the nav's OWN height (offsetHeight).
+  //    This is scroll-INDEPENDENT: native position:fixed keeps both the bar and the nav
+  //    pinned to the bottom while scrolling, so the bar must not be re-positioned on scroll
+  //    (doing so made it jump / slip under the nav). We only recompute on resize/rotate.
+  const navHeight = nav.offsetHeight
+  if (navHeight > 0) el.style.bottom = `${navHeight}px`
 
   // 2) measure after positioning + draw a notch that hugs the Cart's real rounded corners (~1px gap)
   const b = el.getBoundingClientRect()
@@ -215,11 +210,9 @@ const scheduleMeasure = () => { cancelAnimationFrame(raf); raf = requestAnimatio
 let ro = null
 onMounted(() => {
   nextTick(() => { measure(); requestAnimationFrame(measure); setTimeout(measure, 300) })
+  // Recompute ONLY on layout changes — never on scroll, so the bar stays put while scrolling.
   window.addEventListener('resize', scheduleMeasure)
   window.addEventListener('orientationchange', scheduleMeasure)
-  // iOS Safari fires these as the address bar collapses/expands on scroll — re-align then.
-  window.visualViewport?.addEventListener('resize', scheduleMeasure)
-  window.visualViewport?.addEventListener('scroll', scheduleMeasure)
   const nav = document.querySelector('nav.fixed.bottom-0')
   if (nav && 'ResizeObserver' in window) { ro = new ResizeObserver(scheduleMeasure); ro.observe(nav, { box: 'border-box' }) }
 })
@@ -227,8 +220,6 @@ onBeforeUnmount(() => {
   cancelAnimationFrame(raf)
   window.removeEventListener('resize', scheduleMeasure)
   window.removeEventListener('orientationchange', scheduleMeasure)
-  window.visualViewport?.removeEventListener('resize', scheduleMeasure)
-  window.visualViewport?.removeEventListener('scroll', scheduleMeasure)
   ro?.disconnect()
 })
 </script>

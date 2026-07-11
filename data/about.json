@@ -1,51 +1,56 @@
 {
-    "hero_title": "More than gear.",
-    "hero_highlight": "Built to move with you.",
-    "hero_subtitle": "Kizora makes premium backpacks, water bottles and flasks — engineered for everyday life, priced for everyone, and built to go the distance.",
+    "hero_title": "Every Product Matters.",
+    "hero_highlight": "Every Customer Matters. Every Smile Matters.",
+    "hero_subtitle": "we carefully select quality backpacks, bottles, and everyday essentials you can trust—because every customer deserves products that bring lasting value and everyday smiles",
     "hero_image": null,
-    "story_title": "How Kizora began",
+    "story_title": "About Us",
     "story": [
         {
-            "text": "Kizora started with a frustration we all know: carry gear that either looks great but falls apart, or lasts forever but looks dull — and always costs too much."
+            "text": "Every smile has a story. It may come from a child starting a new school day, a family enjoying time together, someone beginning a new journey, or finding joy in a simple everyday moment. At Kizora, each of these precious moments matters."
         },
         {
-            "text": "So we set out to build the opposite. Backpacks, bottles and flasks that are tough, comfortable and genuinely good-looking, at a price that makes sense for students, professionals and families."
+            "text": "Kizora is a lifestyle brand built on the spirit of freedom, vitality, trust, and authentic everyday living. Inspired by the Japanese words “Ki” and “Sora,” the brand carries a meaning that goes beyond products."
         },
         {
-            "text": "Every product is obsessively tested — zippers, straps, seams and insulation — so your gear keeps up with school runs, commutes, gym sessions and weekend adventures."
+            "text": "“Ki” represents energy, spirit, and the joy of living an active life. “Sora,” expressed through “Zora,” represents the open sky and the freedom to learn, explore, travel, dream, and live without limits. Together, \"Kizora\" means having the energy to live freely under an endless sky."
+        },
+        {
+            "text": "We believe care is our foundation, quality is our promise, and trust is our greatest achievement. That is why Kizora creates thoughtful products and builds relationships with heart."
+        },
+        {
+            "text": "We do not want to be just another brand in your life. We want to be a trusted companion, a part of your journey, and one of the reasons behind your everyday smile."
+        },
+        {
+            "text": "Because at Kizora, Every Smile Matters. Every Product Matters. Every Customer Matters."
         }
     ],
     "est": "Est. 2026",
     "story_image": "/storage/media/cMMktMkNAi2q30Xfnqgcrhv5mj1GVmPgFOpdIJcG.webp",
-    "craft_title": "Engineered to last",
-    "craft_image": "/storage/media/eMJDpFqr8DHE2ewKTBtx71db0NMjVltgFkyPEjK7.webp",
-    "craft_body": "We don't cut corners where it counts. Kizora bags use water-resistant fabrics, reinforced stitching and heavy-duty zippers. Our bottles and flasks are made from food-grade stainless steel with double-wall vacuum insulation.",
-    "mission": "To make durable, well-designed everyday carry accessible to everyone — without the premium price tag.",
-    "vision": "To become Bangladesh's most trusted lifestyle gear brand — known for quality, value and service people rely on.",
+    "craft_title": "Brand Principles",
+    "craft_image": "/storage/media/Gx5Fj2OsJLgXQVEePZo0SuI0q98DILJeTUNNM3w9.png",
+    "craft_body": "•       Care Before Commerce\n•       Trust Before Growth\n•       Quality Before Scale\n•       Innovation Before Imitation\n•       Relationships Before Transactions",
+    "mission": "To bring authentic, trusted, and thoughtfully designed lifestyle essentials that add convenience with confidence to everyday living.",
+    "vision": "To become the country’s most trusted, caring, and authentic lifestyle brand, offering a limitless collection of everyday essentials that enrich people's lives while setting new standards and creating the future of the lifestyle industry.",
     "offerings": [
         {
-            "title": "Backpacks",
-            "desc": "Everyday packs built for comfort and capacity"
+            "title": "Authenticity",
+            "desc": "We believe in genuine products, honest communication, and real value."
         },
         {
-            "title": "Laptop Backpacks",
-            "desc": "Padded sleeves and USB ports for work & study"
+            "title": "Trust",
+            "desc": "We aim to build confidence through quality, reliability, and customer care."
         },
         {
-            "title": "School & Trolley Bags",
-            "desc": "Lightweight, sturdy bags kids love"
+            "title": "Freedom",
+            "desc": "We create products that support movement, exploration, learning, and everyday life."
         },
         {
-            "title": "Water Bottles",
-            "desc": "Leak-proof bottles for gym, office and travel"
+            "title": "Vitality",
+            "desc": "We bring freshness, innovation, and positivity into daily essentials"
         },
         {
-            "title": "Thermos & Flasks",
-            "desc": "Double-wall insulation, hot or cold for hours"
-        },
-        {
-            "title": "Accessories",
-            "desc": "Pouches, straps and add-ons to complete your carry"
+            "title": "Limitless Living",
+            "desc": "We believe lifestyle products should open possibilities, never limit them."
         }
     ]
 }

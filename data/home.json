@@ -43,30 +43,30 @@
     ],
     "trust": [
         {
-            "title": "Free delivery",
-            "desc": "On orders over ৳3,000",
+            "title": "Fast Delivery",
+            "desc": null,
             "icon": "truck"
         },
         {
-            "title": "1-year warranty",
-            "desc": "On every product",
+            "title": "Authentic Products",
+            "desc": null,
             "icon": "shield"
         },
         {
-            "title": "7-day returns",
-            "desc": "Easy & hassle-free",
-            "icon": "returns"
+            "title": "Dedicated Support",
+            "desc": null,
+            "icon": "spark"
         },
         {
-            "title": "Cash on delivery",
-            "desc": "Pay when it arrives",
+            "title": "Cash on Delivery",
+            "desc": null,
             "icon": "card"
         }
     ],
     "sections": [
         {
             "title": "New arrivals",
-            "subtitle": "Fresh drops across bags & drinkware.",
+            "subtitle": "New. Fresh. Ready to carry",
             "badge": "New",
             "category": null,
             "sort": "new_arrival",
@@ -76,7 +76,7 @@
         },
         {
             "title": "Bestsellers",
-            "subtitle": "The carry our customers reach for again and again.",
+            "subtitle": "Loved by families, chosen again and again",
             "badge": null,
             "category": null,
             "sort": "random",
@@ -96,7 +96,7 @@
         },
         {
             "title": "Bags",
-            "subtitle": "Backpacks, school bags and trolleys built to carry your world.",
+            "subtitle": "Built for school, work, and everywhere in between",
             "badge": null,
             "category": "bags",
             "sort": "random",
@@ -106,7 +106,7 @@
         },
         {
             "title": "Water Bottles",
-            "subtitle": "Bottles and flasks that keep every sip just right.",
+            "subtitle": "Hydration that moves with you",
             "badge": null,
             "category": "water-bottles",
             "sort": "random",

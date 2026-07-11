@@ -1,5 +1,5 @@
 {
-    "about": "Kizora designs premium backpacks, water bottles, flasks and everyday‑carry essentials built to move with you — for school, work and the road ahead.",
+    "about": "Inspired by Life. Kizora brings you everyday essentials backpacks, bottles, mugs, and toys carefully selected for the moments that matter most",
     "tagline": "Carry your world.",
     "links": [
         {
@@ -32,5 +32,20 @@
         "water-bottles",
         "bags",
         "toys"
+    ],
+    "copyright": "© {year} Kizora. All rights reserved.",
+    "legal_links": [
+        {
+            "label": "Privacy",
+            "url": "/privacy"
+        },
+        {
+            "label": "Terms",
+            "url": "/terms"
+        },
+        {
+            "label": "FAQ",
+            "url": "/faq"
+        }
     ]
 }

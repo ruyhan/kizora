@@ -200,10 +200,27 @@ class EmailSettingService
         ];
     }
 
+    /**
+     * The raw stored logo path/URL (NOT the embedded data URI). Used by the admin
+     * branding form so it edits & re-saves the short path — sending the data URI back
+     * would blow past validation and bloat the DB.
+     */
+    public function rawLogo(): string
+    {
+        $content = app(PageContent::class)->get('settings');
+        return (string) (WebsiteSetting::get('email_logo', '') ?: ($content['logo_light'] ?? '') ?: ($content['logo'] ?? ''));
+    }
+
     public function saveBrand(array $data): void
     {
+        // Never persist a base64 data URI as the logo (keeps the short path in the DB).
+        $logo = $data['logo'] ?? '';
+        if (str_starts_with((string) $logo, 'data:')) {
+            $logo = $this->rawLogo();
+        }
+
         $map = [
-            'email_logo'              => $data['logo'] ?? '',
+            'email_logo'              => $logo,
             'email_banner'            => $data['banner'] ?? '',
             'email_company_name'      => $data['company_name'] ?? '',
             'email_company_address'   => $data['address'] ?? '',

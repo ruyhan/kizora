@@ -96,13 +96,24 @@ class EmailSettingsController extends Controller
 
     public function brand()
     {
+        // The form edits & re-saves the raw logo path — NOT the embedded data URI that
+        // brand() returns for rendering (that would exceed validation on save).
+        $brand = $this->settings->brand();
+        $brand['logo'] = $this->settings->rawLogo();
+
         return Inertia::render('Admin/Email/Brand', [
-            'brand' => $this->settings->brand(),
+            'brand' => $brand,
         ]);
     }
 
     public function updateBrand(Request $request)
     {
+        // A base64 data URI (used only for rendering) must never be saved or validated as
+        // the logo — swap it back to the raw stored path so the save always succeeds.
+        if (str_starts_with((string) $request->input('logo'), 'data:')) {
+            $request->merge(['logo' => $this->settings->rawLogo()]);
+        }
+
         $data = $request->validate([
             'logo'              => 'nullable|string|max:1000',
             'banner'            => 'nullable|string|max:1000',

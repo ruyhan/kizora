@@ -166,7 +166,7 @@
             "active": true
         }
     ],
-    "blog_enabled": true,
+    "blog_enabled": false,
     "blog_title": "From the blog",
     "blog_subtitle": "Guides, tips and stories from the Kizora team.",
     "blog_limit": 8

@@ -53,7 +53,7 @@
         </aside>
 
         <!-- Grid -->
-        <div class="flex-1 min-w-0">
+        <div ref="gridTop" class="flex-1 min-w-0">
           <div v-if="products.data?.length" class="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             <ProductCard v-for="p in products.data" :key="p.id" :product="p" @quickview="$emit('quickview', $event)" />
           </div>
@@ -69,7 +69,7 @@
           <!-- Pagination -->
           <div v-if="products.last_page > 1" class="flex justify-center flex-wrap gap-2 mt-10">
             <template v-for="link in products.links" :key="link.label">
-              <Link v-if="link.url" :href="link.url" preserve-scroll
+              <a v-if="link.url" :href="link.url" @click.prevent="goToPage(link.url)"
                 :class="link.active ? 'bg-ink text-white' : 'bg-surface text-ink hover:bg-[#F4F4F5]'"
                 class="px-4 py-2 rounded-xl text-sm font-medium border border-border" v-html="link.label" />
               <span v-else class="px-4 py-2 rounded-xl text-sm text-muted border border-border" v-html="link.label" />
@@ -93,8 +93,8 @@
 </template>
 
 <script setup>
-import { reactive, computed, ref } from 'vue'
-import { Head, Link, router, usePage } from '@inertiajs/vue3'
+import { reactive, computed, ref, nextTick } from 'vue'
+import { Head, router, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import ProductCard from '@/Components/ProductCard.vue'
 import FacetPanel from '@/Components/product/FacetPanel.vue'
@@ -169,5 +169,23 @@ const activeChips = computed(() => {
 const clearAll = () => {
   Object.assign(local, { category: '', search: '', sort: 'latest', min_price: '', max_price: '', rating: '', in_stock: false, sale: false, tags: [] })
   router.get(route('shop.index'), {}, { preserveScroll: true })
+}
+
+// Pagination: land the user at the top of the product grid. Plain preserve-scroll kept
+// the old bottom-of-page offset, which overshoots into the footer when the new page is shorter.
+const gridTop = ref(null)
+
+const goToPage = (url) => {
+  router.get(url, {}, {
+    preserveState: true,
+    preserveScroll: true,
+    onSuccess: () => nextTick(() => {
+      const el = gridTop.value
+      if (!el) return
+      const headerH = document.querySelector('header')?.offsetHeight || 0
+      const top = el.getBoundingClientRect().top + window.scrollY - headerH - 12
+      window.scrollTo({ top: Math.max(top, 0) })
+    }),
+  })
 }
 </script>

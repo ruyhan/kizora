@@ -548,6 +548,7 @@ const runImport = async (dryRun) => {
 const deleteProduct = (product) => {
   if (!confirm(`Delete "${product.name}"? This cannot be undone.`)) return
   router.delete(route('admin.products.destroy', product.id), {
+    preserveScroll: true,
     onSuccess: () => {}, // FlashMessage handles success toast via server flash
   })
 }
@@ -661,6 +662,7 @@ const submitEdit = () => {
 
   const payload = {
     _method: 'PUT',
+    _stay: 1,
     name:              editForm.value.name,
     slug:              (editForm.value.slug === editOriginalSlug.value && editOriginalSlug.value)
                          ? editOriginalSlug.value
@@ -690,6 +692,7 @@ const submitEdit = () => {
   if (editFeaturedPath.value) payload.featured_image_path = editFeaturedPath.value
 
   router.post(route('admin.products.update', editForm.value.id), payload, {
+    preserveScroll: true,
     onSuccess: () => { closeEdit(); editProcessing.value = false },
     onError:   (errs) => { editErrors.value = errs; editProcessing.value = false },
   })

@@ -161,7 +161,7 @@ class HomeController extends Controller
     public function faq(): Response
     {
         $faq = $this->content->get('faqs');
-        return Inertia::render('Faq', ['faqs' => $faq['items'] ?? []]);
+        return Inertia::render('Faq', ['faqs' => $faq['items'] ?? [], 'page' => $faq]);
     }
 
     public function privacy(): Response

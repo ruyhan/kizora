@@ -277,6 +277,12 @@ class ProductController extends Controller
         $lastOrder = $product->images()->max('sort_order') ?? -1;
         $this->saveGalleryImages($product, $request, $lastOrder + 1);
 
+        // Quick-edit from the products list sends _stay so the user keeps
+        // their current page/filters instead of being sent back to page 1.
+        if ($request->boolean('_stay')) {
+            return back()->with('success', 'Product updated!');
+        }
+
         return redirect()->route('admin.products.index')->with('success', 'Product updated!');
     }
 

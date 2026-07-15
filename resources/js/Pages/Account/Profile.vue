@@ -259,6 +259,7 @@ const updateProfile = () => {
   updatingProfile.value = true
   profileErrors.value = {}
   router.post(route('account.profile.update'), profileForm.value, {
+    preserveScroll: true,
     onSuccess: () => { updatingProfile.value = false }, // FlashMessage shows success toast
     onError: (errs) => { profileErrors.value = errs; updatingProfile.value = false },
   })
@@ -303,6 +304,7 @@ const updatePassword = () => {
   updatingPassword.value = true
   passwordErrors.value = {}
   router.post(route('account.password'), passwordForm.value, {
+    preserveScroll: true,
     onSuccess: () => {
       updatingPassword.value = false
       passwordForm.value = { current_password: '', password: '', password_confirmation: '' }

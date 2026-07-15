@@ -77,7 +77,7 @@
               <td class="px-4 py-3">
                 <div class="flex items-center justify-end gap-1">
                   <a :href="`/blog/${p.slug}`" target="_blank" class="icon-act" title="View"><EyeIcon class="w-4 h-4" /></a>
-                  <Link :href="route('admin.blog.edit', p.id)" class="icon-act" title="Edit"><PencilSquareIcon class="w-4 h-4" /></Link>
+                  <Link :href="route('admin.blog.edit', p.id) + listQuery()" class="icon-act" title="Edit"><PencilSquareIcon class="w-4 h-4" /></Link>
                   <button @click="destroy(p)" class="icon-act text-rose-500" title="Delete"><TrashIcon class="w-4 h-4" /></button>
                 </div>
               </td>
@@ -119,6 +119,10 @@ const debouncedFilter = () => { clearTimeout(timer); timer = setTimeout(applyFil
 const applyFilter = () => {
   router.get(route('admin.blog.index'), { ...form.value }, { preserveState: true, replace: true, preserveScroll: true })
 }
+
+// Carry the current list URL query (?page=…, search, filters) onto the edit
+// link so "Update" can send the user back to the exact same list page.
+const listQuery = () => window.location.search || ''
 
 const destroy = (p) => {
   if (confirm(`Delete “${p.title}”? This cannot be undone.`)) {

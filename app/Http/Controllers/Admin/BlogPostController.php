@@ -110,7 +110,11 @@ class BlogPostController extends Controller
         $post->save();
         $this->syncTags($post, $data['tags'] ?? []);
 
-        return redirect()->route('admin.blog.index')->with('success', 'Blog post updated!');
+        // _list carries the originating list query (?page=…, filters) so the
+        // user returns to the same list page instead of page 1.
+        $listQuery = array_filter((array) $request->input('_list', []), 'is_scalar');
+
+        return redirect()->route('admin.blog.index', $listQuery)->with('success', 'Blog post updated!');
     }
 
     public function destroy(BlogPost $post)

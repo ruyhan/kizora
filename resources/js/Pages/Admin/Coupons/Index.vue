@@ -204,10 +204,12 @@ const save = () => {
   saving.value = true
   if (editing.value) {
     router.patch(route('admin.coupons.update', editing.value.id), form.value, {
+      preserveScroll: true,
       onFinish: () => { saving.value = false; closeModal() }
     })
   } else {
     router.post(route('admin.coupons.store'), form.value, {
+      preserveScroll: true,
       onFinish: () => { saving.value = false; closeModal() }
     })
   }

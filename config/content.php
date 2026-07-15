@@ -46,6 +46,15 @@ $badgeIconOptions = [
     ['value' => 'academic', 'label' => 'Expert / guidance'],
 ];
 
+// SEO meta fields shared by every public page group. Empty = the page's
+// built-in default title / no description tag.
+$seoFields = fn (string $pageName) => [
+    ['key' => 'meta_title', 'label' => 'Meta title (SEO)', 'type' => 'text', 'default' => '',
+        'help' => "Shown in the browser tab and Google search results. Leave empty to use the default \"{$pageName}\" title."],
+    ['key' => 'meta_description', 'label' => 'Meta description (SEO)', 'type' => 'textarea', 'default' => '',
+        'help' => 'Short summary (around 150–160 characters) shown under the title in Google search results. Leave empty for none.'],
+];
+
 return [
 
     'settings' => [
@@ -236,6 +245,7 @@ return [
         'desc'  => 'Hero slider, trust badges and product rail headings.',
         'icon'  => 'home',
         'fields' => [
+            ...$seoFields('Home'),
             ['key' => 'hero_enabled', 'label' => 'Hero slider — show on home page', 'type' => 'toggle', 'default' => true],
             ['key' => 'hero', 'label' => 'Hero banners', 'type' => 'list', 'item' => [
                 ['key' => 'eyebrow', 'label' => 'Eyebrow', 'type' => 'text'],
@@ -324,6 +334,7 @@ return [
         'desc'  => 'Listing page header.',
         'icon'  => 'bag',
         'fields' => [
+            ...$seoFields('Shop'),
             ['key' => 'title', 'label' => 'Heading', 'type' => 'text', 'default' => 'Shop all'],
             ['key' => 'subtitle', 'label' => 'Subtitle', 'type' => 'text', 'default' => 'Backpacks, bottles, flasks & accessories — delivered to your door.'],
             ['key' => 'header_image', 'label' => 'Header background (optional)', 'type' => 'image', 'default' => ''],
@@ -335,6 +346,7 @@ return [
         'desc'  => 'Brand story, craftsmanship, mission & vision.',
         'icon'  => 'info',
         'fields' => [
+            ...$seoFields('About Us'),
             ['key' => 'hero_title', 'label' => 'Hero title', 'type' => 'text', 'default' => 'More than gear.'],
             ['key' => 'hero_highlight', 'label' => 'Hero highlight line', 'type' => 'text', 'default' => 'Built to move with you.'],
             ['key' => 'hero_subtitle', 'label' => 'Hero subtitle', 'type' => 'textarea', 'default' => 'Kizora makes premium backpacks, water bottles and flasks — engineered for everyday life, priced for everyone, and built to go the distance.'],
@@ -386,6 +398,7 @@ return [
         'desc'  => 'Heading, intro, which contact cards to show, and the embedded map. Card details come from Brand & Contact details.',
         'icon'  => 'mail',
         'fields' => [
+            ...$seoFields('Contact Us'),
             ['key' => 'title', 'label' => 'Heading', 'type' => 'text', 'default' => 'Get in touch'],
             ['key' => 'subtitle', 'label' => 'Subtitle', 'type' => 'textarea', 'default' => 'Questions about a product, an order, or bulk pricing? We\'d love to help.'],
 
@@ -405,6 +418,7 @@ return [
         'desc'  => 'Frequently asked questions.',
         'icon'  => 'help',
         'fields' => [
+            ...$seoFields('FAQ'),
             ['key' => 'items', 'label' => 'Questions', 'type' => 'list', 'item' => [
                 ['key' => 'question', 'label' => 'Question', 'type' => 'text'],
                 ['key' => 'answer', 'label' => 'Answer', 'type' => 'textarea'],
@@ -426,6 +440,7 @@ return [
         'desc'  => 'Privacy policy content.',
         'icon'  => 'doc',
         'fields' => [
+            ...$seoFields('Privacy Policy'),
             ['key' => 'title', 'label' => 'Title', 'type' => 'text', 'default' => 'Privacy Policy'],
             ['key' => 'last_updated', 'label' => 'Last updated', 'type' => 'text', 'default' => 'June 2026'],
             ['key' => 'sections', 'label' => 'Sections', 'type' => 'list',
@@ -447,6 +462,7 @@ return [
         'desc'  => 'Terms of service content.',
         'icon'  => 'doc',
         'fields' => [
+            ...$seoFields('Terms & Conditions'),
             ['key' => 'title', 'label' => 'Title', 'type' => 'text', 'default' => 'Terms & Conditions'],
             ['key' => 'last_updated', 'label' => 'Last updated', 'type' => 'text', 'default' => 'June 2026'],
             ['key' => 'sections', 'label' => 'Sections', 'type' => 'list',

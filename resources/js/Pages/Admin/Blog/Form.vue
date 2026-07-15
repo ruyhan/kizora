@@ -4,7 +4,7 @@
 
     <div class="flex items-center justify-between mb-6">
       <h1 class="font-display text-2xl font-bold text-charcoal">{{ post ? 'Edit Post' : 'New Blog Post' }}</h1>
-      <Link :href="route('admin.blog.index')" class="text-primary text-sm hover:underline">← Back to Posts</Link>
+      <Link :href="route('admin.blog.index', listQuery)" class="text-primary text-sm hover:underline">← Back to Posts</Link>
     </div>
 
     <form @submit.prevent="submit">
@@ -208,6 +208,10 @@ const form = ref({
 
 const tagsInput = ref((props.post?.tags || []).join(', '))
 
+// List query (?page=…, search, filters) carried over from the Index edit link,
+// so after Update the user lands back on the exact list page they came from.
+const listQuery = Object.fromEntries(new URLSearchParams(window.location.search))
+
 const slugify = (s) => (s || '').toString().toLowerCase().trim()
   .replace(/[^a-z0-9\s-]/g, '').replace(/[\s_]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
 const slugTouched = ref(!!props.post)
@@ -224,11 +228,13 @@ const submit = () => {
   const payload = { ...form.value }
   payload.slug = slugify(payload.slug || payload.title)
   payload.tags = tagsInput.value.split(',').map(t => t.trim()).filter(Boolean)
+  payload._list = listQuery
 
   const url = props.post ? route('admin.blog.update', props.post.id) : route('admin.blog.store')
   if (props.post) payload._method = 'PUT'
 
   router.post(url, payload, {
+    preserveScroll: true,
     onError: (e) => { errors.value = e; processing.value = false },
     onSuccess: () => { processing.value = false },
   })

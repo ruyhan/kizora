@@ -1,6 +1,8 @@
 <template>
   <AppLayout>
-    <Head title="Carry your world" />
+    <Head :title="page.meta_title || 'Carry your world'">
+      <meta v-if="page.meta_description" name="description" :content="page.meta_description" head-key="description" />
+    </Head>
 
     <!-- Hero box slider -->
     <HeroSlider v-if="page.hero_enabled !== false" :banners="page.hero || []" />

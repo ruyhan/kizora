@@ -1,6 +1,8 @@
 <template>
   <AppLayout>
-    <Head title="Contact Us" />
+    <Head :title="page.meta_title || 'Contact Us'">
+      <meta v-if="page.meta_description" name="description" :content="page.meta_description" head-key="description" />
+    </Head>
 
     <!-- Hero -->
     <div class="py-16 text-center">

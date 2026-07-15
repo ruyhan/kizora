@@ -1,6 +1,8 @@
 <template>
   <AppLayout>
-    <Head title="Shop" />
+    <Head :title="page.meta_title || 'Shop'">
+      <meta v-if="page.meta_description" name="description" :content="page.meta_description" head-key="description" />
+    </Head>
 
     <!-- Header -->
     <div class="relative py-10 text-center overflow-hidden border-b border-border" :class="page.header_image ? 'bg-ink' : ''">

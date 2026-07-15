@@ -1,6 +1,8 @@
 <template>
   <AppLayout>
-    <Head title="FAQ" />
+    <Head :title="page.meta_title || 'FAQ'">
+      <meta v-if="page.meta_description" name="description" :content="page.meta_description" head-key="description" />
+    </Head>
 
     <div class="py-16 text-center mb-16">
       <h1 class="font-display text-4xl md:text-5xl font-bold text-charcoal mb-4">Frequently asked questions</h1>
@@ -57,7 +59,7 @@ import { Head } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { ChevronDownIcon } from '@heroicons/vue/24/outline'
 
-const props = defineProps({ faqs: Array })
+const props = defineProps({ faqs: Array, page: { type: Object, default: () => ({}) } })
 
 const openIndex = ref(0)
 

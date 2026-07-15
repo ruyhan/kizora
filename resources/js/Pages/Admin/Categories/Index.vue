@@ -342,6 +342,6 @@ const save = () => {
 
 const deleteCategory = (cat) => {
   if (!confirm(`Delete "${cat.name}"?`)) return
-  router.delete(route('admin.categories.destroy', cat.id))
+  router.delete(route('admin.categories.destroy', cat.id), { preserveScroll: true })
 }
 </script>

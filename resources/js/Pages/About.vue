@@ -1,6 +1,8 @@
 <template>
   <AppLayout>
-    <Head title="About Us" />
+    <Head :title="page.meta_title || 'About Us'">
+      <meta v-if="page.meta_description" name="description" :content="page.meta_description" head-key="description" />
+    </Head>
 
     <!-- Hero -->
     <section class="relative py-24 gradient-kizora overflow-hidden">

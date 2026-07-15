@@ -1,6 +1,8 @@
 <template>
   <AppLayout>
-    <Head title="Privacy Policy" />
+    <Head :title="page?.meta_title || 'Privacy Policy'">
+      <meta v-if="page?.meta_description" name="description" :content="page.meta_description" head-key="description" />
+    </Head>
     <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-16">
       <div class="max-w-4xl">
         <h1 class="font-display text-3xl sm:text-4xl font-bold text-charcoal mb-3">{{ title }}</h1>

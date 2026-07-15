@@ -376,6 +376,7 @@ const submit = () => {
   if (props.product) payload._method = 'PUT'
 
   router.post(url, payload, {
+    preserveScroll: true,
     onError:   (errs) => { errors.value = errs; processing.value = false },
     onSuccess: () => { processing.value = false },
   })

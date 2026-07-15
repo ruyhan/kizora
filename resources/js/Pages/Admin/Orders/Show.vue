@@ -135,6 +135,7 @@ const updating = ref(false)
 const updateStatus = () => {
   updating.value = true
   router.patch(route('admin.orders.status', props.order.id), { status: newStatus.value }, {
+    preserveScroll: true,
     onSuccess: () => { updating.value = false }, // FlashMessage shows success toast
     onError: () => { toast.error('Failed to update status.'); updating.value = false },
   })

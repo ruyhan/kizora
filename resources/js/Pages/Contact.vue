@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <Head :title="page.meta_title || 'Contact Us'">
+    <Head :title="seoTitle(page.meta_title, 'Contact Us')">
       <meta v-if="page.meta_description" name="description" :content="page.meta_description" head-key="description" />
     </Head>
 
@@ -125,6 +125,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { Head, router, usePage } from '@inertiajs/vue3'
+import { seoTitle } from '@/utils/seoTitle'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import RecaptchaCheckbox from '@/Components/RecaptchaCheckbox.vue'
 import PhoneInput from '@/Components/ui/PhoneInput.vue'

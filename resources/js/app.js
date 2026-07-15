@@ -1,4 +1,4 @@
-import './bootstrap';
+﻿import './bootstrap';
 import '../css/app.css';
 
 import { createApp, h } from 'vue';
@@ -14,8 +14,16 @@ import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Kizora';
 
+// Titles prefixed with the zero-width-space marker (CMS meta titles, via
+// utils/seoTitle.js) are shown exactly as typed — no " - appName" suffix.
+const EXACT_TITLE_MARK = '\u200B';
+
 createInertiaApp({
-    title: (title) => title ? `${title} - ${appName}` : appName,
+    title: (title) => {
+        if (!title) return appName;
+        if (title.startsWith(EXACT_TITLE_MARK)) return title.slice(1);
+        return `${title} - ${appName}`;
+    },
     resolve: (name) =>
         resolvePageComponent(
             `./Pages/${name}.vue`,

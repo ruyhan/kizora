@@ -50,7 +50,7 @@ $badgeIconOptions = [
 // built-in default title / no description tag.
 $seoFields = fn (string $pageName) => [
     ['key' => 'meta_title', 'label' => 'Meta title (SEO)', 'type' => 'text', 'default' => '',
-        'help' => "Shown in the browser tab and Google search results. Leave empty to use the default \"{$pageName}\" title."],
+        'help' => "Shown in the browser tab and Google search results, exactly as you type it. Leave empty to use the default \"{$pageName}\" title."],
     ['key' => 'meta_description', 'label' => 'Meta description (SEO)', 'type' => 'textarea', 'default' => '',
         'help' => 'Short summary (around 150–160 characters) shown under the title in Google search results. Leave empty for none.'],
 ];

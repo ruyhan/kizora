@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <Head :title="page.meta_title || 'About Us'">
+    <Head :title="seoTitle(page.meta_title, 'About Us')">
       <meta v-if="page.meta_description" name="description" :content="page.meta_description" head-key="description" />
     </Head>
 
@@ -138,6 +138,7 @@
 
 <script setup>
 import { Head, Link } from '@inertiajs/vue3'
+import { seoTitle } from '@/utils/seoTitle'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {
   ShoppingBagIcon, ShieldCheckIcon, AcademicCapIcon, BriefcaseIcon,

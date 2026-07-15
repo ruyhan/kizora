@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <Head :title="product.meta_title || product.name">
+    <Head :title="seoTitle(product.meta_title, product.name)">
       <meta v-if="product.meta_description || product.short_description" name="description"
         :content="product.meta_description || product.short_description" head-key="description">
       <meta property="og:title" :content="product.meta_title || product.name" head-key="og:title">
@@ -72,6 +72,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { Head, Link, router, usePage } from '@inertiajs/vue3'
+import { seoTitle } from '@/utils/seoTitle'
 import { useToast } from 'vue-toastification'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import ProductCard from '@/Components/ProductCard.vue'

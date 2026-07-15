@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <Head :title="page.meta_title || 'FAQ'">
+    <Head :title="seoTitle(page.meta_title, 'FAQ')">
       <meta v-if="page.meta_description" name="description" :content="page.meta_description" head-key="description" />
     </Head>
 
@@ -56,6 +56,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { Head } from '@inertiajs/vue3'
+import { seoTitle } from '@/utils/seoTitle'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { ChevronDownIcon } from '@heroicons/vue/24/outline'
 

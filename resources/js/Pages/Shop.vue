@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <Head :title="page.meta_title || 'Shop'">
+    <Head :title="seoTitle(page.meta_title, 'Shop')">
       <meta v-if="page.meta_description" name="description" :content="page.meta_description" head-key="description" />
     </Head>
 
@@ -97,6 +97,7 @@
 <script setup>
 import { reactive, computed, ref, nextTick } from 'vue'
 import { Head, router, usePage } from '@inertiajs/vue3'
+import { seoTitle } from '@/utils/seoTitle'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import ProductCard from '@/Components/ProductCard.vue'
 import FacetPanel from '@/Components/product/FacetPanel.vue'

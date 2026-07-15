@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <Head :title="post.meta_title || post.title">
+    <Head :title="seoTitle(post.meta_title, post.title)">
       <meta name="description" :content="metaDescription" head-key="description" />
       <meta v-if="post.meta_keywords" name="keywords" :content="post.meta_keywords" head-key="keywords" />
       <meta property="og:title" :content="post.meta_title || post.title" head-key="og:title" />
@@ -100,6 +100,7 @@
 <script setup>
 import { computed } from 'vue'
 import { Head, Link } from '@inertiajs/vue3'
+import { seoTitle } from '@/utils/seoTitle'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import BlogRail from '@/Components/home/BlogRail.vue'
 import { ArrowLeftIcon } from '@heroicons/vue/24/outline'

@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <Head :title="page?.meta_title || 'Privacy Policy'">
+    <Head :title="seoTitle(page?.meta_title, 'Privacy Policy')">
       <meta v-if="page?.meta_description" name="description" :content="page.meta_description" head-key="description" />
     </Head>
     <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-16">
@@ -21,6 +21,7 @@
 <script setup>
 import { computed } from 'vue'
 import { Head } from '@inertiajs/vue3'
+import { seoTitle } from '@/utils/seoTitle'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { formatPolicyBody } from '@/utils/policyContent'
 

@@ -53,6 +53,7 @@
               <th class="text-left px-5 py-4 text-xs font-semibold text-muted uppercase tracking-wider">Price</th>
               <th class="text-left px-5 py-4 text-xs font-semibold text-muted uppercase tracking-wider">Stock</th>
               <th class="text-left px-5 py-4 text-xs font-semibold text-muted uppercase tracking-wider">Status</th>
+              <th class="text-left px-5 py-4 text-xs font-semibold text-muted uppercase tracking-wider whitespace-nowrap">New Arrival</th>
               <th class="text-right px-5 py-4 text-xs font-semibold text-muted uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
@@ -85,6 +86,27 @@
                 </span>
                 <span v-if="product.is_featured" class="badge badge-purple text-xs ml-1">Featured</span>
               </td>
+              <!-- New Arrival — toggles products.show_on_hero (home "New Arrival" section) -->
+              <td class="px-5 py-4">
+                <div class="flex items-center gap-2.5">
+                  <button type="button" role="switch" :aria-checked="!!product.show_on_hero"
+                    :aria-label="`New Arrival — ${product.name}`"
+                    :disabled="!canEdit || newArrivalBusy === product.id"
+                    @click="toggleNewArrival(product)"
+                    :class="[
+                      product.show_on_hero ? 'bg-ink' : 'bg-gray-300',
+                      (!canEdit || newArrivalBusy === product.id) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
+                    ]"
+                    class="relative inline-flex items-center h-5 w-9 rounded-full transition-colors shrink-0 focus:outline-none focus:ring-2 focus:ring-ink/30">
+                    <span :class="product.show_on_hero ? 'translate-x-[18px]' : 'translate-x-[3px]'"
+                      class="inline-block w-[14px] h-[14px] bg-white rounded-full shadow transition-transform"></span>
+                  </button>
+                  <span class="text-xs font-medium whitespace-nowrap"
+                    :class="product.show_on_hero ? 'text-success' : 'text-muted'">
+                    {{ product.show_on_hero ? 'On' : 'Off' }}
+                  </span>
+                </div>
+              </td>
               <td class="px-5 py-4">
                 <div class="flex items-center justify-end gap-2">
                   <a :href="route('shop.show', product.slug)" target="_blank" rel="noopener"
@@ -107,7 +129,7 @@
               </td>
             </tr>
             <tr v-if="!products.data?.length">
-              <td :colspan="canDelete ? 7 : 6" class="px-5 py-12 text-center text-muted text-sm">
+              <td :colspan="canDelete ? 8 : 7" class="px-5 py-12 text-center text-muted text-sm">
                 No products found.
                 <Link :href="route('admin.products.create')" class="text-primary hover:underline">Add your first product</Link>
               </td>
@@ -508,6 +530,22 @@ const bulkAction = (action) => {
 // ── Duplicate ──
 const duplicateProduct = (product) => {
   router.post(route('admin.products.duplicate', product.id), {}, { preserveScroll: true })
+}
+
+// ── New Arrival toggle (products.show_on_hero) ──
+// Flip locally for instant feedback, then persist; revert if the request fails.
+const newArrivalBusy = ref(null)
+const toggleNewArrival = (product) => {
+  if (!canEdit || newArrivalBusy.value) return
+  const previous = !!product.show_on_hero
+  product.show_on_hero = !previous
+  newArrivalBusy.value = product.id
+  router.patch(route('admin.products.new-arrival', product.id), {}, {
+    preserveScroll: true,
+    preserveState: true,
+    onError: () => { product.show_on_hero = previous },
+    onFinish: () => { newArrivalBusy.value = null },
+  })
 }
 
 // ── CSV import ──

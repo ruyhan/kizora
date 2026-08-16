@@ -39,7 +39,9 @@ class PosController extends Controller
             'customers' => User::whereHas('role', fn ($q) => $q->where('is_staff', false))
                 ->orWhereNull('role_id')
                 ->select('id', 'name', 'phone', 'email', 'delivery_address')->orderBy('name')->get(),
-            'deliveryCities' => DeliveryCity::active()->orderBy('name')->get(['id', 'name', 'delivery_charge']),
+            // is_active is required by DeliveryAreaPicker — without it every city
+            // reads as inactive and shows the "not available" warning.
+            'deliveryCities' => DeliveryCity::active()->orderBy('name')->get(['id', 'name', 'is_active', 'delivery_charge']),
             'deliveryAreas'  => DeliveryArea::whereHas('city', fn ($q) => $q->where('is_active', true))
                 ->orderBy('name')->get(['id', 'delivery_city_id', 'name', 'postal_code']),
             'paymentMethods' => self::PAYMENT_METHODS,
@@ -60,6 +62,7 @@ class PosController extends Controller
             'address' => 'required|string|max:500',
             'delivery_area_id' => 'required|exists:delivery_areas,id',
             'payment_method' => ['required', Rule::in(self::PAYMENT_METHODS)],
+            'delivery_charge' => 'nullable|numeric|min:0|max:1000000',
             'discount' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:500',
         ]);
@@ -76,8 +79,11 @@ class PosController extends Controller
 
         $subtotal = collect($data['items'])->sum(fn ($l) => (float) $products[$l['product_id']]->final_price * $l['quantity']);
         $area = DeliveryArea::with('city')->find($data['delivery_area_id']);
-        // POS is staff-driven: an unset city charge falls back to 0 (admin can adjust) rather than blocking.
-        $deliveryCharge = $this->delivery->chargeFor($area, $subtotal) ?? 0.0;
+        // "Delivery charge based on location" → the operator types the charge on this screen.
+        // Otherwise POS is staff-driven: an unset city charge falls back to 0 rather than blocking.
+        $deliveryCharge = $this->delivery->manualCharge($subtotal)
+            ? (float) ($data['delivery_charge'] ?? 0)
+            : ($this->delivery->chargeFor($area, $subtotal) ?? 0.0);
         $discount = min((float) ($data['discount'] ?? 0), $subtotal);
         $total = $subtotal + $deliveryCharge - $discount;
 

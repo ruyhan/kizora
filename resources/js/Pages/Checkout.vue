@@ -145,12 +145,18 @@
                   <span class="text-muted">
                     Delivery<span v-if="!freeApplied && selectedCity" class="text-xs"> ({{ selectedCity.name }})</span>
                   </span>
-                  <span :class="deliveryCharge === 0 ? 'text-success font-semibold' : ''">
-                    <template v-if="noChargeForCity">—</template>
+                  <span :class="deliveryCharge === 0 && !chargeIsManual ? 'text-success font-semibold' : ''">
+                    <template v-if="chargeIsManual">To be added</template>
+                    <template v-else-if="noChargeForCity">—</template>
                     <template v-else-if="deliveryCharge === null">Select city</template>
                     <template v-else>{{ deliveryCharge === 0 ? 'FREE' : '৳' + formatPrice(deliveryCharge) }}</template>
                   </span>
                 </div>
+                <!-- Location-based delivery charge: added by us after the order is placed -->
+                <p v-if="chargeIsManual" class="text-xs text-success font-medium flex items-start gap-1.5 bg-green-50 border border-green-100 rounded-xl px-3 py-2">
+                  <TruckIcon class="w-4 h-4 shrink-0 mt-px" />
+                  <span>{{ del.locationMessage }}</span>
+                </p>
                 <p v-if="freeApplied" class="text-xs text-success font-medium flex items-center gap-1">
                   <SparklesIcon class="w-3.5 h-3.5" /> Free delivery applied
                 </p>
@@ -216,7 +222,7 @@ import VariationTags from '@/Components/ui/VariationTags.vue'
 import PhoneInput from '@/Components/ui/PhoneInput.vue'
 import { useRecaptcha } from '@/composables/useRecaptcha'
 import { useDelivery } from '@/composables/useDelivery'
-import { BanknotesIcon, DevicePhoneMobileIcon, CreditCardIcon, SparklesIcon, ShieldCheckIcon } from '@heroicons/vue/24/outline'
+import { BanknotesIcon, DevicePhoneMobileIcon, CreditCardIcon, SparklesIcon, ShieldCheckIcon, TruckIcon } from '@heroicons/vue/24/outline'
 
 const { getToken } = useRecaptcha()
 
@@ -301,9 +307,12 @@ const deliveryCharge = computed(() =>
   del.charge(props.cart.subtotal, selectedCity.value ? selectedCity.value.delivery_charge : null)
 )
 const freeApplied = computed(() => del.qualifiesFree(props.cart.subtotal))
+// Location-based mode — the charge is added by us after the order is placed.
+const chargeIsManual = computed(() => del.isManual(props.cart.subtotal))
 // A city is picked but has no charge configured (and free delivery isn't covering it).
+// Never blocks while the charge is location-based or city charges are switched off.
 const noChargeForCity = computed(() =>
-  !!selectedCity.value && !freeApplied.value &&
+  !!selectedCity.value && !freeApplied.value && !del.locationBased && del.chargesEnabled &&
   (selectedCity.value.delivery_charge === null || selectedCity.value.delivery_charge === undefined)
 )
 const orderTotal = computed(() =>

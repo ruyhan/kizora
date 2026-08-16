@@ -67,8 +67,9 @@
             </div>
             <div class="flex justify-between text-sm">
               <span class="text-muted">Delivery</span>
-              <span class="font-medium text-charcoal">
-                {{ order.delivery_charge == 0 ? 'FREE' : '৳' + Number(order.delivery_charge).toFixed(0) }}
+              <span class="font-medium" :class="pendingDeliveryCharge ? 'text-success' : 'text-charcoal'">
+                <template v-if="pendingDeliveryCharge">To be added</template>
+                <template v-else>{{ order.delivery_charge == 0 ? 'FREE' : '৳' + Number(order.delivery_charge).toFixed(0) }}</template>
               </span>
             </div>
             <div v-if="order.discount > 0" class="flex justify-between text-sm">
@@ -124,12 +125,13 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { Head, Link } from '@inertiajs/vue3'
 import AccountLayout from '@/Layouts/AccountLayout.vue'
 import VariationTags from '@/Components/ui/VariationTags.vue'
 import ReviewModal from '@/Components/ReviewModal.vue'
 import { statusBadge } from '@/composables/useOrderStatus'
+import { useDelivery } from '@/composables/useDelivery'
 import {
   ArrowLeftIcon,
   ArchiveBoxIcon,
@@ -142,6 +144,12 @@ import {
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps({ order: Object })
+
+// Location-based charging: 0 means "not set yet", not free.
+const del = useDelivery()
+const pendingDeliveryCharge = computed(() =>
+  Number(props.order?.delivery_charge || 0) === 0 && del.isManual(props.order?.subtotal || 0)
+)
 
 const review = ref({ open: false, itemId: null })
 const canReviewItem = (item) => props.order.can_review && item.slug && !item.reviewed

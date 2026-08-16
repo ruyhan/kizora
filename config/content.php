@@ -113,7 +113,7 @@ return [
 
     'delivery' => [
         'label' => 'Delivery Settings',
-        'desc'  => 'Free delivery toggle and location-based delivery charges.',
+        'desc'  => 'Free delivery, location-based charging, and city-wise delivery charges.',
         'icon'  => 'truck',
         'fields' => [
             ['key' => 'free_delivery_enabled', 'label' => 'Free delivery', 'type' => 'toggle', 'default' => false],
@@ -128,8 +128,25 @@ return [
                     ['key' => 'free_delivery_enabled', 'value' => true],
                     ['key' => 'free_delivery_type', 'value' => 'minimum'],
                 ]],
-            ['key' => 'delivery_charges', 'label' => 'Delivery charges (per city)', 'type' => 'delivery_charges', 'help' => 'Set a delivery charge for each city. Click "Add Delivery Charge", pick one or more cities, and enter the charge — checkout uses the charge of the customer\'s selected city.'],
-            ['key' => 'no_charge_message', 'label' => 'Message when a city has no delivery charge', 'type' => 'textarea', 'default' => 'Delivery is not available for the selected city yet. Please choose another city or contact us.', 'help' => 'Shown at checkout when the customer picks a city that has no delivery charge set.'],
+            ['key' => 'location_charge_enabled', 'label' => 'Delivery charge based on location', 'type' => 'toggle', 'default' => false,
+                'help' => 'When ON, no delivery charge is added at checkout — the customer sees a note that it will be added based on their location, and you enter the exact charge yourself when editing the order (and while creating a POS order). Overrides the per-city charges below.'],
+            ['key' => 'location_charge_message', 'label' => 'Checkout note (location-based charge)', 'type' => 'textarea',
+                'default' => 'Delivery charge will be added based on your location.',
+                'help' => 'Shown in green in the checkout order summary while location-based delivery charge is ON.',
+                'show_if' => ['key' => 'location_charge_enabled', 'value' => true]],
+
+            ['key' => 'delivery_charges_enabled', 'label' => 'City-wise delivery charges', 'type' => 'toggle', 'default' => true,
+                'help' => 'When OFF, the per-city charges below are ignored and no delivery charge is added at checkout.'],
+            ['key' => 'delivery_charges', 'label' => 'Delivery charges (per city)', 'type' => 'delivery_charges', 'help' => 'Set a delivery charge for each city. Click "Add Delivery Charge", pick one or more cities, and enter the charge — checkout uses the charge of the customer\'s selected city.',
+                'show_if' => [
+                    ['key' => 'delivery_charges_enabled', 'value' => true],
+                    ['key' => 'location_charge_enabled', 'value' => false],
+                ]],
+            ['key' => 'no_charge_message', 'label' => 'Message when a city has no delivery charge', 'type' => 'textarea', 'default' => 'Delivery is not available for the selected city yet. Please choose another city or contact us.', 'help' => 'Shown at checkout when the customer picks a city that has no delivery charge set.',
+                'show_if' => [
+                    ['key' => 'delivery_charges_enabled', 'value' => true],
+                    ['key' => 'location_charge_enabled', 'value' => false],
+                ]],
         ],
     ],
 
@@ -308,6 +325,9 @@ return [
                         ['value' => 'price_desc', 'label' => 'Price — high to low'],
                         ['value' => 'random', 'label' => 'Random'],
                     ]],
+                    ['key' => 'random_order', 'label' => 'Show New Arrival products in random order', 'type' => 'toggle', 'default' => false,
+                        'help' => 'A different random mix of New Arrival products (across all categories you allow above) on every page load, instead of newest-first.',
+                        'show_if' => ['key' => 'sort', 'value' => 'new_arrival']],
                     ['key' => 'limit', 'label' => 'Number of products to display', 'type' => 'number', 'default' => 10],
                     ['key' => 'layout', 'label' => 'Layout', 'type' => 'select', 'default' => 'rail', 'options' => [
                         ['value' => 'rail', 'label' => 'Carousel rail'],

@@ -1,1 +1,10 @@
 node_modules
+
+# Local backups & database dumps — never commit these (GitHub rejects >100 MB,
+# and dumps contain live customer/order data).
+*.zip
+*.sql
+
+# Server-local PHP config
+/php.ini
+/.user.ini

@@ -101,11 +101,12 @@
             "title": "New arrivals",
             "subtitle": "New. Fresh. Ready to carry",
             "badge": "New",
-            "category": null,
+            "category": "lunch-box",
             "sort": "new_arrival",
             "limit": 10,
             "layout": "rail",
-            "active": true
+            "active": true,
+            "random_order": true
         },
         {
             "title": "Bestsellers",

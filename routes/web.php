@@ -166,6 +166,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('products/import', [AdminProductController::class, 'import'])->middleware('permission:products.create')->name('products.import');
     Route::post('products/bulk-update', [AdminProductController::class, 'bulkUpdate'])->middleware('permission:products.edit')->name('products.bulk-update');
     Route::post('products/{product}/duplicate', [AdminProductController::class, 'duplicate'])->middleware('permission:products.create')->name('products.duplicate');
+    Route::patch('products/{product}/new-arrival', [AdminProductController::class, 'toggleNewArrival'])->middleware('permission:products.edit')->name('products.new-arrival');
     Route::get('products/{product}/gallery', [AdminProductController::class, 'galleryData'])->middleware('permission:products.view')->name('products.gallery');
     Route::get('products', [AdminProductController::class, 'index'])->middleware('permission:products.view')->name('products.index');
     Route::get('products/create', [AdminProductController::class, 'create'])->middleware('permission:products.create')->name('products.create');

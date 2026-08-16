@@ -87,7 +87,7 @@
             <h3 class="font-display font-semibold text-charcoal text-sm uppercase tracking-wide mb-3">Summary</h3>
             <dl class="space-y-2 text-sm">
               <div class="flex justify-between"><dt class="text-muted">Subtotal</dt><dd class="text-charcoal">৳{{ Number(order.subtotal).toLocaleString() }}</dd></div>
-              <div class="flex justify-between"><dt class="text-muted">Delivery</dt><dd :class="order.delivery_charge === 0 ? 'text-success font-medium' : 'text-charcoal'">{{ order.delivery_charge === 0 ? 'FREE' : '৳' + Number(order.delivery_charge).toLocaleString() }}</dd></div>
+              <div class="flex justify-between"><dt class="text-muted">Delivery</dt><dd v-if="pendingDeliveryCharge" class="text-success font-medium">To be added</dd><dd v-else :class="order.delivery_charge === 0 ? 'text-success font-medium' : 'text-charcoal'">{{ order.delivery_charge === 0 ? 'FREE' : '৳' + Number(order.delivery_charge).toLocaleString() }}</dd></div>
               <div v-if="order.discount > 0" class="flex justify-between"><dt class="text-success">Discount</dt><dd class="text-success">−৳{{ Number(order.discount).toLocaleString() }}</dd></div>
               <div class="flex justify-between pt-2 mt-1 border-t border-purple-100 font-bold text-base"><dt>Total</dt><dd class="text-primary">৳{{ Number(order.total).toLocaleString() }}</dd></div>
             </dl>
@@ -155,12 +155,20 @@ import { ref, computed } from 'vue'
 import { Head, Link, router } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import VariationTags from '@/Components/ui/VariationTags.vue'
+import { useDelivery } from '@/composables/useDelivery'
 import {
   CheckIcon, MagnifyingGlassIcon, ClockIcon, CheckBadgeIcon, FireIcon,
   TruckIcon, CheckCircleIcon, XCircleIcon, ShoppingBagIcon, ArchiveBoxIcon,
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps({ order: Object })
+
+// Location-based charging: 0 means "not set yet", not free.
+const del = useDelivery()
+const pendingDeliveryCharge = computed(() =>
+  Number(props.order?.delivery_charge || 0) === 0 && del.isManual(props.order?.subtotal || 0)
+)
+
 const orderNumber = ref('')
 const searched = ref(false)
 

@@ -110,7 +110,8 @@
           </div>
           <div class="flex justify-between text-sm text-muted">
             <span>Delivery</span>
-            <span :class="cartStore.delivery_charge === 0 ? 'text-success font-semibold' : ''">
+            <span v-if="del.isManual(cartStore.subtotal)" class="text-success">To be added</span>
+            <span v-else :class="cartStore.delivery_charge === 0 ? 'text-success font-semibold' : ''">
               {{ cartStore.delivery_charge === 0 ? 'FREE' : '৳' + cartStore.delivery_charge }}
             </span>
           </div>
@@ -131,7 +132,8 @@
             Checkout
           </Link>
         </div>
-        <p v-if="del.message" class="text-center text-xs text-success font-medium mt-3">{{ del.message }}</p>
+        <p v-if="del.isManual(cartStore.subtotal)" class="text-center text-xs text-success font-medium mt-3">{{ del.locationMessage }}</p>
+        <p v-else-if="del.message" class="text-center text-xs text-success font-medium mt-3">{{ del.message }}</p>
         <p v-else class="text-center text-xs text-muted mt-3">Delivery charge calculated at checkout by location.</p>
       </div>
 

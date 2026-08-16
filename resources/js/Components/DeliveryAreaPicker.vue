@@ -79,7 +79,11 @@ const areaOptions = computed(() =>
 )
 
 const selectedCity = computed(() => props.cities.find(c => toId(c.id) === selectedCityId.value) ?? null)
-const showUnavailable = computed(() => selectedCity.value && !selectedCity.value.is_active)
+// Only warn when the city is *known* to be inactive — a payload that doesn't
+// include is_active (undefined) must not be treated as "unavailable".
+const showUnavailable = computed(() =>
+  !!selectedCity.value && selectedCity.value.is_active !== undefined && !selectedCity.value.is_active
+)
 
 const onCitySelect = (cityId) => {
   selectedCityId.value = toId(cityId)

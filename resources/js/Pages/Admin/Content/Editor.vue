@@ -73,7 +73,8 @@
               </div>
             </div>
             <div class="space-y-3">
-              <div v-for="sub in field.item" :key="sub.key">
+              <template v-for="sub in field.item" :key="sub.key">
+              <div v-if="visibleSub(sub, item)">
                 <label v-if="sub.type !== 'toggle'" class="block text-xs font-medium text-muted mb-1">{{ sub.label }}</label>
                 <textarea v-if="sub.type === 'textarea'" v-model="item[sub.key]" rows="2" class="input-field text-sm"></textarea>
                 <select v-else-if="sub.type === 'select'" v-model="item[sub.key]" class="input-field text-sm">
@@ -103,7 +104,9 @@
                 <ColorField v-else-if="sub.type === 'color'" v-model="item[sub.key]" />
                 <HeroTypographyField v-else-if="sub.type === 'hero_typography'" :item="item" />
                 <input v-else v-model="item[sub.key]" type="text" class="input-field text-sm">
+                <p v-if="sub.help" class="text-xs text-muted mt-1 leading-relaxed">{{ sub.help }}</p>
               </div>
+              </template>
             </div>
           </div>
           <button type="button" @click="addItem(field)" class="inline-flex items-center gap-1.5 text-sm font-semibold text-ink hover:text-accent transition-colors">
@@ -173,6 +176,14 @@ const visible = (field) => {
   return conds.every((c) => String(form.content[c.key]) === String(c.value))
 }
 const visibleFields = computed(() => props.fields.filter(visible))
+
+// Same conditional visibility for a `list` field's sub-fields, evaluated
+// against that row's own values (e.g. only show an option for a given `sort`).
+const visibleSub = (sub, item) => {
+  if (!sub.show_if) return true
+  const conds = sub.show_if.key !== undefined ? [sub.show_if] : sub.show_if
+  return conds.every((c) => String(item?.[c.key]) === String(c.value))
+}
 
 // select options accept either plain strings or { value, label } objects
 const optVal = (o) => (o && typeof o === 'object') ? o.value : o

@@ -37,6 +37,38 @@ class DeliverySettings
         return (float) ($this->data()['free_delivery_minimum_amount'] ?? 0);
     }
 
+    /**
+     * "Delivery charge based on location" — no charge is computed at checkout;
+     * staff enter the exact amount later (admin order edit) or while creating a
+     * POS order. Takes precedence over the per-city charge table.
+     */
+    public function locationBased(): bool
+    {
+        return (bool) ($this->data()['location_charge_enabled'] ?? false);
+    }
+
+    /** Whether the per-city charge table is applied at all. */
+    public function chargesEnabled(): bool
+    {
+        return (bool) ($this->data()['delivery_charges_enabled'] ?? true);
+    }
+
+    /** Green checkout note shown while location-based charging is on. */
+    public function locationMessage(): string
+    {
+        $m = trim((string) ($this->data()['location_charge_message'] ?? ''));
+        return $m !== '' ? $m : 'Delivery charge will be added based on your location.';
+    }
+
+    /**
+     * True when the charge is not decided at checkout time and is added by staff
+     * afterwards — i.e. location-based mode (free delivery still wins).
+     */
+    public function manualCharge(float $subtotal = 0): bool
+    {
+        return $this->locationBased() && ! $this->qualifiesFree($subtotal);
+    }
+
     /** Message shown when a selected city has no delivery charge configured. */
     public function noChargeMessage(): string
     {
@@ -55,6 +87,8 @@ class DeliverySettings
     /**
      * Delivery charge for a city + subtotal.
      *  - Free delivery applies   → 0.0
+     *  - Location-based mode     → 0.0   (added manually by staff later)
+     *  - City charges disabled   → 0.0
      *  - City missing            → null   (location unknown)
      *  - City has no charge set  → null   (checkout should block)
      *  - Otherwise               → the city's configured charge
@@ -62,6 +96,7 @@ class DeliverySettings
     public function chargeForCity(?DeliveryCity $city, float $subtotal = 0): ?float
     {
         if ($this->qualifiesFree($subtotal)) return 0.0;
+        if ($this->locationBased() || ! $this->chargesEnabled()) return 0.0;
         if (! $city || $city->delivery_charge === null) return null;
         return (float) $city->delivery_charge;
     }
@@ -76,6 +111,7 @@ class DeliverySettings
     public function chargeForCityName(?string $name, float $subtotal = 0): ?float
     {
         if ($this->qualifiesFree($subtotal)) return 0.0;
+        if ($this->locationBased() || ! $this->chargesEnabled()) return 0.0;
         if (! $name) return null;
         $city = DeliveryCity::whereRaw('LOWER(name) = ?', [mb_strtolower(trim($name))])->first();
         return $city ? $this->chargeForCity($city, $subtotal) : null;
@@ -84,6 +120,7 @@ class DeliverySettings
     /** Whether a delivery area's city has a charge configured (for checkout validation). */
     public function hasChargeFor(?DeliveryArea $area): bool
     {
+        if ($this->locationBased() || ! $this->chargesEnabled()) return true;
         return $area?->city && $area->city->delivery_charge !== null;
     }
 
@@ -94,12 +131,21 @@ class DeliverySettings
     public function estimate(float $subtotal = 0): float
     {
         if ($this->qualifiesFree($subtotal)) return 0.0;
+        if ($this->locationBased() || ! $this->chargesEnabled()) return 0.0;
         return (float) (DeliveryCity::active()->whereNotNull('delivery_charge')->min('delivery_charge') ?? 0);
     }
 
     /** Human-readable delivery-charge summary for the chatbot / messaging. */
     public function chargeSummary(): string
     {
+        if ($this->locationBased()) {
+            return $this->freeEnabled() && $this->type() === 'all'
+                ? 'Free delivery on all orders.'
+                : $this->locationMessage();
+        }
+        if (! $this->chargesEnabled()) {
+            return 'No delivery charge is applied.';
+        }
         if ($this->freeEnabled()) {
             return $this->type() === 'all'
                 ? 'Free delivery on all orders.'
@@ -121,8 +167,14 @@ class DeliverySettings
             'type'              => $this->type(),
             'minimum'           => $this->minimumAmount(),
             'no_charge_message' => $this->noChargeMessage(),
+            // Location-based mode: no charge at checkout, staff add it later.
+            'location_based'    => $this->locationBased(),
+            'location_message'  => $this->locationMessage(),
+            'charges_enabled'   => $this->chargesEnabled(),
             // Lowest configured city charge — the mini-cart's estimate before a city is chosen.
-            'estimate'          => (float) (DeliveryCity::active()->whereNotNull('delivery_charge')->min('delivery_charge') ?? 0),
+            'estimate'          => ($this->locationBased() || ! $this->chargesEnabled())
+                ? 0.0
+                : (float) (DeliveryCity::active()->whereNotNull('delivery_charge')->min('delivery_charge') ?? 0),
         ];
     }
 }

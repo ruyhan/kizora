@@ -1,5 +1,10 @@
 {
     "free_delivery_enabled": false,
     "free_delivery_type": "all",
-    "free_delivery_minimum_amount": 1000
+    "free_delivery_minimum_amount": 1000,
+    "location_charge_enabled": true,
+    "location_charge_message": "Delivery charge will be added based on your location.",
+    "delivery_charges_enabled": false,
+    "delivery_charges": null,
+    "no_charge_message": "Delivery is not available for the selected city yet. Please choose another city or contact us."
 }

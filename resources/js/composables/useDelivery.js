@@ -12,11 +12,21 @@ import { usePage } from '@inertiajs/vue3'
 export function useDelivery() {
   const config = computed(() => usePage().props.delivery || {
     free_enabled: false, type: 'all', minimum: 0, no_charge_message: '',
+    location_based: false, location_message: '', charges_enabled: true,
   })
 
   const noChargeMessage = computed(() =>
     config.value.no_charge_message || 'Delivery is not available for the selected city yet. Please choose another city or contact us.'
   )
+
+  // "Delivery charge based on location" — nothing is charged at checkout; staff
+  // add the exact amount later (admin order edit) or while creating a POS order.
+  const locationBased = computed(() => !!config.value.location_based)
+  const locationMessage = computed(() =>
+    config.value.location_message || 'Delivery charge will be added based on your location.'
+  )
+  // Per-city charge table on/off (defaults to on for older saved settings).
+  const chargesEnabled = computed(() => config.value.charges_enabled !== false)
 
   const isFreeForAll = computed(() => config.value.free_enabled && config.value.type === 'all')
   const freeMinimum = computed(() =>
@@ -51,10 +61,17 @@ export function useDelivery() {
    */
   const charge = (subtotal, cityCharge = null) => {
     if (qualifiesFree(subtotal)) return 0
+    if (locationBased.value || !chargesEnabled.value) return 0
     if (cityCharge === null || cityCharge === undefined || cityCharge === '') return null
     return Number(cityCharge) || 0
   }
 
+  // True when the charge is deferred to staff rather than shown at checkout.
+  const isManual = (subtotal) => locationBased.value && !qualifiesFree(subtotal)
+
   // reactive() so nested computed refs auto-unwrap when accessed as `del.message` in templates.
-  return reactive({ config, isFreeForAll, freeMinimum, message, noChargeMessage, qualifiesFree, amountToFree, charge })
+  return reactive({
+    config, isFreeForAll, freeMinimum, message, noChargeMessage, qualifiesFree, amountToFree, charge,
+    locationBased, locationMessage, chargesEnabled, isManual,
+  })
 }

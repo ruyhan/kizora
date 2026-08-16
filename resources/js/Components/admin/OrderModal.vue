@@ -124,11 +124,18 @@
                 <!-- Totals -->
                 <div class="bg-purple-50/40 rounded-2xl p-4 space-y-2">
                   <div class="flex justify-between text-sm"><span class="text-muted">Subtotal</span><span>৳{{ Number(editing ? editSubtotal : order.subtotal).toFixed(2) }}</span></div>
-                  <div class="flex justify-between text-sm"><span class="text-muted">Delivery</span><span>{{ order.delivery_charge == 0 ? 'FREE' : '৳' + Number(order.delivery_charge).toFixed(2) }}</span></div>
+                  <!-- Location-based delivery charge: entered manually by staff -->
+                  <div v-if="editing && manualDelivery" class="flex justify-between items-center gap-3 text-sm">
+                    <span class="text-muted shrink-0">Delivery charge (৳)</span>
+                    <input v-model.number="editForm.delivery_charge" type="number" min="0" step="0.01"
+                      placeholder="0.00" class="input-field text-sm py-1.5 w-32 text-right">
+                  </div>
+                  <div v-else class="flex justify-between text-sm"><span class="text-muted">Delivery</span><span>{{ order.delivery_charge == 0 ? 'FREE' : '৳' + Number(order.delivery_charge).toFixed(2) }}</span></div>
                   <div v-if="order.discount > 0" class="flex justify-between text-sm"><span class="text-success">Discount</span><span class="text-success">-৳{{ Number(order.discount).toFixed(2) }}</span></div>
                   <hr class="border-purple-200">
-                  <div class="flex justify-between font-bold text-base"><span>Total</span><span class="text-primary">৳{{ Number(order.total).toFixed(2) }}</span></div>
-                  <p v-if="editing" class="text-[11px] text-muted pt-1">Delivery &amp; total are recalculated on save (based on delivery settings &amp; location).</p>
+                  <div class="flex justify-between font-bold text-base"><span>Total</span><span class="text-primary">৳{{ Number(editing && manualDelivery ? editTotal : order.total).toFixed(2) }}</span></div>
+                  <p v-if="editing && manualDelivery" class="text-[11px] text-muted pt-1">Delivery charge is set manually (Delivery Settings → “Delivery charge based on location”). The total updates on save.</p>
+                  <p v-else-if="editing" class="text-[11px] text-muted pt-1">Delivery &amp; total are recalculated on save (based on delivery settings &amp; location).</p>
                 </div>
               </div>
 
@@ -180,7 +187,9 @@
                       <datalist id="order-city-list">
                         <option v-for="c in cities" :key="c.id" :value="c.name">৳{{ Number(c.delivery_charge ?? 0).toLocaleString() }}</option>
                       </datalist>
-                      <p class="text-[11px] text-muted mt-1">Delivery charge is taken from this city; totals recalculate on save.</p>
+                      <p class="text-[11px] text-muted mt-1">
+                        {{ manualDelivery ? 'Delivery charge is entered manually in the totals panel.' : 'Delivery charge is taken from this city; totals recalculate on save.' }}
+                      </p>
                     </div>
                     <textarea v-model="editForm.notes" rows="2" placeholder="Notes" class="input-field text-sm py-2"></textarea>
                   </div>
@@ -217,6 +226,7 @@ import InvoiceActions from '@/Components/admin/InvoiceActions.vue'
 import { XMarkIcon, PencilSquareIcon, MagnifyingGlassIcon, TrashIcon } from '@heroicons/vue/24/outline'
 import { statusBadge, paymentBadge } from '@/composables/useOrderStatus'
 import { usePermissions } from '@/composables/usePermissions'
+import { useDelivery } from '@/composables/useDelivery'
 
 const props = defineProps({
   cities: { type: Array, default: () => [] }, // active delivery cities (id, name, delivery_charge)
@@ -224,6 +234,10 @@ const props = defineProps({
 const emit = defineEmits(['updated'])
 const { can } = usePermissions()
 const toast = useToast()
+const del = useDelivery()
+
+// "Delivery charge based on location" is on → staff type the charge in themselves.
+const manualDelivery = computed(() => del.locationBased)
 
 const showOrder = ref(false)
 const loadingOrder = ref(false)
@@ -244,6 +258,12 @@ let prodTimer = null
 const editSubtotal = computed(() =>
   editForm.value ? editForm.value.items.reduce((s, i) => s + Number(i.price) * Number(i.quantity || 0), 0) : 0
 )
+// Live total preview while a manual delivery charge is being typed.
+const editTotal = computed(() => {
+  if (!editForm.value || !order.value) return 0
+  const discount = Math.min(Number(order.value.discount) || 0, editSubtotal.value)
+  return Math.max(0, editSubtotal.value + (Number(editForm.value.delivery_charge) || 0) - discount)
+})
 
 const open = async (id) => {
   showOrder.value = true
@@ -301,6 +321,7 @@ const startEdit = () => {
   editForm.value = {
     name: order.value.customer.name || '', phone: order.value.customer.phone || '', email: order.value.customer.email || '',
     address: order.value.delivery_address || '', delivery_city: order.value.delivery_city || '', notes: order.value.notes || '',
+    delivery_charge: Number(order.value.delivery_charge) || 0,
     payment_method: order.value.payment_method || 'cod', payment_status: order.value.payment_status || 'pending',
     courier_name: order.value.courier_name || '', tracking_number: order.value.tracking_number || '',
     items: order.value.items.map((i) => ({ id: i.id, product_id: i.product_id, name: i.product_name, price: Number(i.price), quantity: i.quantity, image: i.product_image })),
@@ -329,6 +350,8 @@ const saveEdit = () => {
   router.put(route('admin.orders.update', order.value.id), {
     name: editForm.value.name, phone: editForm.value.phone, email: editForm.value.email,
     address: editForm.value.address, delivery_city: editForm.value.delivery_city, notes: editForm.value.notes,
+    // Only sent while the charge is set manually; otherwise it stays city-derived.
+    delivery_charge: manualDelivery.value ? (Number(editForm.value.delivery_charge) || 0) : null,
     payment_method: editForm.value.payment_method, payment_status: editForm.value.payment_status,
     courier_name: editForm.value.courier_name || '', tracking_number: editForm.value.tracking_number || '',
     items: editForm.value.items.map((i) => ({ id: i.id, product_id: i.product_id, quantity: i.quantity })),

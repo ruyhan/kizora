@@ -110,14 +110,19 @@ class HomeController extends Controller
         ];
     }
 
-    /** Products for a home section — cached; the key hashes the section's query config. */
+    /**
+     * Products for a home section — cached; the key hashes the section's query config.
+     * A section with "random order" on is deliberately NOT cached: it has to return a
+     * different mix on every page load.
+     */
     private function sectionProducts(array $s): array
     {
-        $sort  = $s['sort'] ?? 'latest';
-        $limit = max(1, min(24, (int) ($s['limit'] ?? 10) ?: 10));
-        $key   = 'home:section:'.md5(json_encode([$s['category'] ?? '', $sort, $limit]));
+        $sort   = $s['sort'] ?? 'latest';
+        $limit  = max(1, min(24, (int) ($s['limit'] ?? 10) ?: 10));
+        $random = ! empty($s['random_order']);
+        $key    = 'home:section:'.md5(json_encode([$s['category'] ?? '', $sort, $limit]));
 
-        return $this->cache->remember($key, function () use ($s, $sort, $limit) {
+        $build = function () use ($s, $sort, $limit, $random) {
             $query = $this->base();
 
             if (! empty($s['category'])) {
@@ -144,8 +149,16 @@ class HomeController extends Controller
                 default        => $query->latest(),
             };
 
+            // Keep the source filter (e.g. New Arrival only) but drop its ordering,
+            // so each load draws a fresh random slice from the whole matching set.
+            if ($random) {
+                $query->reorder()->inRandomOrder();
+            }
+
             return $query->take($limit)->get()->map(fn ($p) => $this->formatProduct($p))->all();
-        });
+        };
+
+        return $random ? $build() : $this->cache->remember($key, $build);
     }
 
     public function about(): Response

@@ -98,6 +98,13 @@
         <div class="bg-white rounded-2xl border border-purple-50 p-4 space-y-3">
           <h3 class="font-semibold text-charcoal">Payment</h3>
           <SelectMenu v-model="form.payment_method" :options="paymentOptions" trigger-class="text-sm" />
+          <!-- Location-based delivery charge: entered manually per order -->
+          <div v-if="manualDelivery">
+            <label class="text-xs text-muted">Delivery Charge (৳)</label>
+            <input v-model.number="form.delivery_charge" type="number" min="0" step="0.01" class="input-field text-sm">
+            <p v-if="form.errors.delivery_charge" class="text-error text-xs mt-1">{{ form.errors.delivery_charge }}</p>
+            <p class="text-[11px] text-muted mt-1">Set manually because “Delivery charge based on location” is ON in Delivery Settings.</p>
+          </div>
           <div>
             <label class="text-xs text-muted">Discount (৳)</label>
             <input v-model.number="form.discount" type="number" min="0" class="input-field text-sm">
@@ -171,10 +178,14 @@ const selectedCity = computed(() => {
   const a = props.deliveryAreas.find((x) => x.id === form.delivery_area_id)
   return a ? props.deliveryCities.find((c) => c.id === a.delivery_city_id) : null
 })
+// "Delivery charge based on location" is on → staff type the charge in themselves
+// (free delivery still overrides it).
+const manualDelivery = computed(() => del.locationBased && !del.qualifiesFree(subtotal.value))
 // Per-city charge; an unset city charge resolves to 0 for POS (staff can adjust).
-const deliveryCharge = computed(() =>
-  form.delivery_area_id ? (del.charge(subtotal.value, selectedCity.value ? selectedCity.value.delivery_charge : null) ?? 0) : 0
-)
+const deliveryCharge = computed(() => {
+  if (manualDelivery.value) return Number(form.delivery_charge) || 0
+  return form.delivery_area_id ? (del.charge(subtotal.value, selectedCity.value ? selectedCity.value.delivery_charge : null) ?? 0) : 0
+})
 const grandTotal = computed(() => Math.max(0, subtotal.value + deliveryCharge.value - (Number(form.discount) || 0)))
 
 const paymentLabel = (m) => ({ cash: 'Cash', card: 'Card', mobile_banking: 'Mobile Banking', bank_transfer: 'Bank Transfer', other: 'Other' }[m] || m)
@@ -182,7 +193,7 @@ const paymentOptions = computed(() => (props.paymentMethods || []).map(m => ({ v
 
 const form = useForm({
   items: [], customer_type: 'walkin', customer_id: null, name: '', phone: '', email: '',
-  address: '', delivery_area_id: null, payment_method: 'cash', discount: 0, notes: '',
+  address: '', delivery_area_id: null, payment_method: 'cash', delivery_charge: 0, discount: 0, notes: '',
 })
 
 const submit = () => {

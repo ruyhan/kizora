@@ -364,6 +364,20 @@ class ProductController extends Controller
         $product->delete();
     }
 
+    /**
+     * Flip the "New Arrival" flag (products.show_on_hero) straight from the
+     * products list — same flag the edit form and the home page's New Arrival
+     * section use. Model events bust the catalog cache.
+     */
+    public function toggleNewArrival(Product $product)
+    {
+        $product->update(['show_on_hero' => ! $product->show_on_hero]);
+
+        return back()->with('success', $product->show_on_hero
+            ? "\"{$product->name}\" added to New Arrivals."
+            : "\"{$product->name}\" removed from New Arrivals.");
+    }
+
     /** Duplicate a product (created inactive, without SKU) and jump to its edit page. */
     public function duplicate(Product $product)
     {

@@ -189,6 +189,7 @@ class OrderController extends Controller
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string|max:500',
             'delivery_city' => 'nullable|string|max:100',
+            'delivery_charge' => 'nullable|numeric|min:0|max:1000000',
             'notes' => 'nullable|string|max:1000',
             'payment_method' => 'nullable|string|max:30',
             'payment_status' => 'nullable|in:pending,paid,failed,refunded,cancelled',
@@ -272,10 +273,18 @@ class OrderController extends Controller
             }
 
             // ── Recalculate delivery + totals (respects free-delivery rules dynamically) ──
-            // Resolve the charge from the order's (possibly just-changed) delivery city;
-            // if that city isn't in the charges table, keep the order's existing charge.
-            $cityName = $update['delivery_city'] ?? $order->delivery_city;
-            $deliveryCharge = $this->delivery->chargeForCityName($cityName, $subtotal) ?? (float) $order->delivery_charge;
+            if ($this->delivery->locationBased()) {
+                // "Delivery charge based on location": nothing was charged at checkout —
+                // the admin types the exact amount here. Free delivery still wins.
+                $deliveryCharge = $this->delivery->qualifiesFree($subtotal)
+                    ? 0.0
+                    : (isset($data['delivery_charge']) ? (float) $data['delivery_charge'] : (float) $order->delivery_charge);
+            } else {
+                // Resolve the charge from the order's (possibly just-changed) delivery city;
+                // if that city isn't in the charges table, keep the order's existing charge.
+                $cityName = $update['delivery_city'] ?? $order->delivery_city;
+                $deliveryCharge = $this->delivery->chargeForCityName($cityName, $subtotal) ?? (float) $order->delivery_charge;
+            }
             $discount = min((float) $order->discount, $subtotal);
 
             $update += [

@@ -75,7 +75,8 @@
               </div>
               <div class="flex justify-between text-sm">
                 <span class="text-muted">Delivery Charge</span>
-                <span :class="cart.delivery_charge === 0 ? 'text-success font-semibold' : 'text-charcoal font-medium'">
+                <span v-if="del.isManual(cart.subtotal)" class="text-success font-medium">To be added</span>
+                <span v-else :class="cart.delivery_charge === 0 ? 'text-success font-semibold' : 'text-charcoal font-medium'">
                   {{ cart.delivery_charge === 0 ? 'FREE' : '৳' + formatPrice(cart.delivery_charge) }}
                 </span>
               </div>
@@ -90,7 +91,10 @@
               </div>
             </div>
 
-            <template v-if="del.message">
+            <p v-if="del.isManual(cart.subtotal)" class="text-xs text-success font-medium mb-4 text-center">
+              {{ del.locationMessage }}
+            </p>
+            <template v-else-if="del.message">
               <p v-if="del.qualifiesFree(cart.subtotal)" class="text-xs text-success mb-4 text-center font-semibold flex items-center justify-center gap-1">
                 <SparklesIcon class="w-3.5 h-3.5" /> {{ del.isFreeForAll ? 'Free delivery on all orders!' : 'You qualify for free delivery!' }}
               </p>

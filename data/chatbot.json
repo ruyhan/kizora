@@ -3,7 +3,7 @@
     "provider": "groq",
     "groq_api_key": "eyJpdiI6IkVLdlp5VHNlVVJ5Ti9WeXhlM3gwVlE9PSIsInZhbHVlIjoiQTZ2SmpDV2F0QnNobHJaVEVCUmdmU2g4QTlSeHlCZjJpc3NuUFZIY3hzV3hXUW9hZ0dyQ3ZXUUJGdXhiWDR3QU83RzJFY0JFTVo4TjFmL0JEU0dBK2c9PSIsIm1hYyI6IjczMTU0OTQxZjNmNzI4NzBjMmExNTZjNjE4YTg4MWU4ZTBkZmIwMDgzMzI2NjFiZjBmOTkwZWM2NzRlNmUwYmIiLCJ0YWciOiIifQ==",
     "openrouter_api_key": "",
-    "model": "llama-3.3-70b-versatile",
+    "model": "openai/gpt-oss-120b",
     "name": "Zora",
     "welcome_message": "Hi!, I am Zora 👋 I can help you find the product, answer questions, and even place your order. What are you looking for?",
     "avatar": "/storage/media/Gx5Fj2OsJLgXQVEePZo0SuI0q98DILJeTUNNM3w9.png",

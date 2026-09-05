@@ -24,7 +24,7 @@
     "low_stock_threshold": 10,
     "head_scripts": "<!-- Google tag (gtag.js) -->\n<script async src=\"https://www.googletagmanager.com/gtag/js?id=G-BGG7FL87BP\"></script>\n<script>\n  window.dataLayer = window.dataLayer || [];\n  function gtag(){dataLayer.push(arguments);}\n  gtag('js', new Date());\n\n  gtag('config', 'G-BGG7FL87BP');\n</script>\n\n<!-- Meta Pixel Code -->\n<script>\n!function(f,b,e,v,n,t,s)\n{if(f.fbq)return;n=f.fbq=function(){n.callMethod?\nn.callMethod.apply(n,arguments):n.queue.push(arguments)};\nif(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';\nn.queue=[];t=b.createElement(e);t.async=!0;\nt.src=v;s=b.getElementsByTagName(e)[0];\ns.parentNode.insertBefore(t,s)}(window,document,'script',\n'https://connect.facebook.net/en_US/fbevents.js');\n fbq('init', '2487696705065226'); \nfbq('track', 'PageView');\n</script>\n<noscript>\n <img height=\"1\" width=\"1\" \nsrc=\"https://www.facebook.com/tr?id=2487696705065226&ev=PageView\n&noscript=1\"/>\n</noscript>\n<!-- End Meta Pixel Code -->",
     "body_scripts": null,
-    "maintenance_mode": true,
+    "maintenance_mode": false,
     "maintenance_title": "We’ll be right back",
     "maintenance_message": "We’re making things better. Our store is briefly down for scheduled maintenance and will be back online shortly. Thanks for your patience."
 }

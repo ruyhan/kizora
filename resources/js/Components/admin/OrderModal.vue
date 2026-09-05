@@ -130,7 +130,10 @@
                     <input v-model.number="editForm.delivery_charge" type="number" min="0" step="0.01"
                       placeholder="0.00" class="input-field text-sm py-1.5 w-32 text-right">
                   </div>
-                  <div v-else class="flex justify-between text-sm"><span class="text-muted">Delivery</span><span>{{ order.delivery_charge == 0 ? 'FREE' : '৳' + Number(order.delivery_charge).toFixed(2) }}</span></div>
+                  <div v-else class="flex justify-between gap-3 text-sm"><span class="text-muted shrink-0">Delivery</span>
+                    <span v-if="deliveryPending" class="text-right text-xs text-muted">{{ del.locationMessage }}</span>
+                    <span v-else>{{ order.delivery_charge == 0 ? 'FREE' : '৳' + Number(order.delivery_charge).toFixed(2) }}</span>
+                  </div>
                   <div v-if="order.discount > 0" class="flex justify-between text-sm"><span class="text-success">Discount</span><span class="text-success">-৳{{ Number(order.discount).toFixed(2) }}</span></div>
                   <hr class="border-purple-200">
                   <div class="flex justify-between font-bold text-base"><span>Total</span><span class="text-primary">৳{{ Number(editing && manualDelivery ? editTotal : order.total).toFixed(2) }}</span></div>
@@ -238,6 +241,11 @@ const del = useDelivery()
 
 // "Delivery charge based on location" is on → staff type the charge in themselves.
 const manualDelivery = computed(() => del.locationBased)
+
+// Location-based mode and no amount entered yet → show the note instead of "FREE".
+const deliveryPending = computed(() =>
+  !!order.value && del.isManual(Number(order.value.subtotal || 0)) && Number(order.value.delivery_charge || 0) === 0
+)
 
 const showOrder = ref(false)
 const loadingOrder = ref(false)

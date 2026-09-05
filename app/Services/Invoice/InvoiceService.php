@@ -4,6 +4,7 @@ namespace App\Services\Invoice;
 
 use App\Models\Invoice;
 use App\Models\Order;
+use App\Support\DeliverySettings;
 use App\Support\PageContent;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Str;
@@ -14,7 +15,10 @@ use Illuminate\Support\Str;
  */
 class InvoiceService
 {
-    public function __construct(private readonly PageContent $content) {}
+    public function __construct(
+        private readonly PageContent $content,
+        private readonly DeliverySettings $delivery,
+    ) {}
 
     public function settings(): array
     {
@@ -53,6 +57,11 @@ class InvoiceService
             'invoice'  => $this->ensureFor($order),
             'order'    => $order,
             'print'    => $print,
+            // Location-based charging: the amount is added by staff later, so the
+            // invoice shows the admin-configured note instead of a value.
+            'deliveryNote' => $this->delivery->chargePending((float) $order->subtotal, (float) $order->delivery_charge)
+                ? $this->delivery->locationMessage()
+                : null,
             'customer' => [
                 'name'    => $order->user?->name ?? $order->guest_name ?? 'Customer',
                 'phone'   => $order->user?->phone ?? $order->guest_phone,

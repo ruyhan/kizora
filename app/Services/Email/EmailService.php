@@ -6,6 +6,7 @@ use App\Mail\TemplatedMail;
 use App\Models\EmailLog;
 use App\Models\EmailTemplate;
 use App\Models\Order;
+use App\Support\DeliverySettings;
 use App\Support\PageContent;
 use Illuminate\Support\Facades\Mail;
 
@@ -16,7 +17,10 @@ use Illuminate\Support\Facades\Mail;
  */
 class EmailService
 {
-    public function __construct(private readonly EmailSettingService $settings) {}
+    public function __construct(
+        private readonly EmailSettingService $settings,
+        private readonly DeliverySettings $delivery,
+    ) {}
 
     /** Status → template key map used by the order lifecycle. */
     public const STATUS_TEMPLATES = [
@@ -655,7 +659,11 @@ HTML,
             'shipping_address'        => $address,
             'product_table'           => $this->productTable($order),
             'subtotal'                => $this->money($order->subtotal),
-            'shipping_charge'         => $this->money($order->delivery_charge),
+            // Location-based charging: staff add the amount later, so show the
+            // admin-configured note in place of a value (same as checkout/invoice).
+            'shipping_charge'         => $this->delivery->chargePending((float) $order->subtotal, (float) $order->delivery_charge)
+                ? $this->delivery->locationMessage()
+                : $this->money($order->delivery_charge),
             'discount'                => $this->money($order->discount),
             'grand_total'             => $this->money($order->total),
             'order_total'             => $this->money($order->total),

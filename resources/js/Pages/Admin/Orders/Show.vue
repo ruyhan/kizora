@@ -40,9 +40,10 @@
                 <span class="text-muted">Subtotal</span>
                 <span>৳{{ Number(order.subtotal).toFixed(2) }}</span>
               </div>
-              <div class="flex justify-between text-sm">
-                <span class="text-muted">Delivery</span>
-                <span>{{ order.delivery_charge == 0 ? 'FREE' : '৳' + Number(order.delivery_charge).toFixed(2) }}</span>
+              <div class="flex justify-between gap-3 text-sm">
+                <span class="text-muted shrink-0">Delivery</span>
+                <span v-if="deliveryPending" class="text-right text-xs text-muted">{{ del.locationMessage }}</span>
+                <span v-else>{{ order.delivery_charge == 0 ? 'FREE' : '৳' + Number(order.delivery_charge).toFixed(2) }}</span>
               </div>
               <div v-if="order.discount > 0" class="flex justify-between text-sm">
                 <span class="text-success">Discount</span>
@@ -109,7 +110,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { Head, Link, router } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import SelectMenu from '@/Components/ui/SelectMenu.vue'
@@ -126,8 +127,14 @@ import VariationTags from '@/Components/ui/VariationTags.vue'
 import InvoiceActions from '@/Components/admin/InvoiceActions.vue'
 import { useToast } from 'vue-toastification'
 import { statusBadge, paymentBadge } from '@/composables/useOrderStatus'
+import { useDelivery } from '@/composables/useDelivery'
 
 const props = defineProps({ order: Object })
+const del = useDelivery()
+// "Delivery charge based on location" and no amount entered yet → show the note instead of "FREE".
+const deliveryPending = computed(() =>
+  del.isManual(Number(props.order.subtotal || 0)) && Number(props.order.delivery_charge || 0) === 0
+)
 const toast = useToast()
 const newStatus = ref(props.order.status)
 const updating = ref(false)

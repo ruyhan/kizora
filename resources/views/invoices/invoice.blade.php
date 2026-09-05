@@ -27,6 +27,7 @@
         table.items td { padding: 9px 10px; border-bottom: 1px solid #eee; }
         .totals { width: 50%; float: right; margin-top: 10px; }
         .totals td { padding: 6px 10px; }
+        .delivery-note { display: inline-block; text-align: right; font-size: 10px; font-weight: bold; line-height: 1.4; color: {{ $secondary }}; background: #fdf0f0; border: 1px solid {{ $secondary }}; border-radius: 4px; padding: 4px 7px; }
         .totals .grand td { border-top: 2px solid {{ $primary }}; font-size: 15px; font-weight: bold; color: {{ $primary }}; }
         .section-title { color: {{ $primary }}; font-weight: bold; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
         .box { border: 1px solid #eee; border-radius: 8px; padding: 12px 14px; }
@@ -123,7 +124,16 @@
         <!-- Totals -->
         <table class="totals">
             <tr><td class="muted">Subtotal</td><td class="r">{{ $money($order->subtotal) }}</td></tr>
-            <tr><td class="muted">Delivery</td><td class="r">{{ (float) $order->delivery_charge == 0.0 ? 'FREE' : $money($order->delivery_charge) }}</td></tr>
+            @php($deliveryNote = $deliveryNote ?? null)
+            <tr>
+                <td class="muted">Delivery</td>
+                @if($deliveryNote)
+                    {{-- Location-based charging: the note replaces the amount --}}
+                    <td class="r"><span class="delivery-note">{{ $deliveryNote }}</span></td>
+                @else
+                    <td class="r">{{ (float) $order->delivery_charge == 0.0 ? 'FREE' : $money($order->delivery_charge) }}</td>
+                @endif
+            </tr>
             @if((float) $order->discount > 0)
                 <tr><td class="muted">Discount</td><td class="r">- {{ $money($order->discount) }}</td></tr>
             @endif

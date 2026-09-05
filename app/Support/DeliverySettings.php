@@ -69,6 +69,16 @@ class DeliverySettings
         return $this->locationBased() && ! $this->qualifiesFree($subtotal);
     }
 
+    /**
+     * True when an order's delivery charge has not been decided yet: location-based
+     * mode is on, free delivery does not apply and no amount has been entered by
+     * staff. The invoice + order emails show the location note instead of a value.
+     */
+    public function chargePending(float $subtotal = 0, ?float $charge = 0): bool
+    {
+        return $this->manualCharge($subtotal) && (float) $charge <= 0.0;
+    }
+
     /** Message shown when a selected city has no delivery charge configured. */
     public function noChargeMessage(): string
     {

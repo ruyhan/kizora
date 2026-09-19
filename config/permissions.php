@@ -123,6 +123,11 @@ return [
         'blog.edit'   => 'Edit Blog Posts',
         'blog.delete' => 'Delete Blog Posts',
     ],
+    'Privilege Membership' => [
+        'membership.view'     => 'View Privilege Members',
+        'membership.manage'   => 'Approve / Reject Privilege Members',
+        'membership.settings' => 'Edit Privilege Card Settings',
+    ],
     'Marketing' => [
         'marketing.view'   => 'View Campaigns',
         'marketing.create' => 'Create Campaigns',

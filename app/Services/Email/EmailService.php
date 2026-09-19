@@ -198,6 +198,36 @@ HTML,
 <p style="margin:0;color:#9b9ba3;font-size:13px;line-height:1.6;">If you didn't request a password reset, you can safely ignore this email — your password won't change.</p>
 HTML,
             ],
+
+            'membership_approved' => [
+                'name'      => 'Account — Privilege Membership Approved',
+                'group'     => 'Account',
+                'subject'   => 'Welcome to Kizora Privilege, {customer_name}!',
+                'variables' => ['customer_name', 'card_number', 'membership_link'],
+                'body'      => <<<HTML
+<h1 style="margin:0 0 8px;font-size:22px;color:#17181B;">You're now a Privilege Member</h1>
+<p style="margin:0 0 18px;color:#52525b;font-size:15px;line-height:1.6;">Hi {customer_name}, your Privilege Membership has been approved. Your virtual card is ready in your account.</p>
+<table role="presentation" width="100%" style="margin:0 0 22px;border-collapse:collapse;background:#111111;border-radius:12px;">
+  <tr><td style="padding:18px 20px;font-size:12px;letter-spacing:2px;color:#d4b891;">PRIVILEGE CARD NO.<br><strong style="display:block;margin-top:6px;font-size:20px;letter-spacing:1px;color:#d4b891;">{card_number}</strong></td></tr>
+</table>
+<p style="margin:0;"><a href="{membership_link}" style="display:inline-block;background:#17181B;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;line-height:1;padding:13px 24px;border-radius:10px;">View my card</a></p>
+HTML,
+            ],
+
+            'membership_rejected' => [
+                'name'      => 'Account — Privilege Membership Not Approved',
+                'group'     => 'Account',
+                'subject'   => 'About your Kizora Privilege application',
+                'variables' => ['customer_name', 'reason'],
+                'body'      => <<<HTML
+<h1 style="margin:0 0 8px;font-size:22px;color:#17181B;">Your application wasn't approved</h1>
+<p style="margin:0 0 18px;color:#52525b;font-size:15px;line-height:1.6;">Hi {customer_name}, thank you for your interest in Kizora Privilege. Unfortunately we couldn't approve your application this time.</p>
+<table role="presentation" width="100%" style="margin:0 0 20px;border-collapse:collapse;background:#f7f7f8;border-radius:10px;">
+  <tr><td style="padding:14px 16px;font-size:14px;color:#52525b;"><strong style="color:#17181B;">Note:</strong> {reason}</td></tr>
+</table>
+<p style="margin:0;color:#52525b;font-size:15px;line-height:1.6;">You're welcome to apply again from your account at any time.</p>
+HTML,
+            ],
         ];
     }
 

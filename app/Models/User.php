@@ -118,6 +118,11 @@ class User extends Authenticatable
         return $this->hasMany(Address::class);
     }
 
+    public function privilegeMembership()
+    {
+        return $this->hasOne(PrivilegeMembership::class);
+    }
+
     public function deliveryArea()
     {
         return $this->belongsTo(DeliveryArea::class);

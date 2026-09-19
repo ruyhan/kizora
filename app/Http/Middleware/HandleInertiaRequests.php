@@ -53,6 +53,8 @@ class HandleInertiaRequests extends Middleware
                         'is_super' => $u->isSuperAdmin(),
                         'is_staff' => $staff,
                         'permissions' => $staff ? $u->permissionSlugs() : [],
+                        // pending | approved | rejected | revoked | null — drives the account "Privilege Member" link
+                        'privilege_status' => $u->privilegeMembership()->value('status'),
                     ];
                 })() : null,
             ],
@@ -68,6 +70,9 @@ class HandleInertiaRequests extends Middleware
             'unreadMessages'    => (Auth::check() && Auth::user()->isAdmin()) ? ContactMessage::where('is_read', false)->count() : 0,
             'newChatbotOrders'  => (Auth::check() && Auth::user()->isAdmin()) ? Order::chatbot()->where('status', 'pending')->count() : 0,
             'newReviewsCount'   => (Auth::check() && Auth::user()->isAdmin()) ? Review::whereNull('seen_at')->count() : 0,
+            'pendingMemberships' => (Auth::check() && Auth::user()->isAdmin() && Auth::user()->hasPermission('membership.view'))
+                ? \App\Models\PrivilegeMembership::where('status', 'pending')->count()
+                : 0,
             'lowStockCount'     => (Auth::check() && Auth::user()->isAdmin())
                 ? \App\Models\Product::where('is_active', true)
                     ->where('stock', '<=', max(1, (int) data_get(app(PageContent::class)->get('settings'), 'low_stock_threshold', 10)))

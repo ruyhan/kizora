@@ -151,6 +151,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/account/addresses', [\App\Http\Controllers\AddressController::class, 'store'])->name('account.addresses.store');
     Route::put('/account/addresses/{address}', [\App\Http\Controllers\AddressController::class, 'update'])->name('account.addresses.update');
     Route::delete('/account/addresses/{address}', [\App\Http\Controllers\AddressController::class, 'destroy'])->name('account.addresses.destroy');
+
+    // Privilege Membership (apply · status · virtual card)
+    Route::get('/account/privilege', [\App\Http\Controllers\PrivilegeController::class, 'show'])->name('account.privilege');
+    Route::post('/account/privilege', [\App\Http\Controllers\PrivilegeController::class, 'apply'])->middleware('throttle:6,1')->name('account.privilege.apply');
+    Route::delete('/account/privilege', [\App\Http\Controllers\PrivilegeController::class, 'cancel'])->name('account.privilege.cancel');
 });
 
 // Admin routes — every route is permission-gated (Super Admin bypasses).
@@ -240,6 +245,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::patch('/customers/{customer}/reset-password', [AdminCustomerController::class, 'resetPassword'])->middleware('permission:customers.edit')->name('customers.reset-password');
     Route::post('/customers/bulk-delete', [AdminCustomerController::class, 'bulkDestroy'])->middleware('permission:customers.delete')->name('customers.bulk-destroy');
     Route::delete('/customers/{customer}', [AdminCustomerController::class, 'destroy'])->middleware('permission:customers.delete')->name('customers.destroy');
+
+    // Privilege Membership (requests + card settings)
+    Route::get('/privilege-members', [\App\Http\Controllers\Admin\PrivilegeMemberController::class, 'index'])->middleware('permission:membership.view')->name('privilege.index');
+    Route::get('/privilege-members/settings', [\App\Http\Controllers\Admin\PrivilegeMemberController::class, 'settings'])->middleware('permission:membership.settings')->name('privilege.settings');
+    Route::post('/privilege-members/settings', [\App\Http\Controllers\Admin\PrivilegeMemberController::class, 'updateSettings'])->middleware('permission:membership.settings')->name('privilege.settings.update');
+    Route::patch('/privilege-members/{membership}/approve', [\App\Http\Controllers\Admin\PrivilegeMemberController::class, 'approve'])->middleware('permission:membership.manage')->name('privilege.approve');
+    Route::patch('/privilege-members/{membership}/reject', [\App\Http\Controllers\Admin\PrivilegeMemberController::class, 'reject'])->middleware('permission:membership.manage')->name('privilege.reject');
+    Route::patch('/privilege-members/{membership}/revoke', [\App\Http\Controllers\Admin\PrivilegeMemberController::class, 'revoke'])->middleware('permission:membership.manage')->name('privilege.revoke');
+    Route::delete('/privilege-members/{membership}', [\App\Http\Controllers\Admin\PrivilegeMemberController::class, 'destroy'])->middleware('permission:membership.manage')->name('privilege.destroy');
 
     // Roles & Permissions
     Route::get('/roles', [AdminRoleController::class, 'index'])->middleware('permission:roles.view')->name('roles.index');

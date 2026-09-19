@@ -108,6 +108,7 @@ const badgeFor = (item) => {
     'admin.chatbot.orders': p.newChatbotOrders,
     'admin.reviews.index': p.newReviewsCount,
     'admin.inventory.index': p.lowStockCount,
+    'admin.privilege.index': p.pendingMemberships,
   }[item.route] || 0
 }
 </script>

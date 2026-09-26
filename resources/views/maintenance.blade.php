@@ -18,7 +18,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex">
     <title>{{ $title }} · {{ $name }}</title>
-    @if($favicon)<link rel="icon" href="{{ $favicon }}">@endif
+    <link rel="icon" href="/favicon.ico" sizes="48x48">
+    @if($favicon)<link rel="icon" type="image/png" href="{{ $favicon }}">@endif
     <style>
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
         :root{

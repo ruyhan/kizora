@@ -39,5 +39,8 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // abort(404) and missing records (route-model binding, findOrFail) → the universal 404 page.
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e, Request $request) {
+            return \App\Http\Controllers\NotFoundController::render($request);
+        });
     })->create();

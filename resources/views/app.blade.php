@@ -23,14 +23,13 @@
     <!-- Site settings (favicon + tracking scripts are read from here) -->
     @php($kzSettings = app(\App\Support\PageContent::class)->get('settings'))
     @php($kzFavicon = data_get($kzSettings, 'favicon'))
+    {{-- favicon.ico / apple-touch-icon.png are regenerated from the uploaded favicon (FaviconGenerator) --}}
+    @php($kzIconV = @filemtime(public_path('favicon.ico')) ?: 1)
+    <link rel="icon" href="/favicon.ico?v={{ $kzIconV }}" sizes="48x48">
     @if($kzFavicon)
-        <link rel="icon" href="{{ $kzFavicon }}">
-        <link rel="apple-touch-icon" href="{{ $kzFavicon }}">
-    @else
-        <link rel="icon" type="image/x-icon" href="/favicon.ico">
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico">
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+        <link rel="icon" type="image/png" href="{{ $kzFavicon }}">
     @endif
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v={{ $kzIconV }}">
 
     <!-- Open Graph -->
     <meta property="og:title" content="{{ config('app.name', 'Kizora') }}">

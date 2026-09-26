@@ -416,3 +416,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/content/{group}',  [AdminContentController::class, 'edit'])->middleware('permission:settings.view,cms.view')->name('content.edit');
     Route::post('/content/{group}', [AdminContentController::class, 'update'])->middleware('permission:settings.edit,cms.edit')->name('content.update');
 });
+
+// Anything that matched no route above → the universal 404 page (keep this last).
+Route::fallback(\App\Http\Controllers\NotFoundController::class);

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\DeliveryCity;
+use App\Support\FaviconGenerator;
 use App\Support\PageContent;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -102,7 +103,14 @@ class ContentController extends Controller
             }
         }
 
+        $oldFavicon = $group === 'settings' ? ($this->content->get('settings')['favicon'] ?? '') : null;
+
         $this->content->save($group, $data);
+
+        // A new favicon also refreshes public/favicon.ico + apple-touch-icon.png (used by crawlers and error pages).
+        if ($group === 'settings' && ! empty($data['favicon']) && $data['favicon'] !== $oldFavicon) {
+            rescue(fn () => app(FaviconGenerator::class)->generate($data['favicon']), report: true);
+        }
 
         $label = data_get($this->content->schema(), "{$group}.label", 'Content');
 

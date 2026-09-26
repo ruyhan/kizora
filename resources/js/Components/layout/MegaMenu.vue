@@ -24,11 +24,11 @@
 
           <!-- Sub-categories -->
           <ul class="space-y-0.5">
-            <li v-for="item in group.children" :key="item.slug">
+            <li v-for="item in visibleChildren(group)" :key="item.slug">
               <Link :href="route('shop.index', { category: item.slug })" @click="$emit('navigate')"
                 class="flex items-center justify-between gap-2 px-2.5 py-1.5 -mx-2.5 rounded-lg text-sm text-muted hover:bg-purple-50 hover:text-ink transition-colors">
                 <span class="truncate">{{ item.name }}</span>
-                <span class="text-xs text-muted/60 shrink-0">{{ item.count }}</span>
+                <span v-if="settings.showCounts" class="text-xs text-muted/60 shrink-0">{{ item.count }}</span>
               </Link>
             </li>
             <li v-if="!group.children.length">
@@ -41,12 +41,16 @@
         </div>
 
         <!-- Promo tile (fills remaining column) -->
-        <Link
+        <Link v-if="settings.promo"
           :href="promo.link"
           class="relative overflow-hidden rounded-2xl bg-ink text-white p-6 flex flex-col justify-end min-h-44 group"
           @click="$emit('navigate')"
         >
-          <span class="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-accent/25 blur-2xl"></span>
+          <template v-if="promo.image">
+            <img :src="promo.image" alt="" class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+            <span class="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/50 to-ink/10"></span>
+          </template>
+          <span v-else class="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-accent/25 blur-2xl"></span>
           <p class="text-[11px] font-semibold uppercase tracking-widest text-accent relative">{{ promo.eyebrow }}</p>
           <p class="font-display text-xl font-bold leading-tight mt-1 relative">{{ promo.title }}</p>
           <span class="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold relative group-hover:gap-2.5 transition-all">
@@ -56,11 +60,11 @@
       </div>
 
       <!-- Footer row: quick links -->
-      <div class="flex items-center gap-5 mt-6 pt-4 border-t border-border text-sm">
-        <Link :href="route('shop.index')" @click="$emit('navigate')" class="font-semibold text-ink hover:text-accent transition-colors inline-flex items-center gap-1">
-          Browse all products <ArrowRightIcon class="w-3.5 h-3.5" />
+      <div v-if="links.length" class="flex flex-wrap items-center gap-x-5 gap-y-2 mt-6 pt-4 border-t border-border text-sm">
+        <Link v-for="(l, i) in links" :key="i" :href="l.url" @click="$emit('navigate')"
+          :class="i === 0 ? 'font-semibold text-ink hover:text-accent inline-flex items-center gap-1' : 'text-muted hover:text-accent'" class="transition-colors">
+          {{ l.label }} <ArrowRightIcon v-if="i === 0" class="w-3.5 h-3.5" />
         </Link>
-        <Link :href="route('shop.index', { sale: 1 })" @click="$emit('navigate')" class="text-muted hover:text-accent transition-colors">On sale</Link>
       </div>
         </div>
       </div>
@@ -78,7 +82,7 @@ import { megaMenuPromo } from '@/config/categories'
 defineEmits(['navigate', 'hoverin', 'hoverout'])
 
 const page = usePage()
-// Category columns — controlled in Admin → Pages & Content → Mega Menu.
+// Category columns — controlled in Admin → Header & Footer → Mega Menu.
 // If specific categories are chosen, show those (in Categories sort order);
 // otherwise auto-show the first N (mega_columns).
 const groups = computed(() => {
@@ -86,14 +90,31 @@ const groups = computed(() => {
   const tree = page.props.categoryTree || []
   const chosen = Array.isArray(mm.categories) ? mm.categories : []
   if (chosen.length) {
-    return tree.filter((c) => chosen.includes(c.slug))
+    // Admin-chosen columns, in the order they were arranged
+    return chosen.map((slug) => tree.find((c) => c.slug === slug)).filter(Boolean)
   }
   const n = Number(mm.mega_columns) || 3
   return tree.slice(0, Math.max(1, n))
 })
-// columns = category columns + 1 promo tile, on lg+ (mobile stays 2-col)
+// Display options (Admin → Header & Footer → Mega Menu). Missing keys keep the original behaviour.
+const settings = computed(() => {
+  const mm = page.props.megamenu || {}
+  return {
+    maxItems:   Math.max(0, Number(mm.max_items) || 0),   // 0 = all
+    showCounts: mm.show_counts !== false,
+    promo:      mm.promo_enabled !== false,
+  }
+})
+const visibleChildren = (group) => settings.value.maxItems ? group.children.slice(0, settings.value.maxItems) : group.children
+const links = computed(() => {
+  const mm = page.props.megamenu || {}
+  if (mm.links_enabled === false) return []
+  const list = Array.isArray(mm.links) ? mm.links : [{ label: 'Browse all products', url: '/shop' }, { label: 'On sale', url: '/shop?sale=1' }]
+  return list.filter((l) => l?.label && l?.url)
+})
+// columns = category columns + promo tile (when shown), on lg+ (mobile stays 2-col)
 const gridStyle = computed(() => ({
-  '--kz-cols': groups.value.length + 1,
+  '--kz-cols': groups.value.length + (settings.value.promo ? 1 : 0),
 }))
 const promo = computed(() => {
   const mm = page.props.megamenu || {}
@@ -102,6 +123,7 @@ const promo = computed(() => {
     title:   mm.promo_title   || megaMenuPromo.title,
     cta:     mm.promo_cta     || megaMenuPromo.cta,
     link:    mm.promo_link    || '/shop',
+    image:   mm.promo_image   || '',
   }
 })
 </script>

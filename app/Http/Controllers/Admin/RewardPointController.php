@@ -32,24 +32,9 @@ class RewardPointController extends Controller
             ->paginate(15, ['id', 'name', 'email', 'phone', 'reward_points'])
             ->withQueryString();
 
-        $recent = PointTransaction::with('user:id,name', 'order:id,order_number', 'creator:id,name')
-            ->latest()->limit(15)->get()
-            ->map(fn (PointTransaction $t) => [
-                'id'      => $t->id,
-                'user'    => $t->user?->name,
-                'type'    => $t->type,
-                'points'  => $t->points,
-                'balance' => $t->balance_after,
-                'order'   => $t->order?->order_number,
-                'note'    => $t->note,
-                'by'      => $t->creator?->name,
-                'date'    => $t->created_at->format('d M Y, h:i A'),
-            ]);
-
         return Inertia::render('Admin/PrivilegeMembers/Points', [
             'settings'  => $this->settings->get(),
             'customers' => $customers,
-            'recent'    => $recent,
             'filters'   => ['search' => $request->get('search', '')],
             'stats'     => [
                 'outstanding' => (int) User::sum('reward_points'),

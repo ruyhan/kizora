@@ -139,23 +139,6 @@
           </div>
           <div class="px-5 py-3"><Pagination :links="customers.links" /></div>
         </div>
-
-        <div class="bg-white rounded-2xl shadow-sm border border-purple-50 overflow-hidden">
-          <div class="px-5 py-4 border-b border-purple-100"><h2 class="font-semibold text-charcoal">Recent activity</h2></div>
-          <ul class="divide-y divide-purple-50">
-            <li v-for="t in recent" :key="t.id" class="px-5 py-3 flex items-start justify-between gap-3">
-              <div class="min-w-0">
-                <p class="text-sm text-charcoal"><span class="font-medium">{{ t.user }}</span> · <span :class="typeCls[t.type]" class="text-xs font-semibold capitalize">{{ typeLabel[t.type] || t.type }}</span></p>
-                <p class="text-xs text-muted truncate">{{ t.note }}<span v-if="t.by"> · by {{ t.by }}</span> · {{ t.date }}</p>
-              </div>
-              <div class="text-right shrink-0">
-                <p :class="t.points > 0 ? 'text-success' : 'text-error'" class="font-bold text-sm">{{ t.points > 0 ? '+' : '' }}{{ t.points }}</p>
-                <p class="text-[11px] text-muted">bal. {{ t.balance }}</p>
-              </div>
-            </li>
-            <li v-if="!recent.length" class="px-5 py-8 text-center text-muted text-sm">No point activity yet.</li>
-          </ul>
-        </div>
       </div>
     </div>
 
@@ -214,7 +197,6 @@ import { MagnifyingGlassIcon, PlusIcon } from '@heroicons/vue/24/outline'
 const props = defineProps({
   settings: Object,
   customers: Object,
-  recent: { type: Array, default: () => [] },
   filters: Object,
   stats: Object,
 })
@@ -244,9 +226,6 @@ const statCards = computed(() => [
   { label: 'Total earned', value: props.stats.earned.toLocaleString() },
   { label: 'Total redeemed', value: props.stats.redeemed.toLocaleString() },
 ])
-
-const typeLabel = { earn: 'Earned', redeem: 'Redeemed', refund: 'Returned', reverse: 'Taken back', adjust: 'Adjusted' }
-const typeCls = { earn: 'text-success', redeem: 'text-primary', refund: 'text-success', reverse: 'text-error', adjust: 'text-[#9a7b4f]' }
 
 // ── Balances search ──
 const search = ref(props.filters?.search || '')

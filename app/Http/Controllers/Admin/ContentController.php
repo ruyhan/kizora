@@ -26,13 +26,14 @@ class ContentController extends Controller
 
         $fields = $this->content->fields($group);
 
-        // Provide live category options when the group has a `categories` picker field.
+        // Provide live top-level category options when the group has a `categories` / `category_columns` picker.
         $categoryOptions = [];
-        if (collect($fields)->contains(fn ($f) => ($f['type'] ?? '') === 'categories')) {
+        if (collect($fields)->contains(fn ($f) => in_array($f['type'] ?? '', ['categories', 'category_columns'], true))) {
             $categoryOptions = Category::whereNull('parent_id')->where('is_active', true)
+                ->withCount(['children' => fn ($q) => $q->where('is_active', true)])
                 ->orderBy('sort_order')->orderBy('name')
-                ->get(['name', 'slug'])
-                ->map(fn ($c) => ['value' => $c->slug, 'label' => $c->name])
+                ->get(['id', 'name', 'slug'])
+                ->map(fn ($c) => ['value' => $c->slug, 'label' => $c->name, 'children' => $c->children_count])
                 ->all();
         }
 
@@ -65,6 +66,7 @@ class ContentController extends Controller
             'group'           => $group,
             'label'           => data_get($this->content->schema(), "{$group}.label", $group),
             'fields'          => $fields,
+            'sections'        => $this->content->sections($group),
             'values'          => $this->content->get($group),
             'categoryOptions' => $categoryOptions,
             'categorySelectOptions' => $categorySelectOptions,

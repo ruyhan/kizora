@@ -6,7 +6,7 @@ import {
   UsersIcon, UserGroupIcon, ShieldCheckIcon, ClipboardDocumentCheckIcon, ChartBarIcon,
   CubeIcon, BuildingStorefrontIcon, ShoppingCartIcon, StarIcon,
   ChatBubbleLeftRightIcon, SparklesIcon, PresentationChartLineIcon, BanknotesIcon,
-  NewspaperIcon, RectangleStackIcon, CreditCardIcon,
+  NewspaperIcon, RectangleStackIcon, CreditCardIcon, RectangleGroupIcon,
 } from '@heroicons/vue/24/outline'
 
 export const adminNavSections = [
@@ -71,7 +71,8 @@ export const adminNavSections = [
   {
     label: 'Content',
     items: [
-      { label: 'Pages & Content', route: 'admin.content.index', match: 'admin.content.index', icon: DocumentTextIcon, permission: 'cms.view' },
+      { label: 'Pages & Content', route: 'admin.content.index', match: 'admin.content.index', contentGroups: 'pages', icon: DocumentTextIcon, permission: 'cms.view' },
+      { label: 'Header & Footer', route: 'admin.content.edit', params: { group: 'header' }, match: [], contentGroups: 'headerfooter', icon: RectangleGroupIcon, permission: 'cms.view' },
       { label: 'Blog Posts', route: 'admin.blog.index', match: ['admin.blog.index', 'admin.blog.create', 'admin.blog.edit'], icon: NewspaperIcon, permission: 'blog.view' },
       { label: 'Blog Categories', route: 'admin.blog-categories.index', match: 'admin.blog-categories*', icon: RectangleStackIcon, permission: 'blog.view' },
     ],
@@ -83,8 +84,9 @@ export const adminNavSections = [
         label: 'Settings',
         route: 'admin.content.edit',
         params: { group: 'settings' },
-        match: ['admin.content.edit', 'admin.payments*', 'admin.delivery-cities*', 'admin.delivery-areas*', 'admin.recaptcha*'],
-        matchParams: { group: 'settings' },
+        match: ['admin.payments*', 'admin.delivery-cities*', 'admin.delivery-areas*', 'admin.recaptcha*',
+          'admin.email.*', 'admin.invoice-settings*', 'admin.chatbot-settings*'],
+        contentGroups: 'settings',
         icon: Cog6ToothIcon,
         permission: 'settings.view',
       },

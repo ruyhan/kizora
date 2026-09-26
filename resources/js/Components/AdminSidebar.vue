@@ -7,11 +7,11 @@
       </Link>
       <p class="text-[10px] text-gray-500 tracking-widest uppercase mt-2 font-medium">Admin Panel</p>
     </div>
-    <nav class="flex-1 px-3 py-4 overflow-y-auto space-y-0.5">
+    <nav ref="desktopNav" @scroll.passive="saveScroll" class="flex-1 px-3 py-4 overflow-y-auto space-y-0.5">
       <template v-for="(section, i) in sections" :key="section.label">
         <p class="nav-section-label" :class="i > 0 ? 'mt-5' : ''">{{ section.label }}</p>
         <SidebarLink v-for="item in section.items" :key="item.label"
-          :href="route(item.route, item.params)" :active="isActive(item)" :badge="badgeFor(item)">
+          :href="route(item.route, item.params)" :active="isActive(item)" :badge="badgeFor(item)" @click="saveScroll">
           <template #icon><component :is="item.icon" class="w-4.5 h-4.5" /></template>
           {{ item.label }}
         </SidebarLink>
@@ -45,7 +45,7 @@
             <XMarkIcon class="w-5 h-5" />
           </button>
         </div>
-        <nav class="flex-1 px-3 py-4 overflow-y-auto space-y-0.5">
+        <nav ref="mobileNav" @scroll.passive="saveScroll" class="flex-1 px-3 py-4 overflow-y-auto space-y-0.5">
           <template v-for="(section, i) in sections" :key="section.label">
             <p class="nav-section-label" :class="i > 0 ? 'mt-5' : ''">{{ section.label }}</p>
             <SidebarLink v-for="item in section.items" :key="item.label"
@@ -72,7 +72,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch, onMounted, nextTick } from 'vue'
 import { Link, usePage } from '@inertiajs/vue3'
 import SidebarLink from '@/Components/SidebarLink.vue'
 import { adminNavSections } from '@/config/adminNav'
@@ -82,10 +82,35 @@ import { usePermissions } from '@/composables/usePermissions'
 const { dark: darkLogo, darkInvert } = useBrandLogo()
 import { ArrowTopRightOnSquareIcon, ArrowRightOnRectangleIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 
-defineProps({ open: { type: Boolean, default: false } })
+const props = defineProps({ open: { type: Boolean, default: false } })
 defineEmits(['close'])
 
 const { can } = usePermissions()
+
+// ── Keep the sidebar where the admin left it ──
+// The layout re-mounts on every page visit, which would reset the menu to the top.
+// Remember the scroll offset and restore it on mount; then make sure the active item is visible.
+const SCROLL_KEY = 'kz-admin-sidebar-scroll'
+const desktopNav = ref(null)
+const mobileNav = ref(null)
+const saveScroll = (e) => {
+  const el = e?.currentTarget?.closest?.('nav') ?? desktopNav.value
+  if (!el) return
+  try { sessionStorage.setItem(SCROLL_KEY, String(el.scrollTop)) } catch { /* storage unavailable */ }
+}
+const restoreScroll = (el) => {
+  if (!el) return
+  let top = 0
+  try { top = Number(sessionStorage.getItem(SCROLL_KEY)) || 0 } catch { /* storage unavailable */ }
+  el.scrollTop = top
+  const active = el.querySelector('[aria-current="page"]')
+  if (active) {
+    const a = active.getBoundingClientRect(), n = el.getBoundingClientRect()
+    if (a.top < n.top || a.bottom > n.bottom) active.scrollIntoView({ block: 'center' })
+  }
+}
+onMounted(() => nextTick(() => restoreScroll(desktopNav.value)))
+watch(() => props.open, (o) => { if (o) nextTick(() => restoreScroll(mobileNav.value)) })
 
 // Only show items the user is permitted to see; drop sections left empty.
 const sections = computed(() =>
@@ -94,9 +119,17 @@ const sections = computed(() =>
     .filter((s) => s.items.length)
 )
 // Active state supports a single match or an array (e.g. Settings + its tab routes).
+// Content editor routes belong to "Settings" or "Header & Footer" for their tab groups, and to "Pages & Content" otherwise.
+const SETTINGS_GROUPS = ['settings', 'delivery', 'product', 'invoice', 'chatbot']
+const HEADER_FOOTER_GROUPS = ['header', 'megamenu', 'footer']
+const contentOwner = (group) =>
+  SETTINGS_GROUPS.includes(group) ? 'settings' : HEADER_FOOTER_GROUPS.includes(group) ? 'headerfooter' : 'pages'
 const isActive = (item) => {
+  if (item.contentGroups && route().current('admin.content.edit')) {
+    return contentOwner(route().params.group) === item.contentGroups
+  }
   const ms = Array.isArray(item.match) ? item.match : [item.match]
-  return ms.some(m => route().current(m, m === 'admin.content.edit' ? item.matchParams : undefined))
+  return ms.some(m => route().current(m))
 }
 
 // Notification badges (new orders, unread messages, chatbot orders, reviews, low stock).

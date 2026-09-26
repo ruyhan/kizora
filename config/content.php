@@ -61,6 +61,15 @@ return [
         'label' => 'Settings',
         'desc'  => 'Logo, favicon, store name, contact details, socials & currency.',
         'icon'  => 'cog',
+        'hub'   => false, // edited from the Settings tabs, not the Pages & Content hub
+        'sections' => [
+            ['label' => 'Branding', 'fields' => ['logo', 'logo_light', 'favicon', 'site_name', 'tagline']],
+            ['label' => 'Contact details', 'fields' => ['email', 'phone_1', 'phone_2', 'address', 'opening_hours', 'map_url']],
+            ['label' => 'Social media', 'fields' => ['social_links']],
+            ['label' => 'Store', 'fields' => ['currency_symbol', 'low_stock_threshold']],
+            ['label' => 'Tracking scripts', 'fields' => ['head_scripts', 'body_scripts']],
+            ['label' => 'Maintenance mode', 'toggle' => 'maintenance_mode', 'fields' => ['maintenance_mode', 'maintenance_title', 'maintenance_message']],
+        ],
         'fields' => [
             ['key' => 'logo', 'label' => 'Logo — for light backgrounds (header)', 'type' => 'image', 'default' => ''],
             ['key' => 'logo_light', 'label' => 'Logo — for dark backgrounds (footer; use a white/light version)', 'type' => 'image', 'default' => ''],
@@ -115,6 +124,12 @@ return [
         'label' => 'Delivery Settings',
         'desc'  => 'Free delivery, location-based charging, and city-wise delivery charges.',
         'icon'  => 'truck',
+        'hub'   => false, // edited from the Settings tabs, not the Pages & Content hub
+        'sections' => [
+            ['label' => 'Free delivery', 'toggle' => 'free_delivery_enabled', 'fields' => ['free_delivery_enabled', 'free_delivery_type', 'free_delivery_minimum_amount']],
+            ['label' => 'Location-based charge', 'toggle' => 'location_charge_enabled', 'fields' => ['location_charge_enabled', 'location_charge_message']],
+            ['label' => 'City-wise delivery charges', 'toggle' => 'delivery_charges_enabled', 'fields' => ['delivery_charges_enabled', 'delivery_charges', 'no_charge_message']],
+        ],
         'fields' => [
             ['key' => 'free_delivery_enabled', 'label' => 'Free delivery', 'type' => 'toggle', 'default' => false],
             ['key' => 'free_delivery_type', 'label' => 'Free delivery type', 'type' => 'segmented', 'default' => 'all',
@@ -154,6 +169,12 @@ return [
         'label' => 'Invoice Settings',
         'desc'  => 'Branding and content for generated invoices (website + POS).',
         'icon'  => 'doc',
+        'hub'   => false, // edited from the Settings tabs, not the Pages & Content hub
+        'sections' => [
+            ['label' => 'Company details', 'fields' => ['company_logo', 'company_name', 'company_address', 'company_phone', 'company_email', 'company_website']],
+            ['label' => 'Invoice text', 'fields' => ['invoice_title', 'header_text', 'footer_message', 'notes', 'terms']],
+            ['label' => 'Colours', 'fields' => ['primary_color', 'secondary_color']],
+        ],
         'fields' => [
             ['key' => 'company_logo', 'label' => 'Company logo', 'type' => 'image', 'default' => ''],
             ['key' => 'company_name', 'label' => 'Company name', 'type' => 'text', 'default' => 'Kizora'],
@@ -175,6 +196,12 @@ return [
         'label' => 'Chatbot Settings',
         'desc'  => 'AI sales assistant — provider, identity, design & behaviour.',
         'icon'  => 'chat',
+        'hub'   => false, // edited from the Settings tabs, not the Pages & Content hub
+        'sections' => [
+            ['label' => 'AI provider', 'toggle' => 'enabled', 'fields' => ['enabled', 'provider', 'groq_api_key', 'openrouter_api_key', 'model']],
+            ['label' => 'Identity', 'fields' => ['name', 'welcome_message', 'avatar', 'widget_icon']],
+            ['label' => 'Design', 'fields' => ['primary_color', 'position', 'theme', 'rounded']],
+        ],
         'fields' => [
             ['key' => 'enabled', 'label' => 'Enable chatbot', 'type' => 'toggle', 'default' => true],
             ['key' => 'provider', 'label' => 'AI provider', 'type' => 'select', 'options' => ['groq', 'openrouter'], 'default' => 'groq'],
@@ -196,6 +223,12 @@ return [
         'label' => 'Header & Menu',
         'desc'  => 'Main menu and utility links in the top bar. (The mega menu has its own section.)',
         'icon'  => 'layout',
+        'hub'   => false, // edited from Admin → Header & Footer, not the Pages & Content hub
+        'view'  => 'home',
+        'sections' => [
+            ['label' => 'Main menu', 'fields' => ['nav']],
+            ['label' => 'Utility links', 'fields' => ['utility']],
+        ],
         'fields' => [
             ['key' => 'nav', 'label' => 'Main menu', 'type' => 'list', 'item' => [
                 ['key' => 'label', 'label' => 'Label', 'type' => 'text'],
@@ -222,14 +255,39 @@ return [
         'label' => 'Mega Menu',
         'desc'  => 'The "Shop" dropdown — which categories show as columns and the promo tile.',
         'icon'  => 'layout',
+        'hub'   => false, // edited from Admin → Header & Footer, not the Pages & Content hub
+        'view'  => 'home',
+        'sections' => [
+            ['label' => 'Category columns', 'fields' => ['categories', 'mega_columns', 'max_items', 'show_counts']],
+            ['label' => 'Promo tile', 'toggle' => 'promo_enabled', 'fields' => ['promo_enabled', 'promo_image', 'promo_eyebrow', 'promo_title', 'promo_cta', 'promo_link']],
+            ['label' => 'Bottom links', 'toggle' => 'links_enabled', 'fields' => ['links_enabled', 'links']],
+        ],
         'fields' => [
-            ['key' => 'categories', 'label' => 'Category columns', 'type' => 'categories',
-                'help' => 'Choose which categories appear as columns in the mega menu (their sub-categories show automatically). Leave all unchecked to auto-show the first few. Order follows the Categories sort order.'],
-            ['key' => 'mega_columns', 'label' => 'Max category columns (used only when none are chosen above)', 'type' => 'number', 'default' => 3],
-            ['key' => 'promo_eyebrow', 'label' => 'Promo tile — eyebrow', 'type' => 'text', 'default' => 'New in'],
-            ['key' => 'promo_title', 'label' => 'Promo tile — title', 'type' => 'text', 'default' => 'The 2026 carry collection'],
-            ['key' => 'promo_cta', 'label' => 'Promo tile — button text', 'type' => 'text', 'default' => 'Shop new arrivals'],
-            ['key' => 'promo_link', 'label' => 'Promo tile — link', 'type' => 'text', 'default' => '/shop?sort=latest'],
+            ['key' => 'categories', 'label' => 'Category columns', 'type' => 'category_columns',
+                'help' => 'Add the categories to show as columns and arrange their order — each column lists that category’s sub-categories. With no columns added, the first few categories show automatically.'],
+            ['key' => 'mega_columns', 'label' => 'Automatic mode — number of columns (used only when no columns are added above)', 'type' => 'number', 'default' => 3],
+            ['key' => 'max_items', 'label' => 'Sub-categories per column', 'type' => 'number', 'default' => 0,
+                'help' => 'How many sub-categories to list under each column. 0 = show all.'],
+            ['key' => 'show_counts', 'label' => 'Show product counts next to sub-categories', 'type' => 'toggle', 'default' => true],
+            ['key' => 'promo_enabled', 'label' => 'Show promo tile', 'type' => 'toggle', 'default' => true],
+            ['key' => 'promo_image', 'label' => 'Promo tile — background image (optional)', 'type' => 'image', 'default' => '',
+                'help' => 'Leave empty for the plain dark tile. The text sits on a dark overlay so it stays readable.', 'show_if' => ['key' => 'promo_enabled', 'value' => true]],
+            ['key' => 'promo_eyebrow', 'label' => 'Promo tile — eyebrow', 'type' => 'text', 'default' => 'New in', 'show_if' => ['key' => 'promo_enabled', 'value' => true]],
+            ['key' => 'promo_title', 'label' => 'Promo tile — title', 'type' => 'text', 'default' => 'The 2026 carry collection', 'show_if' => ['key' => 'promo_enabled', 'value' => true]],
+            ['key' => 'promo_cta', 'label' => 'Promo tile — button text', 'type' => 'text', 'default' => 'Shop new arrivals', 'show_if' => ['key' => 'promo_enabled', 'value' => true]],
+            ['key' => 'promo_link', 'label' => 'Promo tile — link', 'type' => 'text', 'default' => '/shop?sort=latest', 'show_if' => ['key' => 'promo_enabled', 'value' => true]],
+            ['key' => 'links_enabled', 'label' => 'Show bottom links row', 'type' => 'toggle', 'default' => true],
+            ['key' => 'links', 'label' => 'Bottom links', 'type' => 'list', 'add_label' => 'Add link',
+                'help' => 'Quick links along the bottom of the mega menu. The first link is shown bold.',
+                'show_if' => ['key' => 'links_enabled', 'value' => true],
+                'item' => [
+                    ['key' => 'label', 'label' => 'Label', 'type' => 'text'],
+                    ['key' => 'url', 'label' => 'Link (e.g. /shop?sale=1)', 'type' => 'text'],
+                ],
+                'default' => [
+                    ['label' => 'Browse all products', 'url' => '/shop'],
+                    ['label' => 'On sale', 'url' => '/shop?sale=1'],
+                ]],
         ],
     ],
 
@@ -237,6 +295,12 @@ return [
         'label' => 'Product page',
         'desc'  => 'Product detail page labels, section titles and on/off toggles.',
         'icon'  => 'bag',
+        'hub'   => false, // edited from the Settings tabs, not the Pages & Content hub
+        'sections' => [
+            ['label' => 'Section headings', 'fields' => ['description_title', 'reviews_title', 'write_review_label', 'related_title']],
+            ['label' => 'Assurance badges', 'fields' => ['assurances']],
+            ['label' => 'Show / hide sections', 'fields' => ['show_highlights', 'show_description', 'show_reviews', 'show_related']],
+        ],
         'fields' => [
             ['key' => 'description_title',  'label' => 'Description — heading', 'type' => 'text', 'default' => 'Description'],
             ['key' => 'reviews_title',      'label' => 'Reviews — heading', 'type' => 'text', 'default' => 'Customer reviews'],
@@ -261,6 +325,15 @@ return [
         'label' => 'Home page',
         'desc'  => 'Hero slider, trust badges and product rail headings.',
         'icon'  => 'home',
+        'view'  => 'home',
+        'sections' => [
+            ['label' => 'SEO', 'fields' => ['meta_title', 'meta_description']],
+            ['label' => 'Hero slider', 'toggle' => 'hero_enabled', 'fields' => ['hero_enabled', 'hero']],
+            ['label' => 'Trust badges', 'toggle' => 'trust_enabled', 'fields' => ['trust_enabled', 'trust']],
+            ['label' => 'Shop by Category', 'toggle' => 'category_enabled', 'fields' => ['category_enabled', 'category_title', 'category_subtitle']],
+            ['label' => 'Product sections', 'fields' => ['sections']],
+            ['label' => 'Blog slider', 'toggle' => 'blog_enabled', 'fields' => ['blog_enabled', 'blog_title', 'blog_subtitle', 'blog_limit']],
+        ],
         'fields' => [
             ...$seoFields('Home'),
             ['key' => 'hero_enabled', 'label' => 'Hero slider — show on home page', 'type' => 'toggle', 'default' => true],
@@ -353,6 +426,11 @@ return [
         'label' => 'Shop page',
         'desc'  => 'Listing page header.',
         'icon'  => 'bag',
+        'view'  => 'shop.index',
+        'sections' => [
+            ['label' => 'SEO', 'fields' => ['meta_title', 'meta_description']],
+            ['label' => 'Page header', 'fields' => ['title', 'subtitle', 'header_image']],
+        ],
         'fields' => [
             ...$seoFields('Shop'),
             ['key' => 'title', 'label' => 'Heading', 'type' => 'text', 'default' => 'Shop all'],
@@ -365,6 +443,16 @@ return [
         'label' => 'About page',
         'desc'  => 'Brand story, craftsmanship, mission & vision.',
         'icon'  => 'info',
+        'view'  => 'about',
+        'sections' => [
+            ['label' => 'SEO', 'fields' => ['meta_title', 'meta_description']],
+            ['label' => 'Hero', 'fields' => ['hero_title', 'hero_highlight', 'hero_subtitle', 'hero_image']],
+            ['label' => 'Our story', 'fields' => ['story_badge', 'story_title', 'story', 'est', 'location', 'story_image']],
+            ['label' => 'Craftsmanship', 'fields' => ['craft_badge', 'craft_title', 'craft_image', 'craft_body']],
+            ['label' => 'Mission & Vision', 'fields' => ['mv_eyebrow', 'mv_title', 'mission_title', 'mission', 'vision_title', 'vision']],
+            ['label' => 'What we make', 'fields' => ['offerings_title', 'offerings_subtitle', 'offerings']],
+            ['label' => 'Bottom call-to-action', 'fields' => ['cta_title', 'cta_subtitle', 'cta_primary', 'cta_secondary']],
+        ],
         'fields' => [
             ...$seoFields('About Us'),
             ['key' => 'hero_title', 'label' => 'Hero title', 'type' => 'text', 'default' => 'More than gear.'],
@@ -417,6 +505,13 @@ return [
         'label' => 'Contact page',
         'desc'  => 'Heading, intro, which contact cards to show, and the embedded map. Card details come from Brand & Contact details.',
         'icon'  => 'mail',
+        'view'  => 'contact',
+        'sections' => [
+            ['label' => 'SEO', 'fields' => ['meta_title', 'meta_description']],
+            ['label' => 'Page header', 'fields' => ['title', 'subtitle']],
+            ['label' => 'Info cards', 'fields' => ['show_visit', 'show_call', 'show_email', 'show_hours']],
+            ['label' => 'Map', 'toggle' => 'show_map', 'fields' => ['show_map', 'map_embed', 'map_image']],
+        ],
         'fields' => [
             ...$seoFields('Contact Us'),
             ['key' => 'title', 'label' => 'Heading', 'type' => 'text', 'default' => 'Get in touch'],
@@ -437,6 +532,11 @@ return [
         'label' => 'FAQ',
         'desc'  => 'Frequently asked questions.',
         'icon'  => 'help',
+        'view'  => 'faq',
+        'sections' => [
+            ['label' => 'SEO', 'fields' => ['meta_title', 'meta_description']],
+            ['label' => 'Questions', 'fields' => ['items']],
+        ],
         'fields' => [
             ...$seoFields('FAQ'),
             ['key' => 'items', 'label' => 'Questions', 'type' => 'list', 'item' => [
@@ -459,6 +559,12 @@ return [
         'label' => 'Privacy Policy',
         'desc'  => 'Privacy policy content.',
         'icon'  => 'doc',
+        'view'  => 'privacy',
+        'sections' => [
+            ['label' => 'SEO', 'fields' => ['meta_title', 'meta_description']],
+            ['label' => 'Page header', 'fields' => ['title', 'last_updated']],
+            ['label' => 'Policy sections', 'fields' => ['sections']],
+        ],
         'fields' => [
             ...$seoFields('Privacy Policy'),
             ['key' => 'title', 'label' => 'Title', 'type' => 'text', 'default' => 'Privacy Policy'],
@@ -481,6 +587,12 @@ return [
         'label' => 'Terms & Conditions',
         'desc'  => 'Terms of service content.',
         'icon'  => 'doc',
+        'view'  => 'terms',
+        'sections' => [
+            ['label' => 'SEO', 'fields' => ['meta_title', 'meta_description']],
+            ['label' => 'Page header', 'fields' => ['title', 'last_updated']],
+            ['label' => 'Terms sections', 'fields' => ['sections']],
+        ],
         'fields' => [
             ...$seoFields('Terms & Conditions'),
             ['key' => 'title', 'label' => 'Title', 'type' => 'text', 'default' => 'Terms & Conditions'],
@@ -504,6 +616,13 @@ return [
         'label' => 'Footer',
         'desc'  => 'Footer about text, tagline, quick links and which categories appear.',
         'icon'  => 'layout',
+        'hub'   => false, // edited from Admin → Header & Footer, not the Pages & Content hub
+        'view'  => 'home',
+        'sections' => [
+            ['label' => 'About & tagline', 'fields' => ['about', 'tagline']],
+            ['label' => 'Link columns', 'fields' => ['links', 'footer_categories']],
+            ['label' => 'Bottom bar', 'fields' => ['copyright', 'legal_links']],
+        ],
         'fields' => [
             ['key' => 'about', 'label' => 'About text', 'type' => 'textarea', 'default' => 'Kizora designs premium backpacks, water bottles, flasks and everyday‑carry essentials built to move with you — for school, work and the road ahead.'],
             ['key' => 'tagline', 'label' => 'Tagline', 'type' => 'text', 'default' => 'Carry your world.'],
@@ -537,6 +656,13 @@ return [
         'label' => 'Login & Register',
         'desc'  => 'Headings and marketing copy on the sign-in and create-account pages.',
         'icon'  => 'layout',
+        'view'  => 'login',
+        'sections' => [
+            ['label' => 'Login', 'fields' => ['login_heading', 'login_subtext', 'login_title', 'login_subtitle']],
+            ['label' => 'Register', 'fields' => ['register_heading', 'register_subtext', 'register_title', 'register_subtitle', 'register_perks']],
+            ['label' => 'Forgot password', 'fields' => ['forgot_heading', 'forgot_subtext', 'forgot_title', 'forgot_subtitle']],
+            ['label' => 'Reset password', 'fields' => ['reset_heading', 'reset_subtext', 'reset_title', 'reset_subtitle']],
+        ],
         'fields' => [
             ['key' => 'login_heading',    'label' => 'Login — side panel heading',  'type' => 'text',     'default' => 'Carry your world'],
             ['key' => 'login_subtext',    'label' => 'Login — side panel text',     'type' => 'textarea', 'default' => 'Premium backpacks, bottles & flasks designed to move with you — built to last, priced for everyone.'],
@@ -568,6 +694,9 @@ return [
         'label' => 'Order Success Page',
         'desc'  => 'The confirmation message shown after a customer places an order.',
         'icon'  => 'layout',
+        'sections' => [
+            ['label' => 'Success message', 'fields' => ['heading', 'message']],
+        ],
         'fields' => [
             ['key' => 'heading', 'label' => 'Heading', 'type' => 'text',     'default' => 'Order Placed!'],
             ['key' => 'message', 'label' => 'Message', 'type' => 'textarea', 'default' => "Thank you for your order. We'll start preparing it right away!"],

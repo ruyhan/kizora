@@ -13,6 +13,9 @@ class PrivilegeCardSettings
 {
     public const KEY = 'privilege_card';
 
+    /** Random part of a card number — the last group on the artwork ("2606 1510 •••••••"). */
+    public const RANDOM_DIGITS = 7;
+
     public function defaults(): array
     {
         return [
@@ -29,7 +32,10 @@ class PrivilegeCardSettings
                 'Lost or misused cards may be cancelled.',
                 'Kizora reserves the right to modify or terminate any privilege without prior notice.',
             ],
-            // Card number = prefix + zero-padded serial ("2606151021" + "00001")
+            // random:     random_prefix + 7 random digits ("26061510" + "4829173") — can't be guessed
+            // sequential: number_prefix + zero-padded serial ("2606151021" + "00001")
+            'number_mode'   => 'random',
+            'random_prefix' => '26061510',
             'number_prefix' => '2606151021',
             'serial_digits' => 5,
             'serial_start'  => 1,
@@ -43,6 +49,14 @@ class PrivilegeCardSettings
                 'Priority customer support',
                 'Use your card online and at the Kizora store',
             ],
+            // Customers may apply only after one completed order of at least this much (0 = no requirement)
+            'min_order_to_apply' => 5000,
+            // Member discount — % off the order subtotal (delivery excluded). 0 = off.
+            'member_discount_percent'     => 0,
+            // Guests can type a card number at checkout to claim the discount.
+            'checkout_card_field'         => true,
+            // false = only the bigger of coupon / member discount applies (per the card terms).
+            'discount_stacks_with_coupon' => false,
         ];
     }
 
@@ -56,6 +70,22 @@ class PrivilegeCardSettings
     {
         $merged = array_merge($this->get(), $data);
         WebsiteSetting::set(self::KEY, json_encode($merged, JSON_UNESCAPED_UNICODE));
+    }
+
+    public function minOrderToApply(): float
+    {
+        return max(0, (float) $this->get()['min_order_to_apply']);
+    }
+
+    public function discountPercent(): float
+    {
+        return max(0, min(100, (float) $this->get()['member_discount_percent']));
+    }
+
+    /** Guest card-number field on checkout — only meaningful while a discount is set. */
+    public function guestFieldEnabled(): bool
+    {
+        return $this->discountPercent() > 0 && (bool) $this->get()['checkout_card_field'];
     }
 
     /** Only the fields the card artwork renders. */

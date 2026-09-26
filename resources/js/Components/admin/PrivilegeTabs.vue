@@ -4,7 +4,7 @@
       <CreditCardIcon class="w-6 h-6 text-charcoal" />
       <h1 class="font-display text-2xl font-bold text-charcoal">Privilege Members</h1>
     </div>
-    <p class="text-muted text-sm mb-4">Review membership requests and manage the Privilege Card design.</p>
+    <p class="text-muted text-sm mb-4">Review membership requests, manage the Privilege Card design and reward points.</p>
     <div class="border-b border-purple-100 overflow-x-auto scrollbar-hide">
       <nav class="flex gap-1 min-w-max">
         <Link v-for="t in tabs" :key="t.label" :href="t.href"
@@ -28,5 +28,6 @@ const { can } = usePermissions()
 const tabs = computed(() => [
   { label: 'Requests',      href: route('admin.privilege.index'),    active: route().current('admin.privilege.index'),    show: can('membership.view'), badge: usePage().props.pendingMemberships },
   { label: 'Card Settings', href: route('admin.privilege.settings'), active: route().current('admin.privilege.settings*'), show: can('membership.settings') },
+  { label: 'Point Management', href: route('admin.privilege.points'), active: route().current('admin.privilege.points*'), show: can('membership.settings') },
 ].filter((t) => t.show))
 </script>

@@ -73,7 +73,7 @@
             <input v-model="form.name" type="text" placeholder="Full name *" class="input-field text-sm">
             <p v-if="form.errors.name" class="text-error text-xs">{{ form.errors.name }}</p>
             <input v-model="form.email" type="email" placeholder="Email (optional)" class="input-field text-sm">
-            <PhoneInput v-model="form.phone" input-class="input-field text-sm" placeholder="Phone number" />
+            <PhoneInput v-model="form.phone" input-class="input-field text-sm" />
           </template>
         </div>
 

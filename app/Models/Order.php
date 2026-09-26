@@ -14,7 +14,7 @@ class Order extends Model
         'order_number', 'source', 'user_id', 'guest_name', 'guest_email', 'guest_phone',
         'delivery_address', 'delivery_city', 'delivery_area', 'delivery_postal_code',
         'status', 'subtotal', 'delivery_charge',
-        'discount', 'total', 'coupon_code', 'payment_method', 'payment_status',
+        'discount', 'member_discount', 'privilege_card_number', 'points_redeemed', 'points_discount', 'points_earned', 'total', 'coupon_code', 'payment_method', 'payment_status',
         'notes', 'estimated_delivery',
         'courier_name', 'tracking_number', 'tracking_url', 'estimated_delivery_date', 'cancel_reason',
     ];
@@ -23,6 +23,10 @@ class Order extends Model
         'subtotal' => 'decimal:2',
         'delivery_charge' => 'decimal:2',
         'discount' => 'decimal:2',
+        'member_discount' => 'decimal:2',
+        'points_discount' => 'decimal:2',
+        'points_redeemed' => 'integer',
+        'points_earned' => 'integer',
         'total' => 'decimal:2',
         'estimated_delivery' => 'datetime',
         'estimated_delivery_date' => 'date',
@@ -65,6 +69,14 @@ class Order extends Model
             if (str_starts_with((string) $order->order_number, 'TMP-')) {
                 $order->order_number = self::makeNumber($order->id);
                 $order->saveQuietly(); // no events → no audit noise / recursion
+            }
+        });
+
+        // Reward points follow the order status (earn on completed, unwind on cancelled),
+        // whichever screen changed it. Never let a points problem block the order itself.
+        static::saved(function ($order) {
+            if ($order->wasRecentlyCreated || $order->wasChanged('status')) {
+                rescue(fn () => app(\App\Services\RewardPointService::class)->syncOrder($order), report: true);
             }
         });
     }

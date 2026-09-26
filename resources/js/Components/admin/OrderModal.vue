@@ -12,6 +12,19 @@
                 <span v-if="order.source && order.source !== 'web'" class="badge badge-purple text-[10px] align-middle ml-1 uppercase">{{ order.source }}</span>
               </h2>
               <p class="text-muted text-xs mt-0.5">{{ order.created_at }}</p>
+              <!-- Membership / points at a glance -->
+              <div v-if="order.member_discount > 0 || order.points_redeemed > 0 || order.points_earned > 0" class="flex flex-wrap gap-1.5 mt-1.5">
+                <span v-if="order.member_discount > 0" class="kz-tag-gold">
+                  <CreditCardIcon class="w-3 h-3" /> Privilege −৳{{ Number(order.member_discount).toFixed(0) }}
+                  <span class="font-mono font-normal opacity-80">· {{ order.privilege_card_number }}</span>
+                </span>
+                <span v-if="order.points_redeemed > 0" class="kz-tag-gold">
+                  <StarIcon class="w-3 h-3" /> {{ order.points_redeemed }} pts used −৳{{ Number(order.points_discount).toFixed(0) }}
+                </span>
+                <span v-if="order.points_earned > 0" class="kz-tag-soft">
+                  <StarIcon class="w-3 h-3" /> Earned {{ order.points_earned }} pts
+                </span>
+              </div>
             </div>
             <div v-else class="h-10 w-48 bg-purple-50 rounded-xl animate-pulse"></div>
             <div class="flex items-center gap-2 ml-4">
@@ -135,6 +148,9 @@
                     <span v-else>{{ order.delivery_charge == 0 ? 'FREE' : '৳' + Number(order.delivery_charge).toFixed(2) }}</span>
                   </div>
                   <div v-if="order.discount > 0" class="flex justify-between text-sm"><span class="text-success">Discount</span><span class="text-success">-৳{{ Number(order.discount).toFixed(2) }}</span></div>
+                  <p v-if="order.member_discount > 0" class="text-[11px] text-muted -mt-1">incl. Privilege Member ৳{{ Number(order.member_discount).toFixed(2) }} · card <span class="font-mono">{{ order.privilege_card_number }}</span></p>
+                  <p v-if="order.points_redeemed > 0" class="text-[11px] text-muted -mt-1">incl. {{ order.points_redeemed }} reward points ৳{{ Number(order.points_discount).toFixed(2) }}</p>
+                  <p v-if="order.points_earned > 0" class="text-[11px] text-[#9a7b4f]">Customer earned {{ order.points_earned }} points on this order</p>
                   <hr class="border-purple-200">
                   <div class="flex justify-between font-bold text-base"><span>Total</span><span class="text-primary">৳{{ Number(editing && manualDelivery ? editTotal : order.total).toFixed(2) }}</span></div>
                   <p v-if="editing && manualDelivery" class="text-[11px] text-muted pt-1">Delivery charge is set manually (Delivery Settings → “Delivery charge based on location”). The total updates on save.</p>
@@ -226,7 +242,7 @@ import { useToast } from 'vue-toastification'
 import axios from 'axios'
 import VariationTags from '@/Components/ui/VariationTags.vue'
 import InvoiceActions from '@/Components/admin/InvoiceActions.vue'
-import { XMarkIcon, PencilSquareIcon, MagnifyingGlassIcon, TrashIcon } from '@heroicons/vue/24/outline'
+import { XMarkIcon, PencilSquareIcon, MagnifyingGlassIcon, TrashIcon, CreditCardIcon, StarIcon } from '@heroicons/vue/24/outline'
 import { statusBadge, paymentBadge } from '@/composables/useOrderStatus'
 import { usePermissions } from '@/composables/usePermissions'
 import { useDelivery } from '@/composables/useDelivery'
@@ -378,4 +394,26 @@ const saveEdit = () => {
 .modal-enter-active .relative, .modal-leave-active .relative { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
 .modal-enter-from .relative { transform: scale(0.95); }
 .modal-leave-to .relative { transform: scale(0.95); }
+
+/* Membership / reward-point markers on an order */
+.kz-tag-gold,
+.kz-tag-soft {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.kz-tag-gold {
+  color: #141414;
+  background: linear-gradient(135deg, #b8955f 0%, #ebcda2 50%, #c9a770 100%);
+}
+.kz-tag-soft {
+  color: #9a7b4f;
+  background: #f7f1e8;
+  border: 1px solid #e5d5bc;
+}
 </style>

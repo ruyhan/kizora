@@ -43,6 +43,7 @@ class HandleInertiaRequests extends Middleware
                 'user' => Auth::check() ? (function () {
                     $u = Auth::user();
                     $staff = $u->canAccessAdmin();
+                    $privilegeStatus = $u->privilegeMembership()->value('status');
                     return [
                         'id' => $u->id,
                         'name' => $u->name,
@@ -54,7 +55,16 @@ class HandleInertiaRequests extends Middleware
                         'is_staff' => $staff,
                         'permissions' => $staff ? $u->permissionSlugs() : [],
                         // pending | approved | rejected | revoked | null — drives the account "Privilege Member" link
-                        'privilege_status' => $u->privilegeMembership()->value('status'),
+                        'privilege_status' => $privilegeStatus,
+                        // % off shown on product prices for approved members (0 = regular prices)
+                        'member_discount' => $privilegeStatus === 'approved'
+                            ? app(\App\Support\PrivilegeCardSettings::class)->discountPercent()
+                            : 0,
+                        // Reward-point balance for customers without a Privilege Card (null = hide the badge)
+                        'reward_points' => $privilegeStatus !== 'approved'
+                            && app(\App\Support\PointSettings::class)->get()['enabled']
+                            ? (int) $u->reward_points
+                            : null,
                     ];
                 })() : null,
             ],

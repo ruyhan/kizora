@@ -123,6 +123,9 @@
             <span>Total</span>
             <span class="text-primary text-lg">৳{{ cartStore.total?.toFixed(2) }}</span>
           </div>
+          <p v-if="member.isMember.value" class="text-xs text-[#9a7b4f] font-medium text-center pt-1">
+            Your {{ member.percent.value }}% Privilege Member discount is applied at checkout.
+          </p>
         </div>
         <div class="flex gap-3">
           <Link :href="route('cart.index')" @click="close" class="btn-secondary flex-1 text-center text-sm">
@@ -145,6 +148,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { Link } from '@inertiajs/vue3'
 import { useToast } from 'vue-toastification'
+import { useMemberPrice } from '@/composables/useMemberPrice'
 import { useCartStore } from '@/stores/cart'
 import { useDelivery } from '@/composables/useDelivery'
 import VariationTags from '@/Components/ui/VariationTags.vue'
@@ -155,6 +159,7 @@ import {
 const cartStore = useCartStore()
 const del = useDelivery()
 const toast     = useToast()
+const member    = useMemberPrice()
 const isOpen    = ref(false)
 
 const updatingId = ref(null)

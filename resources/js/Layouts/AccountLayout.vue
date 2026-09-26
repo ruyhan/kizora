@@ -6,8 +6,11 @@
 
       <!-- ── Mobile: gradient banner + scrollable tab strip (< lg) ── -->
       <div class="lg:hidden">
-        <div class="gradient-purple px-4 pt-6 pb-5">
-          <div class="flex items-center gap-4">
+        <div class="gradient-purple px-4 pt-6 pb-5 relative">
+          <span v-if="hasPoints" class="points-badge absolute top-4 right-4" :title="pointsTitle">
+            <StarIcon class="w-3.5 h-3.5" /> {{ pointsLabel }}
+          </span>
+          <div class="flex items-center gap-4" :class="{ 'pr-24': hasPoints }">
             <div class="w-14 h-14 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center text-white text-xl font-bold font-display shrink-0">
               {{ user?.name?.[0]?.toUpperCase() }}
             </div>
@@ -60,7 +63,11 @@
           <!-- Desktop sidebar -->
           <aside class="hidden lg:flex flex-col w-64 xl:w-72 shrink-0 lg:sticky lg:top-32 lg:self-start">
             <!-- User card -->
-            <div class="gradient-purple rounded-2xl p-6 mb-4">
+            <div class="gradient-purple rounded-2xl p-6 mb-4 relative">
+              <!-- Reward points (customers without a Privilege Card) -->
+              <span v-if="hasPoints" class="points-badge absolute top-4 right-4" :title="pointsTitle">
+                <StarIcon class="w-3.5 h-3.5" /> {{ pointsLabel }}
+              </span>
               <div class="w-16 h-16 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center text-white text-2xl font-bold font-display mb-4">
                 {{ user?.name?.[0]?.toUpperCase() }}
               </div>
@@ -131,9 +138,15 @@ import {
   SparklesIcon,
   ChevronRightIcon,
 } from '@heroicons/vue/24/outline'
+import { StarIcon } from '@heroicons/vue/24/solid'
 
 const page = usePage()
 const user = computed(() => page.props.auth?.user)
+
+// Reward points badge — null for approved Privilege Members (and when points are off)
+const hasPoints = computed(() => user.value?.reward_points !== null && user.value?.reward_points !== undefined)
+const pointsLabel = computed(() => `${Number(user.value?.reward_points || 0).toLocaleString()} pts`)
+const pointsTitle = 'Reward points — earn on every completed order and redeem at checkout'
 
 const privilegeCaption = computed(() => ({
   approved: 'View your virtual card',
@@ -175,6 +188,12 @@ const isActive = (name) => route().current(name + '*')
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+.points-badge {
+  @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap;
+  color: #141414;
+  background: linear-gradient(135deg, #b8955f 0%, #ebcda2 50%, #c9a770 100%);
+  box-shadow: 0 6px 16px -6px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.35);
 }
 .tab-link-gold { color: #a8844f; }
 .tab-link-gold:hover { color: #8a6a3b; }

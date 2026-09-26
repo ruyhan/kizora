@@ -1,54 +1,44 @@
 <template>
   <div class="kz-phone">
-    <input ref="input" type="tel" :class="inputClass" autocomplete="tel" :placeholder="placeholder">
+    <div class="relative">
+      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted pointer-events-none select-none">🇧🇩 +880</span>
+      <input ref="input" type="tel" inputmode="numeric" autocomplete="tel" maxlength="11"
+        :class="[inputClass, showError ? 'border-error' : '']" style="padding-left: 5.25rem"
+        :placeholder="placeholder" :value="local" @input="onInput" @blur="touched = true">
+    </div>
+    <p v-if="showError" class="text-error text-xs mt-1">{{ message }}</p>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
-import intlTelInput from 'intl-tel-input/intlTelInputWithUtils'
-import 'intl-tel-input/styles'
+import { ref, computed, watch } from 'vue'
+import { normalizeBdPhone, toLocalBdPhone, BD_PHONE_MESSAGE } from '@/utils/phone'
 
 const props = defineProps({
-  modelValue: { type: String, default: '' },
-  inputClass: { type: String, default: 'input-field' },
-  placeholder: { type: String, default: 'Phone number' },
+  modelValue:  { type: String, default: '' },
+  inputClass:  { type: String, default: 'input-field' },
+  placeholder: { type: String, default: '01712345678' },
+  // The parent already shows a server-side error for this field
+  hideError:   { type: Boolean, default: false },
 })
 const emit = defineEmits(['update:modelValue'])
 
-const input = ref(null)
-let iti = null
+const message = BD_PHONE_MESSAGE
+const local = ref(toLocalBdPhone(props.modelValue))
+const touched = ref(false)
 
-const currentNumber = () => {
-  if (!iti) return ''
-  const e164 = iti.getNumber()
-  if (e164) return e164
-  const c = iti.getSelectedCountryData()
-  const digits = (input.value?.value || '').replace(/\D/g, '')
-  return digits ? '+' + (c.dialCode || '') + digits : ''
+// Only flagged once the field has been left, so typing isn't nagged at.
+const showError = computed(() => !props.hideError && touched.value && local.value.length > 0 && !normalizeBdPhone(local.value))
+
+const onInput = (e) => {
+  local.value = e.target.value.replace(/\D/g, '').slice(0, 11)
+  e.target.value = local.value
+  // Hand the parent the stored format once it's valid, the raw digits until then.
+  emit('update:modelValue', normalizeBdPhone(local.value) || local.value)
 }
-const emitVal = () => emit('update:modelValue', currentNumber())
-
-onMounted(() => {
-  iti = intlTelInput(input.value, {
-    initialCountry: 'bd',          // default: Bangladesh
-    countrySearch: true,
-    nationalMode: false,
-  })
-  if (props.modelValue) iti.setNumber(props.modelValue)
-  input.value.addEventListener('input', emitVal)
-  input.value.addEventListener('countrychange', emitVal)
-})
-
-onBeforeUnmount(() => { iti?.destroy() })
 
 watch(() => props.modelValue, (v) => {
-  if (iti && v && v !== iti.getNumber()) iti.setNumber(v)
+  const next = toLocalBdPhone(v)
+  if (next !== local.value && normalizeBdPhone(v)) local.value = next
 })
 </script>
-
-<style>
-/* intl-tel-input renders a wrapper around the input — make it full width */
-.kz-phone .iti { width: 100%; display: block; }
-.kz-phone .iti__tel-input { width: 100%; }
-</style>

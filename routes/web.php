@@ -85,6 +85,7 @@ Route::get('/api/cart', [CartController::class, 'getCartJson'])->name('cart.json
 // Checkout routes
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
 Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+Route::post('/checkout/privilege-card', [CheckoutController::class, 'verifyPrivilegeCard'])->middleware('throttle:10,1')->name('checkout.privilege-card');
 Route::get('/order/success', [CheckoutController::class, 'success'])->name('order.success');
 
 // Payment gateway callbacks (public — no auth, called by payment gateways)
@@ -156,6 +157,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/account/privilege', [\App\Http\Controllers\PrivilegeController::class, 'show'])->name('account.privilege');
     Route::post('/account/privilege', [\App\Http\Controllers\PrivilegeController::class, 'apply'])->middleware('throttle:6,1')->name('account.privilege.apply');
     Route::delete('/account/privilege', [\App\Http\Controllers\PrivilegeController::class, 'cancel'])->name('account.privilege.cancel');
+    // Activating a card an admin issued to this email address
+    Route::get('/account/privilege/claim/{membership}', [\App\Http\Controllers\PrivilegeController::class, 'claim'])->name('account.privilege.claim');
+    Route::post('/account/privilege/resend-claim', [\App\Http\Controllers\PrivilegeController::class, 'resendClaim'])->middleware('throttle:4,10')->name('account.privilege.resend-claim');
 });
 
 // Admin routes — every route is permission-gated (Super Admin bypasses).
@@ -250,10 +254,16 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/privilege-members', [\App\Http\Controllers\Admin\PrivilegeMemberController::class, 'index'])->middleware('permission:membership.view')->name('privilege.index');
     Route::get('/privilege-members/settings', [\App\Http\Controllers\Admin\PrivilegeMemberController::class, 'settings'])->middleware('permission:membership.settings')->name('privilege.settings');
     Route::post('/privilege-members/settings', [\App\Http\Controllers\Admin\PrivilegeMemberController::class, 'updateSettings'])->middleware('permission:membership.settings')->name('privilege.settings.update');
+    Route::post('/privilege-members', [\App\Http\Controllers\Admin\PrivilegeMemberController::class, 'store'])->middleware('permission:membership.manage')->name('privilege.store');
     Route::patch('/privilege-members/{membership}/approve', [\App\Http\Controllers\Admin\PrivilegeMemberController::class, 'approve'])->middleware('permission:membership.manage')->name('privilege.approve');
     Route::patch('/privilege-members/{membership}/reject', [\App\Http\Controllers\Admin\PrivilegeMemberController::class, 'reject'])->middleware('permission:membership.manage')->name('privilege.reject');
     Route::patch('/privilege-members/{membership}/revoke', [\App\Http\Controllers\Admin\PrivilegeMemberController::class, 'revoke'])->middleware('permission:membership.manage')->name('privilege.revoke');
     Route::delete('/privilege-members/{membership}', [\App\Http\Controllers\Admin\PrivilegeMemberController::class, 'destroy'])->middleware('permission:membership.manage')->name('privilege.destroy');
+    // Reward points (customers without a Privilege Card)
+    Route::get('/privilege-members/points', [\App\Http\Controllers\Admin\RewardPointController::class, 'index'])->middleware('permission:membership.settings')->name('privilege.points');
+    Route::post('/privilege-members/points', [\App\Http\Controllers\Admin\RewardPointController::class, 'updateSettings'])->middleware('permission:membership.settings')->name('privilege.points.update');
+    Route::get('/privilege-members/points/customers', [\App\Http\Controllers\Admin\RewardPointController::class, 'search'])->middleware('permission:membership.manage')->name('privilege.points.search');
+    Route::post('/privilege-members/points/{user}/adjust', [\App\Http\Controllers\Admin\RewardPointController::class, 'adjust'])->middleware('permission:membership.manage')->name('privilege.points.adjust');
 
     // Roles & Permissions
     Route::get('/roles', [AdminRoleController::class, 'index'])->middleware('permission:roles.view')->name('roles.index');

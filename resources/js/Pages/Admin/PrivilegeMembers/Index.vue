@@ -19,6 +19,9 @@
         <input v-model="f.search" @input="applyDebounced" type="text" placeholder="Search name, email, phone, card no…"
           class="input-field text-sm pl-9 py-2 w-full">
       </div>
+      <button v-if="canManage" @click="issuing = true" class="btn-primary text-sm py-2 px-3.5 inline-flex items-center gap-1.5 shrink-0">
+        <PlusIcon class="w-4 h-4" /> Issue card
+      </button>
     </div>
 
     <div class="bg-white rounded-2xl shadow-sm border border-purple-50 overflow-hidden">
@@ -42,6 +45,7 @@
                   <div class="min-w-0">
                     <p class="font-semibold text-charcoal text-sm truncate">{{ m.name }}</p>
                     <p class="text-muted text-xs truncate">{{ m.email }}</p>
+                    <p v-if="m.unclaimed" class="text-[11px] text-amber-600 font-medium mt-0.5">No account yet — activates when they sign up with this email</p>
                     <p v-if="m.note" class="text-xs text-charcoal/70 mt-1 max-w-xs italic line-clamp-2" :title="m.note">“{{ m.note }}”</p>
                   </div>
                 </div>
@@ -117,6 +121,42 @@
       </form>
     </Modal>
 
+    <!-- Issue a card by email (no application needed) -->
+    <Modal :open="issuing" @update:open="issuing = false" max-width="sm:max-w-md" title="Issue a Privilege Card">
+      <form @submit.prevent="issue" class="p-5 space-y-4">
+        <p class="text-sm text-muted">
+          The card is approved straight away. If an account already uses this email it appears in that account immediately;
+          otherwise we email the card details and it activates when they sign up with this address and confirm it.
+        </p>
+        <div>
+          <label class="block text-sm font-medium text-charcoal mb-1">Name on card <span class="text-accent">*</span></label>
+          <input v-model="newCard.name" maxlength="120" class="input-field text-sm uppercase" placeholder="OTHIYA ISRAQ">
+          <p v-if="newCard.errors.name" class="text-error text-xs mt-1">{{ newCard.errors.name }}</p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-charcoal mb-1">Email <span class="text-accent">*</span></label>
+          <input v-model="newCard.email" type="email" maxlength="255" class="input-field text-sm" placeholder="customer@example.com">
+          <p v-if="newCard.errors.email" class="text-error text-xs mt-1">{{ newCard.errors.email }}</p>
+          <p class="text-xs text-muted mt-1">One membership per email address.</p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-charcoal mb-1">Mobile <span class="text-muted font-normal">(optional)</span></label>
+          <PhoneInput v-model="newCard.phone" :hide-error="!!newCard.errors.phone" input-class="input-field text-sm" />
+          <p v-if="newCard.errors.phone" class="text-error text-xs mt-1">{{ newCard.errors.phone }}</p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-charcoal mb-1">Internal note <span class="text-muted font-normal">(optional)</span></label>
+          <textarea v-model="newCard.note" rows="2" maxlength="500" class="input-field text-sm" placeholder="e.g. VIP customer, issued in store"></textarea>
+        </div>
+        <div class="flex gap-3">
+          <button type="button" @click="issuing = false" class="btn-secondary flex-1">Cancel</button>
+          <button type="submit" :disabled="newCard.processing" class="btn-primary flex-1 disabled:opacity-50">
+            {{ newCard.processing ? 'Issuing…' : 'Issue card' }}
+          </button>
+        </div>
+      </form>
+    </Modal>
+
     <!-- Card preview -->
     <Modal :open="!!preview" @update:open="preview = null" max-width="sm:max-w-lg" :title="preview?.name">
       <div class="p-6 bg-[#0d0d0e]">
@@ -130,15 +170,16 @@
 
 <script setup>
 import { ref, reactive } from 'vue'
-import { Head, router } from '@inertiajs/vue3'
+import { Head, router, useForm } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import PrivilegeTabs from '@/Components/admin/PrivilegeTabs.vue'
 import PrivilegeCard from '@/Components/PrivilegeCard.vue'
 import Avatar from '@/Components/ui/Avatar.vue'
+import PhoneInput from '@/Components/ui/PhoneInput.vue'
 import Modal from '@/Components/ui/Modal.vue'
 import Pagination from '@/Components/ui/Pagination.vue'
 import { usePermissions } from '@/composables/usePermissions'
-import { MagnifyingGlassIcon, CheckIcon, XMarkIcon, TrashIcon, CreditCardIcon, NoSymbolIcon } from '@heroicons/vue/24/outline'
+import { MagnifyingGlassIcon, CheckIcon, XMarkIcon, TrashIcon, CreditCardIcon, NoSymbolIcon, PlusIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
   members: Object,
@@ -170,6 +211,14 @@ const badgeClass = (s) => ({
   rejected: 'badge-error',
   revoked: 'bg-gray-100 text-gray-600',
 }[s])
+
+// ── Issue a card by email ──
+const issuing = ref(false)
+const newCard = useForm({ name: '', email: '', phone: '', note: '' })
+const issue = () => newCard.post(route('admin.privilege.store'), {
+  preserveScroll: true,
+  onSuccess: () => { issuing.value = false; newCard.reset() },
+})
 
 const busy = ref(null)
 const opts = { preserveScroll: true, onFinish: () => { busy.value = null } }

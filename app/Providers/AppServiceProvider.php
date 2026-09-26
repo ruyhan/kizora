@@ -45,6 +45,12 @@ class AppServiceProvider extends ServiceProvider
             // ignore — falls back to .env mail config
         }
 
+        // A Privilege Card issued to this email may be waiting to be activated
+        // (covers accounts that already existed when the admin created the card).
+        Event::listen(\Illuminate\Auth\Events\Login::class, function ($event) {
+            rescue(fn () => app(\App\Services\PrivilegeClaimService::class)->attempt($event->user), report: true);
+        });
+
         // Throttle outgoing transactional email (queue middleware: RateLimited('emails')).
         RateLimiter::for('emails', fn () => Limit::perMinute(30));
 

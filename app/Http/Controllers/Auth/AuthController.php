@@ -73,7 +73,7 @@ class AuthController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
-            'phone' => 'nullable|string|max:20',
+            'phone' => ['nullable', new \App\Rules\BdPhone],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 

@@ -6,6 +6,19 @@
       <div>
         <h1 class="font-display text-2xl font-bold text-charcoal">{{ order.order_number }}</h1>
         <p class="text-muted text-sm">Placed on {{ order.created_at }}</p>
+        <!-- Membership / points at a glance -->
+        <div v-if="order.member_discount > 0 || order.points_redeemed > 0 || order.points_earned > 0" class="flex flex-wrap gap-2 mt-2">
+          <span v-if="order.member_discount > 0" class="kz-tag-gold">
+            <CreditCardIcon class="w-3.5 h-3.5" /> Privilege Member −৳{{ Number(order.member_discount).toFixed(0) }}
+            <span class="font-mono font-normal opacity-80">· {{ order.privilege_card_number }}</span>
+          </span>
+          <span v-if="order.points_redeemed > 0" class="kz-tag-gold">
+            <StarIcon class="w-3.5 h-3.5" /> {{ order.points_redeemed }} points used −৳{{ Number(order.points_discount).toFixed(0) }}
+          </span>
+          <span v-if="order.points_earned > 0" class="kz-tag-soft">
+            <StarIcon class="w-3.5 h-3.5" /> Earned {{ order.points_earned }} points
+          </span>
+        </div>
       </div>
       <div class="flex items-center gap-3">
         <InvoiceActions :order-id="order.id" />
@@ -49,6 +62,13 @@
                 <span class="text-success">Discount</span>
                 <span class="text-success">-৳{{ Number(order.discount).toFixed(2) }}</span>
               </div>
+              <p v-if="order.member_discount > 0" class="text-xs text-muted -mt-1">
+                incl. Privilege Member ৳{{ Number(order.member_discount).toFixed(2) }} · card <span class="font-mono">{{ order.privilege_card_number }}</span>
+              </p>
+              <p v-if="order.points_redeemed > 0" class="text-xs text-muted -mt-1">
+                incl. {{ order.points_redeemed }} reward points ৳{{ Number(order.points_discount).toFixed(2) }}
+              </p>
+              <p v-if="order.points_earned > 0" class="text-xs text-[#9a7b4f]">Customer earned {{ order.points_earned }} points on this order</p>
               <hr class="border-purple-200">
               <div class="flex justify-between font-bold text-lg">
                 <span>Total</span>
@@ -124,6 +144,7 @@ const statusOptions = [
   { value: 'cancelled', label: 'Cancelled' },
 ]
 import VariationTags from '@/Components/ui/VariationTags.vue'
+import { CreditCardIcon, StarIcon } from '@heroicons/vue/24/outline'
 import InvoiceActions from '@/Components/admin/InvoiceActions.vue'
 import { useToast } from 'vue-toastification'
 import { statusBadge, paymentBadge } from '@/composables/useOrderStatus'
@@ -148,3 +169,16 @@ const updateStatus = () => {
   })
 }
 </script>
+
+<style scoped>
+@reference "../../../../css/app.css";
+/* Membership / reward-point markers on an order */
+.kz-tag-gold {
+  @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold;
+  color: #141414;
+  background: linear-gradient(135deg, #b8955f 0%, #ebcda2 50%, #c9a770 100%);
+}
+.kz-tag-soft {
+  @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold text-[#9a7b4f] bg-[#f7f1e8] border border-[#e5d5bc];
+}
+</style>

@@ -118,7 +118,7 @@ class ChatController extends Controller
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1|max:50',
             'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:30',
+            'phone' => ['required', new \App\Rules\BdPhone],
             'email' => 'nullable|email|max:255',
             'address' => 'required|string|max:500',
             'delivery_area_id' => ['required', Rule::exists('delivery_areas', 'id')],

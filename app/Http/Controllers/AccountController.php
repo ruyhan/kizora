@@ -68,7 +68,7 @@ class AccountController extends Controller
         $user = Auth::user();
         $request->validate([
             'name'             => 'required|string|max:255',
-            'phone'            => 'nullable|string|max:20',
+            'phone'            => ['nullable', new \App\Rules\BdPhone],
             'email'            => 'required|email|unique:users,email,' . $user->id,
             // Any existing area is allowed — availability is not enforced on profile save
             'delivery_area_id' => ['nullable', Rule::exists('delivery_areas', 'id')],

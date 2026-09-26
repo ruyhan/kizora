@@ -71,7 +71,7 @@ class UserController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'phone' => 'nullable|string|max:20',
+            'phone' => ['nullable', new \App\Rules\BdPhone],
             'password' => 'required|string|min:8',
             'role_id' => ['required', Rule::exists('roles', 'id')->where('is_staff', true)],
             'status' => 'required|in:active,inactive,suspended',
@@ -89,7 +89,7 @@ class UserController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id)],
-            'phone' => 'nullable|string|max:20',
+            'phone' => ['nullable', new \App\Rules\BdPhone],
             'role_id' => ['required', Rule::exists('roles', 'id')->where('is_staff', true)],
             'status' => 'required|in:active,inactive,suspended',
             'avatar' => 'nullable|string|max:1000',

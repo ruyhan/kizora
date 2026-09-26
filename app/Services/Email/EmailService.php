@@ -199,6 +199,53 @@ HTML,
 HTML,
             ],
 
+            'membership_applied' => [
+                'name'      => 'Account — Privilege Membership Application Received',
+                'group'     => 'Account',
+                'subject'   => 'We received your Privilege Membership application',
+                'variables' => ['customer_name', 'membership_link'],
+                'body'      => <<<HTML
+<h1 style="margin:0 0 8px;font-size:22px;color:#17181B;">Thanks for applying, {customer_name}</h1>
+<p style="margin:0 0 18px;color:#52525b;font-size:15px;line-height:1.6;">We've received your application for Kizora Privilege Membership. Our team reviews applications within 1–2 business days, and we'll email you as soon as there's a decision.</p>
+<table role="presentation" width="100%" style="margin:0 0 22px;border-collapse:collapse;background:#f7f7f8;border-radius:10px;">
+  <tr><td style="padding:14px 16px;font-size:14px;color:#52525b;">Status<br><strong style="color:#17181B;font-size:15px;">Under review</strong></td></tr>
+</table>
+<p style="margin:0;"><a href="{membership_link}" style="display:inline-block;background:#17181B;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;line-height:1;padding:13px 24px;border-radius:10px;">Track your application</a></p>
+HTML,
+            ],
+
+            'membership_invite' => [
+                'name'      => 'Account — Privilege Card Issued (no account yet)',
+                'group'     => 'Account',
+                'subject'   => 'Your Kizora Privilege Card is ready',
+                'variables' => ['customer_name', 'card_number', 'customer_email', 'register_link'],
+                'body'      => <<<HTML
+<h1 style="margin:0 0 8px;font-size:22px;color:#17181B;">Your Privilege Card is ready</h1>
+<p style="margin:0 0 18px;color:#52525b;font-size:15px;line-height:1.6;">Hi {customer_name}, we've issued your Kizora Privilege Card. Create an account with <strong style="color:#17181B;">{customer_email}</strong> and your card will be waiting inside.</p>
+<table role="presentation" width="100%" style="margin:0 0 22px;border-collapse:collapse;background:#111111;border-radius:12px;">
+  <tr><td style="padding:18px 20px;font-size:12px;letter-spacing:2px;color:#d4b891;">PRIVILEGE CARD NO.<br><strong style="display:block;margin-top:6px;font-size:20px;letter-spacing:1px;color:#d4b891;">{card_number}</strong></td></tr>
+</table>
+<p style="margin:0 0 6px;"><a href="{register_link}" style="display:inline-block;background:#17181B;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;line-height:1;padding:13px 24px;border-radius:10px;">Create my account</a></p>
+<p style="margin:14px 0 0;color:#9b9ba3;font-size:13px;line-height:1.6;">Use this same email address when you sign up — we'll send you a confirmation link to activate the card.</p>
+HTML,
+            ],
+
+            'membership_activate' => [
+                'name'      => 'Account — Activate Privilege Card',
+                'group'     => 'Account',
+                'subject'   => 'Activate your Kizora Privilege Card',
+                'variables' => ['customer_name', 'card_number', 'activation_link'],
+                'body'      => <<<HTML
+<h1 style="margin:0 0 8px;font-size:22px;color:#17181B;">One click to activate your card</h1>
+<p style="margin:0 0 18px;color:#52525b;font-size:15px;line-height:1.6;">Hi {customer_name}, a Kizora Privilege Card has been issued to this email address. Confirm it's you and the card appears in your account straight away.</p>
+<table role="presentation" width="100%" style="margin:0 0 22px;border-collapse:collapse;background:#111111;border-radius:12px;">
+  <tr><td style="padding:18px 20px;font-size:12px;letter-spacing:2px;color:#d4b891;">PRIVILEGE CARD NO.<br><strong style="display:block;margin-top:6px;font-size:20px;letter-spacing:1px;color:#d4b891;">{card_number}</strong></td></tr>
+</table>
+<p style="margin:0 0 6px;"><a href="{activation_link}" style="display:inline-block;background:#17181B;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;line-height:1;padding:13px 24px;border-radius:10px;">Activate my card</a></p>
+<p style="margin:14px 0 0;color:#9b9ba3;font-size:13px;line-height:1.6;">If you weren't expecting this, you can ignore this email — the card stays locked until the link is used.</p>
+HTML,
+            ],
+
             'membership_approved' => [
                 'name'      => 'Account — Privilege Membership Approved',
                 'group'     => 'Account',
@@ -459,6 +506,10 @@ HTML,
             'review_link'             => url('/track-order?order_number=ORD-10042'),
             'reorder_link'            => url('/shop'),
             'order_link'              => url('/admin/orders/42'),
+            'card_number'             => '2606 1510 4829173',
+            'membership_link'         => url('/account/privilege'),
+            'activation_link'         => url('/account/privilege'),
+            'register_link'           => url('/register'),
         ];
     }
 

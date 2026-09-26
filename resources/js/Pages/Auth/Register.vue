@@ -66,7 +66,7 @@
 
             <div>
               <label class="text-sm font-medium text-charcoal mb-1.5 block">Phone Number</label>
-              <PhoneInput v-model="form.phone" :input-class="errors.phone ? 'input-field border-error' : 'input-field'" placeholder="Phone number" />
+              <PhoneInput v-model="form.phone" :hide-error="!!errors.phone" :input-class="errors.phone ? 'input-field border-error' : 'input-field'" />
               <p v-if="errors.phone" class="text-error text-xs mt-1">{{ errors.phone }}</p>
             </div>
 

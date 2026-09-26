@@ -153,7 +153,7 @@ class CustomerController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($customer->id)],
-            'phone' => 'nullable|string|max:20',
+            'phone' => ['nullable', new \App\Rules\BdPhone],
             'status' => 'required|in:active,inactive,suspended',
         ]);
 

@@ -24,6 +24,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'last_login_at'     => 'datetime',
+            'reward_points'     => 'integer',
             'password' => 'hashed',
         ];
     }
@@ -121,6 +122,19 @@ class User extends Authenticatable
     public function privilegeMembership()
     {
         return $this->hasOne(PrivilegeMembership::class);
+    }
+
+    protected static function booted(): void
+    {
+        // A new account may have a Privilege Card waiting for its email address.
+        static::created(function (User $user) {
+            rescue(fn () => app(\App\Services\PrivilegeClaimService::class)->attempt($user), report: true);
+        });
+    }
+
+    public function pointTransactions()
+    {
+        return $this->hasMany(PointTransaction::class);
     }
 
     public function deliveryArea()

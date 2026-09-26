@@ -13,7 +13,7 @@ class AddressController extends Controller
         return [
             'label'        => 'nullable|string|max:50',
             'name'         => 'required|string|max:255',
-            'phone'        => 'required|string|max:20',
+            'phone'        => ['required', new \App\Rules\BdPhone],
             'address_line' => 'required|string|max:500',
             'city'         => 'nullable|string|max:100',
             'postal_code'  => 'nullable|string|max:20',

@@ -43,7 +43,7 @@
                 </div>
                 <div class="md:col-span-2">
                   <label class="text-sm font-medium text-charcoal mb-1.5 block">Phone Number *</label>
-                  <PhoneInput v-model="form.phone" :input-class="errors.phone ? 'input-field border-error' : 'input-field'" />
+                  <PhoneInput v-model="form.phone" :hide-error="!!errors.phone" :input-class="errors.phone ? 'input-field border-error' : 'input-field'" />
                   <p v-if="errors.phone" class="text-error text-xs mt-1">{{ errors.phone }}</p>
                 </div>
                 <!-- City + Area picker -->
@@ -135,6 +135,75 @@
 
               <hr class="border-purple-100 mb-4">
 
+              <!-- Privilege Member: automatic for logged-in approved members -->
+              <div v-if="privilege.member_card && disc.member > 0"
+                class="mb-4 rounded-xl border border-[#d4b891]/50 bg-[#d4b891]/10 px-3.5 py-3 flex items-start gap-2.5">
+                <CheckBadgeIcon class="w-5 h-5 text-[#9a7b4f] shrink-0 mt-px" />
+                <div class="min-w-0">
+                  <p class="text-sm font-semibold text-charcoal">Privilege Member · {{ percentText }}% off applied</p>
+                  <p class="text-[11px] text-muted font-mono">Card {{ privilege.member_card }}</p>
+                </div>
+              </div>
+
+              <!-- Privilege card number: optional, for guests (admin can switch this off) -->
+              <div v-else-if="privilege.guest_field" class="mb-4 rounded-xl border border-dashed border-[#d4b891] bg-[#d4b891]/5 px-3.5 py-3">
+                <label for="privilege-card" class="flex items-start gap-2 mb-2 cursor-pointer">
+                  <CheckBadgeIcon class="w-5 h-5 text-[#9a7b4f] shrink-0 mt-px" />
+                  <span>
+                    <span class="block text-sm font-semibold text-charcoal">Privilege Member? Get {{ percentText }}% off</span>
+                    <span class="block text-[11px] text-muted">Enter your Privilege card number (optional) to get {{ percentText }}% off your order.</span>
+                  </span>
+                </label>
+                <div v-if="card.applied" class="flex items-center justify-between gap-2 rounded-lg bg-white border border-green-200 px-3 py-2">
+                  <span class="text-xs text-success font-medium truncate"><span class="font-mono">{{ card.applied }}</span> · {{ card.message }}</span>
+                  <button type="button" @click="removeCard" class="text-xs text-muted hover:text-error shrink-0">Remove</button>
+                </div>
+                <div v-else class="flex gap-2">
+                  <input id="privilege-card" v-model="card.input" inputmode="numeric" maxlength="30" autocomplete="off"
+                    placeholder="Card number" @keydown.enter.prevent="applyCard"
+                    class="input-field text-sm py-2 font-mono flex-1 min-w-0" :class="{ 'border-error': card.error }">
+                  <button type="button" @click="applyCard" :disabled="card.loading || !card.input.trim()"
+                    class="btn-secondary text-sm py-2 px-4 shrink-0 disabled:opacity-50">{{ card.loading ? '…' : 'Apply' }}</button>
+                </div>
+                <p v-if="card.error || errors.privilege_card" class="text-error text-xs mt-1.5">{{ card.error || errors.privilege_card }}</p>
+                <p v-else-if="!card.applied" class="text-[11px] text-muted mt-1.5">
+                  Not a member yet?
+                  <Link :href="route('register')" class="text-primary hover:underline">Create an account</Link> and apply for the Privilege Card.
+                </p>
+              </div>
+
+              <!-- Reward points (customers without a Privilege Card) -->
+              <div v-if="points" class="mb-4 rounded-xl border border-[#d4b891]/50 bg-[#d4b891]/5 px-3.5 py-3">
+                <div class="flex items-center justify-between gap-2">
+                  <p class="text-sm font-semibold text-charcoal flex items-center gap-1.5">
+                    <StarIcon class="w-4 h-4 text-[#b8955f]" /> Reward Points
+                  </p>
+                  <span class="text-xs font-bold text-[#9a7b4f]">{{ points.balance.toLocaleString() }} pts</span>
+                </div>
+
+                <template v-if="points.max > 0">
+                  <label class="flex items-center gap-2 mt-2 text-sm text-charcoal cursor-pointer">
+                    <input v-model="usePoints" type="checkbox" class="rounded accent-ink">
+                    Use my points <span class="text-muted text-xs">(1 point = ৳{{ points.point_value }})</span>
+                  </label>
+                  <div v-if="usePoints" class="flex items-center gap-2 mt-2">
+                    <input v-model.number="pointsToUse" type="number" :min="points.min_redeem" :max="points.max" step="1"
+                      class="input-field text-sm py-1.5 w-28" :class="{ 'border-error': pointsError }">
+                    <span class="text-xs text-muted">of {{ points.max }} usable</span>
+                    <span class="ml-auto text-sm font-semibold text-success">−৳{{ formatPrice(pointsDiscount) }}</span>
+                  </div>
+                  <p v-if="pointsError || errors.redeem_points" class="text-error text-xs mt-1">{{ pointsError || errors.redeem_points }}</p>
+                </template>
+                <p v-else-if="points.balance < points.min_redeem" class="text-[11px] text-muted mt-1">
+                  Collect {{ points.min_redeem }} points to start redeeming — {{ points.min_redeem - points.balance }} more to go.
+                </p>
+                <p v-else class="text-[11px] text-muted mt-1">Points can't be used on this order.</p>
+
+                <p v-if="pointsToEarn > 0" class="text-[11px] text-[#9a7b4f] mt-1.5">
+                  You'll earn <strong>{{ pointsToEarn }} points</strong> when this order is delivered.
+                </p>
+              </div>
+
               <!-- Totals -->
               <div class="space-y-2 mb-6">
                 <div class="flex justify-between text-sm">
@@ -163,10 +232,21 @@
                 <p v-else-if="del.freeMinimum" class="text-xs text-muted">
                   Add ৳{{ formatPrice(del.amountToFree(cart.subtotal)) }} more for free delivery
                 </p>
-                <div v-if="cart.discount > 0" class="flex justify-between text-sm">
+                <div v-if="disc.coupon > 0" class="flex justify-between text-sm">
                   <span class="text-success">Coupon Discount</span>
-                  <span class="text-success font-semibold">-৳{{ formatPrice(cart.discount) }}</span>
+                  <span class="text-success font-semibold">-৳{{ formatPrice(disc.coupon) }}</span>
                 </div>
+                <div v-if="disc.member > 0" class="flex justify-between text-sm">
+                  <span class="text-success">Privilege Member ({{ percentText }}%)</span>
+                  <span class="text-success font-semibold">-৳{{ formatPrice(disc.member) }}</span>
+                </div>
+                <div v-if="pointsDiscount > 0" class="flex justify-between text-sm">
+                  <span class="text-success">Reward Points ({{ pointsToUse }})</span>
+                  <span class="text-success font-semibold">-৳{{ formatPrice(pointsDiscount) }}</span>
+                </div>
+                <p v-if="cart.coupon_code && !disc.coupon_applied && disc.member > 0" class="text-[11px] text-muted">
+                  Coupon {{ cart.coupon_code }} isn't combined with the member discount — the bigger saving is applied.
+                </p>
                 <hr class="border-purple-100">
                 <div class="flex justify-between font-bold text-lg">
                   <span class="text-charcoal">Total</span>
@@ -222,7 +302,8 @@ import VariationTags from '@/Components/ui/VariationTags.vue'
 import PhoneInput from '@/Components/ui/PhoneInput.vue'
 import { useRecaptcha } from '@/composables/useRecaptcha'
 import { useDelivery } from '@/composables/useDelivery'
-import { BanknotesIcon, DevicePhoneMobileIcon, CreditCardIcon, SparklesIcon, ShieldCheckIcon, TruckIcon } from '@heroicons/vue/24/outline'
+import axios from 'axios'
+import { BanknotesIcon, DevicePhoneMobileIcon, CreditCardIcon, SparklesIcon, ShieldCheckIcon, TruckIcon, CheckBadgeIcon, StarIcon } from '@heroicons/vue/24/outline'
 
 const { getToken } = useRecaptcha()
 
@@ -234,6 +315,10 @@ const props = defineProps({
   savedAddresses:  { type: Array, default: () => [] },
   // Object { bkash: { logo_url: '...' }, nagad: {...}, sslcommerz: {...} }
   enabledGateways: { type: Object, default: () => ({}) },
+  // { percent, member_card, guest_field }
+  privilege:       { type: Object, default: () => ({ percent: 0, member_card: null, guest_field: false }) },
+  // { balance, max, min_redeem, point_value, earn_amount, earn_points } — null when not eligible
+  points:          { type: Object, default: null },
 })
 
 const errors     = ref({})
@@ -315,8 +400,61 @@ const noChargeForCity = computed(() =>
   !!selectedCity.value && !freeApplied.value && !del.locationBased && del.chargesEnabled &&
   (selectedCity.value.delivery_charge === null || selectedCity.value.delivery_charge === undefined)
 )
+// ── Discounts (coupon + Privilege Member) — the server decides the split ──
+const initialDiscount = () => ({
+  total:  Number(props.cart.discount || 0),
+  coupon: Number(props.cart.coupon_discount ?? props.cart.discount ?? 0),
+  member: Number(props.cart.member_discount || 0),
+  coupon_applied: props.cart.coupon_applied ?? true,
+})
+const disc = ref(initialDiscount())
+const percentText = computed(() => Number(props.privilege?.percent || 0))
+
+const card = ref({ input: '', applied: null, message: '', error: '', loading: false })
+const applyCard = async () => {
+  if (!card.value.input.trim() || card.value.loading) return
+  card.value.loading = true
+  card.value.error = ''
+  try {
+    const { data } = await axios.post(route('checkout.privilege-card'), { card_number: card.value.input })
+    card.value.applied = data.card_number
+    card.value.message = data.message
+    disc.value = { total: data.discount, coupon: data.coupon_discount, member: data.member_discount, coupon_applied: data.coupon_applied }
+  } catch (e) {
+    card.value.error = e.response?.status === 429
+      ? 'Too many attempts. Please wait a minute and try again.'
+      : (e.response?.data?.message || 'Could not verify the card. Please try again.')
+  } finally {
+    card.value.loading = false
+  }
+}
+const removeCard = () => {
+  card.value = { input: '', applied: null, message: '', error: '', loading: false }
+  disc.value = initialDiscount()
+}
+
+// ── Reward points — the server re-checks the balance and limits on submit ──
+const usePoints = ref(false)
+const pointsToUse = ref(props.points?.max || 0)
+const pointsError = computed(() => {
+  if (!usePoints.value || !props.points) return ''
+  const n = Number(pointsToUse.value)
+  if (!Number.isInteger(n) || n < props.points.min_redeem) return `Use at least ${props.points.min_redeem} points.`
+  if (n > props.points.max) return `You can use up to ${props.points.max} points on this order.`
+  return ''
+})
+const pointsDiscount = computed(() =>
+  usePoints.value && !pointsError.value ? Math.round(Number(pointsToUse.value) * props.points.point_value * 100) / 100 : 0
+)
+// Earned on the product amount actually paid (after discounts, delivery excluded).
+const pointsToEarn = computed(() => {
+  if (!props.points || !props.points.earn_amount) return 0
+  const paid = Number(props.cart.subtotal || 0) - Number(disc.value.total || 0) - pointsDiscount.value
+  return Math.floor(Math.max(0, paid) / props.points.earn_amount) * props.points.earn_points
+})
+
 const orderTotal = computed(() =>
-  Number(props.cart.subtotal || 0) + Number(deliveryCharge.value || 0) - Number(props.cart.discount || 0)
+  Number(props.cart.subtotal || 0) + Number(deliveryCharge.value || 0) - Number(disc.value.total || 0) - pointsDiscount.value
 )
 
 const submitOrder = async () => {
@@ -332,7 +470,12 @@ const submitOrder = async () => {
     return
   }
 
-  router.post(route('checkout.store'), { ...form.value, recaptcha_token: token }, {
+  router.post(route('checkout.store'), {
+    ...form.value,
+    privilege_card: card.value.applied ? card.value.input : null,
+    redeem_points: pointsDiscount.value > 0 ? Number(pointsToUse.value) : 0,
+    recaptcha_token: token,
+  }, {
     onError: (errs) => {
       errors.value     = errs
       submitting.value = false

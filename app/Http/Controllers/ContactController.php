@@ -18,7 +18,7 @@ class ContactController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email',
-            'phone' => 'nullable|string|max:20',
+            'phone' => ['nullable', new \App\Rules\BdPhone],
             'subject' => 'nullable|string|max:255',
             'message' => 'required|string|min:10|max:2000',
         ]);

@@ -4,6 +4,18 @@
 
     <div class="space-y-6">
 
+      <!-- ═══════════════ CARD ISSUED TO THIS EMAIL — needs activating ═══════════════ -->
+      <section v-if="awaitingActivation" class="rounded-2xl border border-[#d4b891]/50 bg-[#d4b891]/10 p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+        <EnvelopeIcon class="w-8 h-8 text-[#9a7b4f] shrink-0" />
+        <div class="min-w-0 flex-1">
+          <p class="font-semibold text-charcoal">A Privilege Card is waiting for {{ awaitingActivation.email }}</p>
+          <p class="text-sm text-muted mt-0.5">
+            For your security we only hand it over once you confirm this email address. Open the activation link we emailed you<span v-if="awaitingActivation.sent_at"> on {{ awaitingActivation.sent_at }}</span> — it's valid for {{ awaitingActivation.link_days }} days.
+          </p>
+        </div>
+        <button @click="resendClaim" :disabled="busy" class="btn-secondary text-sm shrink-0 disabled:opacity-50">Send it again</button>
+      </section>
+
       <!-- ═══════════════ APPROVED — virtual card ═══════════════ -->
       <template v-if="isMember">
         <section class="lux-panel">
@@ -45,6 +57,20 @@
 
             <!-- Details + terms -->
             <div class="space-y-5">
+              <!-- Member discount -->
+              <div v-if="discount" class="discount-panel rounded-2xl p-5 flex items-center gap-4">
+                <div class="discount-badge shrink-0">
+                  <span class="text-2xl font-display font-bold leading-none">{{ discount }}%</span>
+                  <span class="text-[9px] font-semibold tracking-[0.2em] uppercase mt-0.5">off</span>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-white font-semibold">You get {{ discount }}% off on all products</p>
+                  <p class="text-xs text-white/55 mt-1 leading-relaxed">
+                    Applied automatically at checkout when you're logged in<span v-if="program.guest_field"> — or enter your card number at checkout</span>. Delivery charges excluded.
+                  </p>
+                </div>
+              </div>
+
               <div class="rounded-2xl border border-white/10 bg-white/[0.03] divide-y divide-white/10">
                 <div class="px-5 py-4">
                   <p class="detail-label">Card holder</p>
@@ -102,6 +128,9 @@
               <p class="eyebrow">Kizora Privilege</p>
               <h1 class="font-display text-2xl sm:text-3xl font-semibold text-white mt-2">Your application is <span class="gold-text">under review</span></h1>
               <p class="text-white/60 mt-3 leading-relaxed">Thank you, {{ firstName }}. Our team is reviewing your request. Once approved, your personal virtual Privilege Card will appear right here — we'll email you too.</p>
+              <p v-if="discount" class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#d4b891]/35 bg-[#d4b891]/10 text-sm text-[#ebcda2]">
+                <SparklesIcon class="w-4 h-4 shrink-0" /> Once approved, you'll get <strong class="font-semibold">{{ discount }}% off</strong> on all products
+              </p>
 
               <ol class="mt-8 space-y-0">
                 <li v-for="(s, i) in steps" :key="s.label" class="flex gap-4">
@@ -150,6 +179,18 @@
               </h1>
               <p class="text-white/60 mt-3 leading-relaxed">{{ program.intro }}</p>
 
+              <!-- Member discount highlight -->
+              <div v-if="discount" class="discount-panel mt-6 rounded-2xl p-4 flex items-center gap-4">
+                <div class="discount-badge shrink-0">
+                  <span class="text-2xl font-display font-bold leading-none">{{ discount }}%</span>
+                  <span class="text-[9px] font-semibold tracking-[0.2em] uppercase mt-0.5">off</span>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-white font-semibold">Privilege Members get {{ discount }}% off on all products</p>
+                  <p class="text-xs text-white/55 mt-1">Applied automatically at checkout, every time you order.</p>
+                </div>
+              </div>
+
               <ul v-if="program.benefits.length" class="mt-6 grid sm:grid-cols-2 gap-3">
                 <li v-for="b in program.benefits" :key="b" class="flex items-start gap-2.5 text-sm text-white/80">
                   <span class="w-5 h-5 rounded-full bg-[#d4b891]/15 flex items-center justify-center shrink-0 mt-0.5">
@@ -159,9 +200,27 @@
                 </li>
               </ul>
 
-              <a v-if="program.accepting" href="#apply" class="gold-btn mt-8 inline-flex items-center gap-2 px-7 py-3 rounded-full text-sm font-semibold shadow-lg hover:brightness-105 transition">
+              <!-- How to qualify -->
+              <div v-if="requirement" class="mt-6 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                <p class="text-[11px] uppercase tracking-[0.2em] text-[#d4b891] font-semibold mb-2">How to qualify</p>
+                <p class="text-sm text-white/75 leading-relaxed">
+                  Membership is for our regular customers: you can apply once you have <strong class="text-white">one completed order of ৳{{ money(requirement) }} or more</strong> (a single invoice — orders can't be added together).
+                </p>
+                <p v-if="!eligibility.qualified" class="mt-3 text-xs text-white/50 flex items-center gap-1.5">
+                  <LockClosedIcon class="w-3.5 h-3.5 shrink-0" />
+                  Not eligible yet — place a single order of ৳{{ money(requirement) }}+ and apply once it's delivered.
+                </p>
+                <p v-else class="mt-3 text-sm text-emerald-300 font-medium flex items-center gap-1.5">
+                  <CheckIcon class="w-4 h-4" /> You qualify — apply below.
+                </p>
+              </div>
+
+              <a v-if="program.accepting && eligibility.qualified" href="#apply" class="gold-btn mt-8 inline-flex items-center gap-2 px-7 py-3 rounded-full text-sm font-semibold shadow-lg hover:brightness-105 transition">
                 Apply now <ArrowRightIcon class="w-4 h-4" />
               </a>
+              <Link v-else-if="program.accepting" :href="route('shop.index')" class="gold-btn mt-8 inline-flex items-center gap-2 px-7 py-3 rounded-full text-sm font-semibold shadow-lg hover:brightness-105 transition">
+                Start shopping <ArrowRightIcon class="w-4 h-4" />
+              </Link>
             </div>
             <div>
               <div class="max-w-[440px] mx-auto card-float">
@@ -201,6 +260,16 @@
             <p class="text-muted text-sm mt-1">Please check back soon — new memberships open regularly.</p>
           </div>
 
+          <!-- Requirement not met yet -->
+          <div v-else-if="!eligibility.qualified" class="px-5 sm:px-7 py-10 text-center">
+            <LockClosedIcon class="w-8 h-8 text-[#b8955f] mx-auto mb-3" />
+            <p class="text-charcoal font-medium">You need one completed order of ৳{{ money(requirement) }} or more</p>
+            <p class="text-muted text-sm mt-1">
+              It must be a single invoice — smaller orders don't add up. Once one order of ৳{{ money(requirement) }}+ is delivered, this form opens automatically.
+            </p>
+            <Link :href="route('shop.index')" class="btn-primary mt-5 inline-flex text-sm">Continue shopping</Link>
+          </div>
+
           <form v-else @submit.prevent="submit" class="px-5 sm:px-7 py-6 space-y-5">
             <div class="grid sm:grid-cols-2 gap-4">
               <div>
@@ -210,7 +279,7 @@
               </div>
               <div>
                 <label class="lbl">Mobile number <span class="text-accent">*</span></label>
-                <input v-model="form.phone" type="tel" maxlength="20" class="input-field" placeholder="01XXXXXXXXX" required>
+                <PhoneInput v-model="form.phone" :hide-error="!!form.errors.phone" />
                 <p v-if="form.errors.phone" class="err">{{ form.errors.phone }}</p>
               </div>
             </div>
@@ -250,9 +319,11 @@ import { ref, computed } from 'vue'
 import { Head, Link, router, useForm } from '@inertiajs/vue3'
 import AccountLayout from '@/Layouts/AccountLayout.vue'
 import PrivilegeCard from '@/Components/PrivilegeCard.vue'
+import PhoneInput from '@/Components/ui/PhoneInput.vue'
 import {
   SparklesIcon, CheckIcon, ClockIcon, CreditCardIcon, ArrowRightIcon, ChevronDownIcon, ShieldCheckIcon,
   DocumentDuplicateIcon, InformationCircleIcon, ExclamationTriangleIcon, ArrowPathRoundedSquareIcon,
+  EnvelopeIcon, LockClosedIcon,
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
@@ -260,13 +331,26 @@ const props = defineProps({
   holder: { type: Object, required: true },
   card: { type: Object, required: true },
   program: { type: Object, required: true },
+  // { qualified, required, best_order } — who may apply
+  eligibility: { type: Object, default: () => ({ qualified: true, required: 0, best_order: 0 }) },
+  // Card issued by an admin to this email, waiting for the activation link
+  awaitingActivation: { type: Object, default: null },
 })
+
+const money = (v) => Number(v || 0).toLocaleString()
+const requirement = computed(() => Number(props.eligibility.required) || 0)
+
+const resendClaim = () => {
+  busy.value = true
+  router.post(route('account.privilege.resend-claim'), {}, { preserveScroll: true, onFinish: () => { busy.value = false } })
+}
 
 const status = computed(() => props.membership?.status || null)
 const isMember = computed(() => status.value === 'approved')
 const firstName = computed(() => (props.holder.name || '').split(' ')[0])
 const tierName = computed(() => [props.card.tier_line_1, props.card.tier_line_2].filter(Boolean).join(' ').toLowerCase())
 const placeholderNumber = 'XXXX XXXX XXXXXXX'
+const discount = computed(() => Number(props.program.discount) || 0)
 
 const flipped = ref(false)
 const showTerms = ref(false)
@@ -328,6 +412,17 @@ const copyNumber = async () => {
 .gold-btn {
   background: linear-gradient(135deg, #b8955f 0%, #ebcda2 50%, #c9a770 100%);
   color: #141414;
+}
+
+.discount-panel {
+  background: linear-gradient(135deg, rgba(212, 184, 145, 0.16), rgba(212, 184, 145, 0.04));
+  box-shadow: inset 0 0 0 1px rgba(212, 184, 145, 0.3);
+}
+.discount-badge {
+  @apply w-16 h-16 rounded-full flex flex-col items-center justify-center;
+  background: linear-gradient(135deg, #b8955f 0%, #ebcda2 50%, #c9a770 100%);
+  color: #141414;
+  box-shadow: 0 8px 20px -8px rgba(212, 184, 145, 0.6);
 }
 
 .card-float { animation: float 6s ease-in-out infinite; }

@@ -91,6 +91,10 @@
               </div>
             </div>
 
+            <p v-if="member.isMember.value" class="text-xs text-[#9a7b4f] font-medium mb-4 text-center">
+              Your {{ member.percent.value }}% Privilege Member discount is applied at checkout.
+            </p>
+
             <p v-if="del.isManual(cart.subtotal)" class="text-xs text-success font-medium mb-4 text-center">
               {{ del.locationMessage }}
             </p>
@@ -124,6 +128,7 @@
 import { ref } from 'vue'
 import { Head, Link, router } from '@inertiajs/vue3'
 import { useToast } from 'vue-toastification'
+import { useMemberPrice } from '@/composables/useMemberPrice'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { useCartStore } from '@/stores/cart'
 import { useDelivery } from '@/composables/useDelivery'
@@ -132,6 +137,7 @@ import { ShoppingCartIcon, TrashIcon, SparklesIcon } from '@heroicons/vue/24/out
 
 const props = defineProps({ cart: Object })
 const toast = useToast()
+const member = useMemberPrice()
 const cartStore = useCartStore()
 const del = useDelivery()
 const couponCode = ref('')

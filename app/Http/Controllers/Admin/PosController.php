@@ -57,7 +57,7 @@ class PosController extends Controller
             'customer_type' => 'required|in:existing,walkin',
             'customer_id' => 'required_if:customer_type,existing|nullable|exists:users,id',
             'name' => 'required_if:customer_type,walkin|nullable|string|max:255',
-            'phone' => 'nullable|string|max:30',
+            'phone' => ['nullable', new \App\Rules\BdPhone],
             'email' => 'nullable|email|max:255',
             'address' => 'required|string|max:500',
             'delivery_area_id' => 'required|exists:delivery_areas,id',

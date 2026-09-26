@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\PrivilegeMembership;
+use App\Models\User;
 use App\Services\Email\EmailService;
 use App\Support\PrivilegeCardSettings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -31,6 +33,8 @@ class PrivilegeMemberController extends Controller
             $query->where(fn ($q) => $q
                 ->where('card_number', 'like', "%{$digits}%")
                 ->orWhere('phone', 'like', "%{$s}%")
+                ->orWhere('email', 'like', "%{$s}%")
+                ->orWhere('name', 'like', "%{$s}%")
                 ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$s}%")->orWhere('email', 'like', "%{$s}%")));
         }
 
@@ -41,9 +45,11 @@ class PrivilegeMemberController extends Controller
         $members = $query->paginate(15)->withQueryString()->through(fn (PrivilegeMembership $m) => [
             'id'          => $m->id,
             'status'      => $m->status,
-            'name'        => $m->user?->name,
-            'email'       => $m->user?->email,
+            'name'        => $m->holder_name,
+            'email'       => $m->email ?: $m->user?->email,
             'avatar'      => $m->user?->avatar,
+            // Issued by an admin, still waiting for its owner to sign up / confirm
+            'unclaimed'   => $m->isUnclaimed(),
             'phone'       => $m->phone ?: $m->user?->phone,
             'note'        => $m->note,
             'admin_note'  => $m->admin_note,
@@ -68,6 +74,66 @@ class PrivilegeMemberController extends Controller
             ],
             'card' => $this->settings->cardContent(),
         ]);
+    }
+
+    /**
+     * Issue a card straight from the admin panel, against an email address.
+     * If an account already uses that email the card is attached to it at once;
+     * otherwise it waits for that person to sign up and confirm the address.
+     */
+    public function store(Request $request, EmailService $email, \App\Services\PrivilegeClaimService $claims)
+    {
+        $data = $request->validate([
+            'name'  => 'required|string|max:120',
+            'email' => ['required', 'email', 'max:255', Rule::unique('privilege_memberships', 'email')],
+            'phone' => ['nullable', new \App\Rules\BdPhone],
+            'note'  => 'nullable|string|max:500',
+        ], ['email.unique' => 'A membership already exists for this email address.']);
+
+        $user = User::where('email', $data['email'])->first();
+        if ($user && $user->privilegeMembership()->exists()) {
+            return back()->withErrors(['email' => 'That account already has a membership.']);
+        }
+
+        $membership = DB::transaction(function () use ($data, $user) {
+            [$serial, $number] = $this->nextCardNumber();
+
+            return PrivilegeMembership::create([
+                'user_id'     => $user?->id,
+                'name'        => $data['name'],
+                'email'       => $data['email'],
+                'phone'       => $data['phone'] ?? null,
+                'note'        => $data['note'] ?? null,
+                'status'      => 'approved',
+                'serial'      => $serial,
+                'card_number' => $number,
+                'applied_at'  => now(),
+                'approved_at' => now(),
+                'reviewed_by' => auth()->id(),
+            ]);
+        });
+
+        AuditLog::record('created', 'Privilege Membership', "Issued card {$membership->card_number} to {$data['email']}");
+
+        if ($user) {
+            rescue(fn () => $email->send('membership_approved', $user->email, [
+                'customer_name'   => $user->name,
+                'card_number'     => PrivilegeMembership::formatNumber($membership->card_number),
+                'membership_link' => route('account.privilege'),
+            ]), report: true);
+
+            return back()->with('success', "Card {$this->fmt($membership)} issued to {$user->name} — it's already in their account.");
+        }
+
+        // No account yet: invite them to sign up with this email.
+        rescue(fn () => $email->send('membership_invite', $data['email'], [
+            'customer_name'   => $data['name'],
+            'card_number'     => PrivilegeMembership::formatNumber($membership->card_number),
+            'register_link'   => route('register'),
+            'customer_email'  => $data['email'],
+        ]), report: true);
+
+        return back()->with('success', "Card {$this->fmt($membership)} created for {$data['email']} — they'll get it after signing up with that email.");
     }
 
     public function approve(PrivilegeMembership $membership, EmailService $email)
@@ -172,15 +238,22 @@ class PrivilegeMemberController extends Controller
             'terms_heading'          => 'required|string|max:60',
             'terms'                  => 'array|max:10',
             'terms.*'                => 'nullable|string|max:140',
+            'number_mode'            => 'required|in:random,sequential',
+            'random_prefix'          => 'required|digits:8',
             'number_prefix'          => 'required|digits_between:4,12',
             'serial_digits'          => 'required|integer|min:3|max:8',
             'serial_start'           => 'required|integer|min:1',
             'accepting_applications' => 'boolean',
+            'min_order_to_apply'     => 'required|numeric|min:0|max:10000000',
             'program_title'          => 'required|string|max:80',
             'program_intro'          => 'nullable|string|max:500',
             'benefits'               => 'array|max:12',
             'benefits.*'             => 'nullable|string|max:120',
+            'member_discount_percent'     => 'required|numeric|min:0|max:100',
+            'checkout_card_field'         => 'boolean',
+            'discount_stacks_with_coupon' => 'boolean',
         ]);
+        $data['member_discount_percent'] = round((float) $data['member_discount_percent'], 2);
 
         $data['terms'] = array_values(array_filter(array_map('trim', $data['terms'] ?? []), 'strlen'));
         $data['benefits'] = array_values(array_filter(array_map('trim', $data['benefits'] ?? []), 'strlen'));
@@ -191,10 +264,20 @@ class PrivilegeMemberController extends Controller
         return back()->with('success', 'Card settings saved.');
     }
 
-    /** @return array{0:int,1:string} [serial, raw card number] for the next approval. */
+    /** @return array{0:?int,1:string} [serial (null for random numbers), raw card number] for the next approval. */
     private function nextCardNumber(): array
     {
         $s = $this->settings->get();
+
+        if ($s['number_mode'] === 'random') {
+            $digits = PrivilegeCardSettings::RANDOM_DIGITS;
+            do {
+                $number = $s['random_prefix'] . str_pad((string) random_int(0, 10 ** $digits - 1), $digits, '0', STR_PAD_LEFT);
+            } while (PrivilegeMembership::where('card_number', $number)->exists());
+
+            return [null, $number];
+        }
+
         $max = (int) PrivilegeMembership::lockForUpdate()->max('serial');
         $serial = max($max + 1, (int) $s['serial_start']);
         $number = $s['number_prefix'] . str_pad((string) $serial, (int) $s['serial_digits'], '0', STR_PAD_LEFT);

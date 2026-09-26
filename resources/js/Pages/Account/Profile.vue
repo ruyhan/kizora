@@ -46,12 +46,8 @@
           <!-- Phone -->
           <div>
             <label class="text-sm font-medium text-charcoal mb-1.5 block">Phone Number</label>
-            <div class="relative">
-              <PhoneIcon class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-muted pointer-events-none" />
-              <input v-model="profileForm.phone" type="tel"
-                class="input-field pl-10" :class="{ 'border-error': profileErrors.phone }"
-                placeholder="+8801XXXXXXXXX">
-            </div>
+            <PhoneInput v-model="profileForm.phone" :hide-error="!!profileErrors.phone"
+              :input-class="profileErrors.phone ? 'input-field border-error' : 'input-field'" />
             <p v-if="profileErrors.phone" class="text-error text-xs mt-1">{{ profileErrors.phone }}</p>
           </div>
 
@@ -134,7 +130,7 @@
             <div class="grid sm:grid-cols-2 gap-3">
               <input v-model="addressForm.label" type="text" class="input-field text-sm" placeholder="Label — e.g. Home, Office">
               <input v-model="addressForm.name" type="text" class="input-field text-sm" placeholder="Recipient name *" required>
-              <input v-model="addressForm.phone" type="tel" class="input-field text-sm" placeholder="Phone *" required>
+              <PhoneInput v-model="addressForm.phone" input-class="input-field text-sm" />
               <input v-model="addressForm.city" type="text" class="input-field text-sm" placeholder="City">
               <input v-model="addressForm.postal_code" type="text" class="input-field text-sm" placeholder="Postal code">
               <label class="flex items-center gap-2 text-sm text-charcoal">
@@ -224,6 +220,7 @@ import { ref } from 'vue'
 import { Head, router } from '@inertiajs/vue3'
 import AccountLayout from '@/Layouts/AccountLayout.vue'
 import DeliveryAreaPicker from '@/Components/DeliveryAreaPicker.vue'
+import PhoneInput from '@/Components/ui/PhoneInput.vue'
 import {
   UserCircleIcon,
   UserIcon,

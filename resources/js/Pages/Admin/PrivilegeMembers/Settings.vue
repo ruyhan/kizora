@@ -65,9 +65,24 @@
             <div class="rounded-xl border border-purple-100 p-4 space-y-4">
               <div>
                 <p class="font-semibold text-charcoal text-sm">Card number format</p>
-                <p class="hint !mt-0.5">Numbers are issued automatically on approval: <span class="font-mono">prefix + serial</span>. Already-issued cards never change.</p>
+                <p class="hint !mt-0.5">Numbers are issued automatically on approval. Already-issued cards never change.</p>
               </div>
-              <div class="grid grid-cols-3 gap-3">
+              <div class="inline-flex p-1 rounded-xl bg-purple-50 border border-purple-100">
+                <button v-for="m in numberModes" :key="m.key" type="button" @click="form.number_mode = m.key"
+                  :class="form.number_mode === m.key ? 'bg-white shadow-sm text-ink' : 'text-muted hover:text-charcoal'"
+                  class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors">{{ m.label }}</button>
+              </div>
+
+              <div v-if="form.number_mode === 'random'" class="space-y-2">
+                <div class="max-w-[220px]">
+                  <label class="lbl">Fixed start (8 digits)</label>
+                  <input v-model="form.random_prefix" inputmode="numeric" maxlength="8" class="input-field font-mono">
+                  <p v-if="form.errors.random_prefix" class="err">{{ form.errors.random_prefix }}</p>
+                </div>
+                <p class="hint">The last 7 digits are random for every card, so numbers can't be guessed from one another. Recommended.</p>
+              </div>
+
+              <div v-else class="grid grid-cols-3 gap-3">
                 <div class="col-span-3 sm:col-span-1">
                   <label class="lbl">Prefix</label>
                   <input v-model="form.number_prefix" inputmode="numeric" maxlength="12" class="input-field font-mono">
@@ -82,7 +97,9 @@
                   <input v-model.number="form.serial_start" type="number" min="1" class="input-field">
                 </div>
               </div>
-              <p class="text-xs text-muted">{{ issued }} card(s) issued so far · next approval gets <span class="font-mono font-semibold text-[#9a7b4f]">{{ nextPreview }}</span></p>
+              <p v-if="form.number_mode === 'sequential'" class="text-xs text-amber-700">Sequential numbers are easy to guess (…00001, …00002). Keep the checkout card field off if you use this.</p>
+              <p class="text-xs text-muted">{{ issued }} card(s) issued so far · next approval gets
+                <span class="font-mono font-semibold text-[#9a7b4f]">{{ nextPreview }}</span><span v-if="form.number_mode === 'random'"> (example)</span></p>
             </div>
             <p class="text-xs text-muted">The member's <strong>account name</strong> is printed on the card automatically.</p>
           </template>
@@ -98,6 +115,43 @@
               hint="Shown on the back of the card and beside the card in the customer's account. Keep each point short — 6 points fit best." />
           </template>
 
+          <!-- DISCOUNT -->
+          <template v-else-if="tab === 'discount'">
+            <div>
+              <label class="lbl">Member discount (%)</label>
+              <div class="relative max-w-[180px]">
+                <input v-model.number="form.member_discount_percent" type="number" min="0" max="100" step="0.5" class="input-field pr-9">
+                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted">%</span>
+              </div>
+              <p v-if="form.errors.member_discount_percent" class="err">{{ form.errors.member_discount_percent }}</p>
+              <p class="hint">Off the order subtotal (delivery excluded). Every <strong>approved</strong> member gets it automatically at checkout when logged in. Set 0 to turn the discount off.</p>
+            </div>
+
+            <label class="flex items-center justify-between gap-4 rounded-xl border border-purple-100 p-4 cursor-pointer"
+              :class="{ 'opacity-50': !discountOn }">
+              <span>
+                <span class="block font-semibold text-charcoal text-sm">Card number field on checkout</span>
+                <span class="hint !mt-0.5 block">Lets guests (not logged in) enter a card number to claim the discount. Also tells every visitor the membership exists. Turn off if you notice misuse — logged-in members keep their discount.</span>
+              </span>
+              <input v-model="form.checkout_card_field" type="checkbox" :disabled="!discountOn" class="w-5 h-5 accent-ink">
+            </label>
+
+            <label class="flex items-center justify-between gap-4 rounded-xl border border-purple-100 p-4 cursor-pointer"
+              :class="{ 'opacity-50': !discountOn }">
+              <span>
+                <span class="block font-semibold text-charcoal text-sm">Combine with coupons</span>
+                <span class="hint !mt-0.5 block">Off: only the bigger of the coupon or member discount applies. On: both are deducted.</span>
+              </span>
+              <input v-model="form.discount_stacks_with_coupon" type="checkbox" :disabled="!discountOn" class="w-5 h-5 accent-ink">
+            </label>
+
+            <div v-if="discountOn && form.checkout_card_field" class="rounded-xl bg-purple-50/50 border border-purple-100 p-4">
+              <p class="text-[11px] uppercase tracking-wider text-muted font-semibold mb-2">Guests see at checkout</p>
+              <p class="text-sm font-medium text-charcoal">Privilege Member? Get {{ percentLabel }}% off</p>
+              <p class="text-xs text-muted">Enter your Privilege card number to get {{ percentLabel }}% off your order.</p>
+            </div>
+          </template>
+
           <!-- MEMBER PAGE -->
           <template v-else>
             <label class="flex items-center justify-between gap-4 rounded-xl border border-purple-100 p-4 cursor-pointer">
@@ -107,6 +161,15 @@
               </span>
               <input v-model="form.accepting_applications" type="checkbox" class="w-5 h-5 accent-ink">
             </label>
+            <div>
+              <label class="lbl">Who can apply — minimum single order</label>
+              <div class="relative max-w-[200px]">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted">৳</span>
+                <input v-model.number="form.min_order_to_apply" type="number" min="0" step="100" class="input-field pl-7">
+              </div>
+              <p v-if="form.errors.min_order_to_apply" class="err">{{ form.errors.min_order_to_apply }}</p>
+              <p class="hint">A customer can apply only after one <strong>completed</strong> order of at least this amount. The requirement and their progress are shown on their membership page. Set 0 to let anyone apply.</p>
+            </div>
             <div>
               <label class="lbl">Program title</label>
               <input v-model="form.program_title" maxlength="80" class="input-field">
@@ -141,7 +204,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue'
 import PrivilegeTabs from '@/Components/admin/PrivilegeTabs.vue'
 import PrivilegeCard from '@/Components/PrivilegeCard.vue'
 import ListEditor from '@/Components/admin/PrivilegeListEditor.vue'
-import { RectangleStackIcon, DocumentTextIcon, SparklesIcon } from '@heroicons/vue/24/outline'
+import { RectangleStackIcon, DocumentTextIcon, SparklesIcon, ReceiptPercentIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
   settings: Object,
@@ -154,29 +217,50 @@ const form = useForm({
   tier_line_2: props.settings.tier_line_2,
   terms_heading: props.settings.terms_heading,
   terms: [...(props.settings.terms || [])],
+  number_mode: props.settings.number_mode || 'random',
+  random_prefix: props.settings.random_prefix,
   number_prefix: props.settings.number_prefix,
   serial_digits: props.settings.serial_digits,
   serial_start: props.settings.serial_start,
   accepting_applications: !!props.settings.accepting_applications,
+  min_order_to_apply: Number(props.settings.min_order_to_apply) || 0,
   program_title: props.settings.program_title,
   program_intro: props.settings.program_intro,
   benefits: [...(props.settings.benefits || [])],
+  member_discount_percent: Number(props.settings.member_discount_percent) || 0,
+  checkout_card_field: !!props.settings.checkout_card_field,
+  discount_stacks_with_coupon: !!props.settings.discount_stacks_with_coupon,
 })
+
+const discountOn = computed(() => Number(form.member_discount_percent) > 0)
+const percentLabel = computed(() => Number(form.member_discount_percent) || 0)
 
 const tabs = [
   { key: 'front', label: 'Front', icon: RectangleStackIcon },
   { key: 'back', label: 'Back', icon: DocumentTextIcon },
+  { key: 'discount', label: 'Discount', icon: ReceiptPercentIcon },
   { key: 'page', label: 'Member Page', icon: SparklesIcon },
 ]
 const tab = ref('front')
 const flipped = ref(false)
 // Preview follows the editor tab (Front ↔ Back).
-const setTab = (k) => { tab.value = k; if (k !== 'page') flipped.value = k === 'back' }
+const setTab = (k) => { tab.value = k; if (k === 'front' || k === 'back') flipped.value = k === 'back' }
 
 const sample = reactive({ name: 'Othiya Israq', number: computed(() => nextPreview.value) })
 
+const numberModes = [
+  { key: 'random', label: 'Random (secure)' },
+  { key: 'sequential', label: 'Sequential' },
+]
+// Example random tail for the preview — the real one is drawn on approval.
+const sampleTail = String(Math.floor(Math.random() * 1e7)).padStart(7, '0')
+
 // Mirror of the server's next-number rule, so edits to the scheme preview instantly.
 const nextPreview = computed(() => {
+  if (form.number_mode === 'random') {
+    const raw = String(form.random_prefix || '').padEnd(8, '0').slice(0, 8) + sampleTail
+    return `${raw.slice(0, 4)} ${raw.slice(4, 8)} ${raw.slice(8)}`
+  }
   const digits = Math.min(8, Math.max(3, Number(form.serial_digits) || 5))
   const serverSerial = Number(String(props.nextNumber || '').replace(/\s/g, '').slice(String(props.settings.number_prefix).length)) || 1
   const serial = Math.max(serverSerial, Number(form.serial_start) || 1)

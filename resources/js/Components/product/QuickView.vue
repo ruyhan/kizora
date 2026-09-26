@@ -15,11 +15,7 @@
           <Rating :value="Number(product.average_rating)" :count="product.review_count" size="sm" />
         </div>
 
-        <div class="flex items-baseline gap-2 mb-4">
-          <span class="text-2xl font-bold text-ink">৳{{ money(product.final_price) }}</span>
-          <span v-if="product.discount_price" class="text-sm text-muted line-through">৳{{ money(product.price) }}</span>
-          <span v-if="product.discount_percentage > 0" class="badge badge-accent">-{{ product.discount_percentage }}%</span>
-        </div>
+        <Price :price="product.price" :final="product.final_price" :off="product.discount_percentage" class="mb-4" />
 
         <p v-if="product.short_description" class="text-sm text-muted leading-relaxed mb-4 line-clamp-3">{{ product.short_description }}</p>
 
@@ -79,6 +75,7 @@ import { useCartStore } from '@/stores/cart'
 import Modal from '@/Components/ui/Modal.vue'
 import Button from '@/Components/ui/Button.vue'
 import Rating from '@/Components/ui/Rating.vue'
+import Price from '@/Components/ui/Price.vue'
 import ProductHighlights from '@/Components/product/detail/ProductHighlights.vue'
 import { variationGroups as variationGroupsOf } from '@/utils/variations'
 import { ShoppingBagIcon } from '@heroicons/vue/24/outline'

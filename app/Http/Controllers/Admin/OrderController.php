@@ -95,6 +95,12 @@ class OrderController extends Controller
             'subtotal' => $order->subtotal,
             'delivery_charge' => $order->delivery_charge,
             'discount' => $order->discount,
+            'member_discount' => $order->member_discount,
+            'privilege_card_number' => \App\Models\PrivilegeMembership::formatNumber($order->privilege_card_number),
+            'coupon_code' => $order->coupon_code,
+            'points_redeemed' => $order->points_redeemed,
+            'points_discount' => $order->points_discount,
+            'points_earned' => $order->points_earned,
             'total' => $order->total,
             'payment_method' => $order->payment_method,
             'payment_status' => $order->payment_status,
@@ -185,7 +191,7 @@ class OrderController extends Controller
         $user = $request->user();
         $data = $request->validate([
             'name' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:30',
+            'phone' => ['nullable', new \App\Rules\BdPhone],
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string|max:500',
             'delivery_city' => 'nullable|string|max:100',

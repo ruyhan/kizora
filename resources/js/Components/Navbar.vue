@@ -38,7 +38,7 @@
                     <p class="text-sm font-medium text-charcoal truncate group-hover:text-ink">{{ p.name }}</p>
                     <p class="text-xs text-muted truncate">{{ p.category }}</p>
                   </div>
-                  <p class="text-sm font-bold text-ink shrink-0">৳{{ Number(p.final_price).toLocaleString() }}</p>
+                  <p class="text-sm font-bold text-ink shrink-0">৳{{ memberPrice(p.final_price).toLocaleString() }}</p>
                 </Link>
                 <button @click="submitSearch" class="w-full mt-1 px-4 py-2.5 rounded-xl text-xs font-semibold text-ink hover:bg-[#F4F4F5] transition-colors">
                   See all results for "{{ searchQuery }}"
@@ -131,7 +131,7 @@
                 class="flex items-center gap-3 px-4 py-3 border-b border-border/60 active:bg-[#F4F4F5]">
                 <img :src="p.featured_image_url" :alt="p.name" class="w-12 h-12 object-cover rounded-lg bg-[#F1F1F2] shrink-0">
                 <span class="flex-1 min-w-0 text-sm text-charcoal truncate">{{ p.name }}</span>
-                <span class="text-sm font-bold text-ink shrink-0">৳{{ Number(p.final_price).toLocaleString() }}</span>
+                <span class="text-sm font-bold text-ink shrink-0">৳{{ memberPrice(p.final_price).toLocaleString() }}</span>
               </Link>
               <button @click="submitSearch" class="w-full text-center text-sm text-primary font-semibold py-4">
                 See all results for "{{ searchQuery }}"
@@ -235,6 +235,7 @@
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { Link, usePage, router } from '@inertiajs/vue3'
 import axios from 'axios'
+import { useMemberPrice } from '@/composables/useMemberPrice'
 import {
   MagnifyingGlassIcon, HeartIcon, ShoppingBagIcon, XMarkIcon, UserIcon, UserCircleIcon,
   ChevronDownIcon, ClipboardDocumentListIcon, Cog6ToothIcon, Squares2X2Icon,
@@ -253,6 +254,7 @@ const DEFAULT_NAV = [
 ]
 
 const page = usePage()
+const { apply: memberPrice } = useMemberPrice()
 const auth = page.props.auth
 const logoSrc = computed(() => page.props.site?.logo || '/images/kizora-logo.png')
 const cart_count = computed(() => page.props.cart_count ?? 0)

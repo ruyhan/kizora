@@ -9,14 +9,15 @@ class PrivilegeMembership extends Model
     public const STATUSES = ['pending', 'approved', 'rejected', 'revoked'];
 
     protected $fillable = [
-        'user_id', 'status', 'phone', 'note', 'card_number', 'serial', 'admin_note',
-        'applied_at', 'approved_at', 'rejected_at', 'reviewed_by',
+        'user_id', 'name', 'email', 'status', 'phone', 'note', 'card_number', 'serial', 'admin_note',
+        'applied_at', 'claim_sent_at', 'approved_at', 'rejected_at', 'reviewed_by',
     ];
 
     protected function casts(): array
     {
         return [
-            'applied_at'  => 'datetime',
+            'applied_at'    => 'datetime',
+            'claim_sent_at' => 'datetime',
             'approved_at' => 'datetime',
             'rejected_at' => 'datetime',
             'serial'      => 'integer',
@@ -36,6 +37,23 @@ class PrivilegeMembership extends Model
     public function isApproved(): bool
     {
         return $this->status === 'approved';
+    }
+
+    /** Name printed on the card: the account's name once linked, otherwise what the admin entered. */
+    public function getHolderNameAttribute(): string
+    {
+        return $this->user?->name ?: ($this->name ?: 'Cardholder');
+    }
+
+    /** Issued by an admin and still waiting for its owner to sign up / confirm the email. */
+    public function isUnclaimed(): bool
+    {
+        return $this->user_id === null;
+    }
+
+    public function scopeUnclaimedFor($query, string $email)
+    {
+        return $query->whereNull('user_id')->where('email', $email);
     }
 
     /** "2606151021" + "00001" → "2606 1510 2100001" (matches the card artwork). */

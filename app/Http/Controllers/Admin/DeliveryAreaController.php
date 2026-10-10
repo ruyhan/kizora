@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\DeliveryArea;
 use App\Models\DeliveryCity;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class DeliveryAreaController extends Controller
@@ -41,6 +42,24 @@ class DeliveryAreaController extends Controller
             'cities'  => DeliveryCity::orderBy('name')->get(['id', 'name']),
             'filters' => ['search' => $search ?? '', 'city_id' => $cityId ?? ''],
         ]);
+    }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'delivery_city_id' => 'required|integer|exists:delivery_cities,id',
+            'name'             => [
+                'required', 'string', 'max:100',
+                Rule::unique('delivery_areas', 'name')->where('delivery_city_id', $request->input('delivery_city_id')),
+            ],
+            'postal_code'      => 'nullable|string|max:20',
+        ], [
+            'name.unique' => 'This area already exists in the selected city.',
+        ]);
+
+        DeliveryArea::create($data);
+
+        return back()->with('success', 'Area added.');
     }
 
     public function update(Request $request, DeliveryArea $deliveryArea)

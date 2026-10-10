@@ -27,6 +27,19 @@ class DeliveryCityController extends Controller
         ]);
     }
 
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'name'            => 'required|string|max:255|unique:delivery_cities,name',
+            'delivery_charge' => 'nullable|numeric|min:0|max:1000000',
+            'is_active'       => 'boolean',
+        ]);
+
+        $city = DeliveryCity::create($data);
+
+        return back()->with('success', "{$city->name} added.");
+    }
+
     public function update(Request $request, DeliveryCity $deliveryCity)
     {
         $data = $request->validate([

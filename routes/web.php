@@ -395,10 +395,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Delivery Cities (Settings)
     Route::get('/delivery-cities',                 [AdminDeliveryCityController::class, 'index'])->middleware('permission:settings.view')->name('delivery-cities.index');
+    Route::post('/delivery-cities',                [AdminDeliveryCityController::class, 'store'])->middleware('permission:settings.edit')->name('delivery-cities.store');
     Route::patch('/delivery-cities/{deliveryCity}',[AdminDeliveryCityController::class, 'update'])->middleware('permission:settings.edit')->name('delivery-cities.update');
 
     // Delivery Areas (Settings)
     Route::get('/delivery-areas',                  [AdminDeliveryAreaController::class, 'index'])->middleware('permission:settings.view')->name('delivery-areas.index');
+    Route::post('/delivery-areas',                 [AdminDeliveryAreaController::class, 'store'])->middleware('permission:settings.edit')->name('delivery-areas.store');
     Route::patch('/delivery-areas/{deliveryArea}', [AdminDeliveryAreaController::class, 'update'])->middleware('permission:settings.edit')->name('delivery-areas.update');
 
     // Delivery Charges — per-city, managed inside the Delivery Settings page (Settings)

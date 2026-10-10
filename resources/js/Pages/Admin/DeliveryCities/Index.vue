@@ -15,6 +15,9 @@
         <div class="flex items-center gap-2">
           <span class="badge badge-success text-xs">{{ stats.active }} active</span>
           <span class="badge badge-gray text-xs">{{ stats.total }} total</span>
+          <button type="button" @click="openCreate" class="btn-primary text-sm inline-flex items-center gap-1.5">
+            <PlusIcon class="w-4 h-4" /> Add New City
+          </button>
         </div>
       </div>
 
@@ -56,6 +59,43 @@
       </div>
 
     </div>
+
+    <!-- Add City Modal -->
+    <Teleport to="body">
+      <div v-if="modalOpen" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl">
+          <div class="p-6 border-b border-purple-100 flex items-center justify-between">
+            <h3 class="font-display font-semibold text-charcoal text-lg">Add New City</h3>
+            <button @click="modalOpen = false" class="p-2 text-muted hover:text-charcoal rounded-lg hover:bg-gray-100">
+              <XMarkIcon class="w-5 h-5" />
+            </button>
+          </div>
+          <form @submit.prevent="save" class="p-6 space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-charcoal mb-1.5">City Name *</label>
+              <input v-model="form.name" type="text" class="input-field" required>
+              <p v-if="formErrors.name" class="text-error text-xs mt-1">{{ formErrors.name }}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-charcoal mb-1.5">Delivery Charge</label>
+              <input v-model="form.delivery_charge" type="number" min="0" step="0.01" class="input-field" placeholder="e.g. 150">
+              <p class="text-xs text-muted mt-1">Checkout is blocked for cities without a delivery charge.</p>
+              <p v-if="formErrors.delivery_charge" class="text-error text-xs mt-1">{{ formErrors.delivery_charge }}</p>
+            </div>
+            <label class="flex items-center gap-2 text-sm text-charcoal">
+              <input v-model="form.is_active" type="checkbox" class="rounded border-purple-200 text-primary">
+              Active (available at checkout)
+            </label>
+            <div class="flex gap-3 pt-2">
+              <button type="button" @click="modalOpen = false" class="btn-secondary flex-1 text-sm">Cancel</button>
+              <button type="submit" :disabled="saving" class="btn-primary flex-1 text-sm">
+                {{ saving ? 'Saving…' : 'Add City' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </Teleport>
   </AdminLayout>
 </template>
 
@@ -64,7 +104,7 @@ import { ref } from 'vue'
 import { Head, router } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import SettingsTabs from '@/Components/admin/SettingsTabs.vue'
-import { MagnifyingGlassIcon, BuildingOffice2Icon } from '@heroicons/vue/24/outline'
+import { MagnifyingGlassIcon, BuildingOffice2Icon, PlusIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({ cities: Array, filters: Object, stats: Object })
 
@@ -84,5 +124,30 @@ const toggle = (city) => {
     { is_active: !city.is_active },
     { preserveScroll: true, preserveState: false }
   )
+}
+
+// Add city modal
+const modalOpen  = ref(false)
+const saving     = ref(false)
+const formErrors = ref({})
+const form = ref({ name: '', delivery_charge: '', is_active: true })
+
+const openCreate = () => {
+  formErrors.value = {}
+  form.value = { name: '', delivery_charge: '', is_active: true }
+  modalOpen.value = true
+}
+
+const save = () => {
+  saving.value = true
+  router.post(route('admin.delivery-cities.store'), {
+    ...form.value,
+    delivery_charge: form.value.delivery_charge === '' ? null : form.value.delivery_charge,
+  }, {
+    preserveScroll: true,
+    onError: (errs) => { formErrors.value = errs },
+    onSuccess: () => { modalOpen.value = false },
+    onFinish: () => { saving.value = false },
+  })
 }
 </script>

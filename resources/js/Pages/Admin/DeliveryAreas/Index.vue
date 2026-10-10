@@ -7,12 +7,17 @@
       <SettingsTabs />
 
       <!-- Header -->
-      <div>
-        <h1 class="text-2xl font-bold font-display text-charcoal">Delivery Areas</h1>
-        <p class="text-muted text-sm mt-1">
-          Browse seeded areas. Availability is controlled per-city in
-          <Link :href="route('admin.delivery-cities.index')" class="text-primary hover:underline">Delivery Cities</Link>.
-        </p>
+      <div class="flex items-center justify-between gap-4 flex-wrap">
+        <div>
+          <h1 class="text-2xl font-bold font-display text-charcoal">Delivery Areas</h1>
+          <p class="text-muted text-sm mt-1">
+            Browse seeded areas. Availability is controlled per-city in
+            <Link :href="route('admin.delivery-cities.index')" class="text-primary hover:underline">Delivery Cities</Link>.
+          </p>
+        </div>
+        <button type="button" @click="openCreate" class="btn-primary text-sm inline-flex items-center gap-1.5">
+          <PlusIcon class="w-4 h-4" /> Add New Area
+        </button>
       </div>
 
       <!-- Filters -->
@@ -87,13 +92,18 @@
       <div v-if="modalOpen" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl">
           <div class="p-6 border-b border-purple-100 flex items-center justify-between">
-            <h3 class="font-display font-semibold text-charcoal text-lg">Edit Area</h3>
+            <h3 class="font-display font-semibold text-charcoal text-lg">{{ editing ? 'Edit Area' : 'Add New Area' }}</h3>
             <button @click="modalOpen = false" class="p-2 text-muted hover:text-charcoal rounded-lg hover:bg-gray-100">
               <XMarkIcon class="w-5 h-5" />
             </button>
           </div>
           <form @submit.prevent="save" class="p-6 space-y-4">
-            <p class="text-xs text-muted">City: <span class="font-medium text-charcoal">{{ editing?.city.name }}</span></p>
+            <p v-if="editing" class="text-xs text-muted">City: <span class="font-medium text-charcoal">{{ editing.city.name }}</span></p>
+            <div v-else>
+              <label class="block text-sm font-medium text-charcoal mb-1.5">City *</label>
+              <SearchableSelect v-model="form.delivery_city_id" :options="cityOptions" placeholder="Select city" />
+              <p v-if="formErrors.delivery_city_id" class="text-error text-xs mt-1">{{ formErrors.delivery_city_id }}</p>
+            </div>
             <div>
               <label class="block text-sm font-medium text-charcoal mb-1.5">Area Name *</label>
               <input v-model="form.name" type="text" class="input-field" required>
@@ -102,11 +112,12 @@
             <div>
               <label class="block text-sm font-medium text-charcoal mb-1.5">Postal Code</label>
               <input v-model="form.postal_code" type="text" class="input-field font-mono" placeholder="e.g. 3900">
+              <p v-if="formErrors.postal_code" class="text-error text-xs mt-1">{{ formErrors.postal_code }}</p>
             </div>
             <div class="flex gap-3 pt-2">
               <button type="button" @click="modalOpen = false" class="btn-secondary flex-1 text-sm">Cancel</button>
               <button type="submit" :disabled="saving" class="btn-primary flex-1 text-sm">
-                {{ saving ? 'Saving…' : 'Save' }}
+                {{ saving ? 'Saving…' : (editing ? 'Save' : 'Add Area') }}
               </button>
             </div>
           </form>
@@ -122,7 +133,7 @@ import { Head, Link, router } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import SettingsTabs from '@/Components/admin/SettingsTabs.vue'
 import SearchableSelect from '@/Components/SearchableSelect.vue'
-import { MagnifyingGlassIcon, MapPinIcon, PencilSquareIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { MagnifyingGlassIcon, MapPinIcon, PencilSquareIcon, PlusIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({ areas: Object, cities: Array, filters: Object })
 
@@ -133,6 +144,8 @@ const cityFilterOptions = computed(() => [
   { value: '', label: 'All cities' },
   ...props.cities.map(c => ({ value: c.id, label: c.name })),
 ])
+
+const cityOptions = computed(() => props.cities.map(c => ({ value: c.id, label: c.name })))
 
 const onCityFilter = (val) => {
   cityId.value = val
@@ -163,9 +176,20 @@ const openEdit = (area) => {
   modalOpen.value = true
 }
 
+const openCreate = () => {
+  editing.value = null
+  formErrors.value = {}
+  // Pre-select the city currently being filtered, if any
+  form.value = { delivery_city_id: cityId.value || '', name: '', postal_code: '' }
+  modalOpen.value = true
+}
+
 const save = () => {
   saving.value = true
-  router.patch(route('admin.delivery-areas.update', editing.value.id), form.value, {
+  const url = editing.value
+    ? route('admin.delivery-areas.update', editing.value.id)
+    : route('admin.delivery-areas.store')
+  router[editing.value ? 'patch' : 'post'](url, form.value, {
     preserveScroll: true,
     onError: (errs) => { formErrors.value = errs; saving.value = false },
     onSuccess: () => { saving.value = false; modalOpen.value = false },
